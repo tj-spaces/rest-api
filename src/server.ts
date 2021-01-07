@@ -34,7 +34,7 @@ app.get("/space/:spaceId", (req, res) => {
   const { spaceId } = req.params;
   if (spaceId in spaces) {
     const { name, createdBy } = spaces[spaceId];
-    res.render("space", { title: name, name, createdBy });
+    res.render("space", { title: name, name, createdBy, spaceId });
   } else {
     res.render("space_not_found");
   }
@@ -49,9 +49,14 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket: SocketIO.Socket) => {
-  console.log("Client connected");
   socket.on("disconnect", () => {
-    console.log("Client disconnected");
+    socket.broadcast.emit("peer leave");
+  });
+
+  socket.on("join space", (spaceId) => {
+    console.log("Client joined space", spaceId);
+    socket.join(spaceId);
+    socket.broadcast.emit("peer join");
   });
 });
 
