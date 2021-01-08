@@ -3,7 +3,6 @@ import * as dotenv from "dotenv";
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
-import * as path from "path";
 import * as auth from "./auth";
 import { createIo } from "./socket";
 dotenv.config();
@@ -27,9 +26,10 @@ app.use("/static", express.static("static/"));
 
 app.use(
   cookieSession({
-    secret: process.env.SESSION_SECRET,
-    keys: [process.env.SESSION_KEY_0, process.env.SESSION_KEY_1],
     name: "ping",
+    secret: process.env.SESSION_SECRET,
+    secure: false,
+    signed: false,
   })
 );
 
