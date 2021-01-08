@@ -1,14 +1,16 @@
+import cookieSession = require("cookie-session");
+import * as dotenv from "dotenv";
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
-import { Server as SocketIOServer } from "socket.io";
 import * as path from "path";
-
-const localFile = (filename: string) => path.join(process.cwd(), filename);
+import * as auth from "./auth";
+import { createIo } from "./socket";
+dotenv.config();
 
 const app = express();
 const httpServer = http.createServer(app);
-const io = new SocketIOServer(httpServer);
+createIo(httpServer);
 
 app.set("view engine", "hbs");
 
@@ -22,6 +24,17 @@ app.engine(
 );
 
 app.use("/static", express.static("static/"));
+
+app.use(
+  cookieSession({
+    secret: process.env.SESSION_SECRET,
+    keys: [process.env.SESSION_KEY_0, process.env.SESSION_KEY_1],
+    name: "ping",
+  })
+);
+
+auth.bootloadAuthMethods();
+app.use("/auth", auth.router);
 
 const spaces = {
   tourist: {
@@ -45,19 +58,11 @@ app.get("/create-space", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.render("index", { title: "Ping" });
-});
-
-io.on("connection", (socket: SocketIO.Socket) => {
-  socket.on("disconnect", () => {
-    socket.broadcast.emit("peer leave");
-  });
-
-  socket.on("join space", (spaceId) => {
-    console.log("Client joined space", spaceId);
-    socket.join(spaceId);
-    socket.broadcast.emit("peer join");
-  });
+  if (req.session.loggedIn) {
+    res.render("index", { title: "Ping" });
+  } else {
+    res.render("login", { title: "Ping" });
+  }
 });
 
 const port = process.env.PORT ?? 5000;
