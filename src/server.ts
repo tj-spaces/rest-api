@@ -4,6 +4,7 @@ import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
 import * as auth from "./auth";
+import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
 dotenv.config();
 
@@ -24,14 +25,7 @@ app.engine(
 
 app.use("/static", express.static("static/"));
 
-app.use(
-  cookieSession({
-    name: "ping",
-    secret: process.env.SESSION_SECRET,
-    secure: false,
-    signed: false,
-  })
-);
+app.use(getSessionMiddleware());
 
 auth.bootloadAuthMethods();
 app.use("/auth", auth.router);
@@ -58,7 +52,7 @@ app.get("/create-space", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  if (req.session.loggedIn) {
+  if (req.session.isLoggedIn) {
     res.render("index", { title: "Ping" });
   } else {
     res.render("login", { title: "Ping" });
