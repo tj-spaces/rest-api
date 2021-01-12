@@ -1,5 +1,5 @@
 import * as uuid from "uuid";
 
-export default function createUUID() {
-  uuid.v4();
+export default function createUuid() {
+  return uuid.v4();
 }

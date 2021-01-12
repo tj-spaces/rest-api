@@ -1,5 +1,6 @@
-import * as http from "http";
-import * as uuid from "uuid";
+import createUuid from "./lib/createUuid";
+import { Socket } from "socket.io";
+import { CustomSocket } from "./socket";
 
 /**
  * Where the user is in the space.
@@ -52,7 +53,13 @@ export interface SpaceInhabitant {
   /**
    * Anything from 'agree' to 'disagree' to 'go faster'
    */
-  displayStatus: "agree" | "disagree" | "faster" | "slower" | "raised-hand";
+  displayStatus:
+    | "agree"
+    | "disagree"
+    | "faster"
+    | "slower"
+    | "raised-hand"
+    | "none";
 
   /**
    * Whether the user has been granted permission to present
@@ -133,8 +140,42 @@ export class Space {
     this.isLoginRequiredToJoin = loginRequiredToJoin;
   }
 
-  tryJoin(socket: SocketIO.Socket) {
+  tryJoin(socket: CustomSocket) {
     const session = socket.request.session;
+    const isLoggedIn = session.isLoggedIn ?? false;
+
+    if (!this.isLoginRequiredToJoin || isLoggedIn) {
+      const sessionId = createUuid();
+      const temporaryId = session.temporaryId;
+      if (temporaryId == null) {
+        throw new Error("temporaryId is NULL");
+      }
+
+      const inhabitant: SpaceInhabitant = {
+        sessionId,
+        temporaryId: session.temporaryId,
+        isGuest: !isLoggedIn,
+        displayColor: "red",
+        displayName: "User",
+        displayStatus: "none",
+        canPresent: false,
+        isAdministrator: false,
+        isModerator: false,
+        isForceMuted: false,
+        isPresenting: false,
+        lastPingReceiveTime: 0,
+        lastPingSendTime: 0,
+        socket,
+      };
+
+      if (this.isWaitingRoomEnabled) {
+        this.inhabitantsInWaitingRoom.set(temporaryId, inhabitant);
+        socket.emit("in_waiting_room");
+      } else {
+        this.inhabitants.set(temporaryId, inhabitant);
+        socket.broadcast.emit("peer_joined");
+      }
+    }
   }
 }
 
