@@ -1,7 +1,11 @@
 {
 	"compilerOptions": {
 		"outDir": "dist",
-		"declaration": true
+		"declaration": true,
+		"typeRoots": [
+			"src/typings",
+			"node_modules/@types"
+		]
 	},
 	"include": [
 		"src/"
