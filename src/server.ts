@@ -1,12 +1,12 @@
-import cookieSession = require("cookie-session");
 import * as dotenv from "dotenv";
+dotenv.config();
+
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
 import * as auth from "./auth";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
-dotenv.config();
 
 const app = express();
 const httpServer = http.createServer(app);

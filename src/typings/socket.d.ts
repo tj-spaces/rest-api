@@ -8,22 +8,22 @@
 import { SpaceInhabitant } from "../space";
 
 declare module "socket.io" {
-  class Socket {
-    emit(ev: "peer_joined", peer: SpaceInhabitant): boolean;
-    emit(ev: "peer_left", peer: SpaceInhabitant): boolean;
-    emit(ev: "peer_info", peer: SpaceInhabitant): boolean;
-    emit(ev: "ping", key: string): boolean;
+  interface Socket {
+    emit(ev: "peer_joined", peer: SpaceInhabitant): this;
+    emit(ev: "peer_left", peer: SpaceInhabitant): this;
+    emit(ev: "peer_info", peer: SpaceInhabitant): this;
+    emit(ev: "ping", key: string): this;
     emit(
       ev: "chat_message",
       messageContent: string,
       senderUserId: string
-    ): boolean;
-    emit(ev: "space_inhabitants", users: Map<string, SpaceInhabitant>): boolean;
-    emit(ev: "in_waiting_room" | "space_not_found"): boolean;
+    ): this;
+    emit(ev: "space_inhabitants", users: Map<string, SpaceInhabitant>): this;
+    emit(ev: "in_waiting_room" | "space_not_found"): this;
 
-    on(ev: "chat_message", cb: (messageContent: string) => void): boolean;
-    on(ev: "disconnect", cb: () => void): boolean;
-    on(ev: "join_space", cb: (spaceId: string) => void): boolean;
+    on(ev: "chat_message", cb: (messageContent: string) => void): this;
+    on(ev: "disconnect", cb: () => void): this;
+    on(ev: "join_space", cb: (spaceId: string) => void): this;
   }
 }
 
