@@ -6,17 +6,17 @@ interface Profile {
   isGuest: boolean;
 }
 
-interface UserInfoPacket {
+interface UserInfoOutboundPacket {
   type: "user_info";
   user: Profile;
 }
 
-interface UserJoinPacket {
+interface UserJoinOutboundPacket {
   type: "user_join";
   user: Profile;
 }
 
-interface UserLeavePacket {
+interface UserLeaveOutboundPacket {
   type: "user_leave";
   userId: string;
 }
@@ -30,6 +30,10 @@ interface Position3D {
   rotation_z: number;
 }
 
+/**
+ * Where something is in the space.
+ * This is a 2D location, because as of now, the spaces are "2.5-dimensional" worlds
+ */
 interface Position2D {
   x: number;
   z: number;
@@ -38,14 +42,19 @@ interface Position2D {
 
 type UserPositions = Map<string, Position2D>;
 
-interface UserPositionsPacket {
+interface UserPositionsOutboundPacket {
   type: "user_positions";
   positions: UserPositions;
 }
 
-interface UsersInRoomPacket {
+interface UsersInRoomOutboundPacket {
   type: "users_in_room";
   users: Profile[];
+}
+
+interface ChatMessageInboundPacket {
+  type: "chat_message";
+  messageText: string;
 }
 
 interface ChatMessage {
@@ -53,19 +62,37 @@ interface ChatMessage {
   messageContent: string;
 }
 
-interface ChatMessagePacket {
+interface ChatMessageOutboundPacket {
   type: "chat_message";
   message: ChatMessage;
 }
 
 interface PingPacket {
   type: "ping";
+
+  /**
+   * Used to correlate pings with each other
+   */
+  key: string;
 }
 
-export type Packet =
-  | UserInfoPacket
-  | UserJoinPacket
-  | UserLeavePacket
-  | UserPositionsPacket
-  | UsersInRoomPacket
-  | ChatMessagePacket;
+interface SpaceNotFoundOutboundPacket {
+  type: "space_not_found";
+}
+
+export const SPACE_NOT_FOUND = "space_not_found";
+
+interface SpaceFoundInboundPacket {
+  type: "space_found";
+}
+
+export type OutboundPacket =
+  | UserInfoOutboundPacket
+  | UserJoinOutboundPacket
+  | UserLeaveOutboundPacket
+  | UserPositionsOutboundPacket
+  | UsersInRoomOutboundPacket
+  | ChatMessageOutboundPacket
+  | PingPacket;
+
+export type InboundPacket = ChatMessageInboundPacket;
