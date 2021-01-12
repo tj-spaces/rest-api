@@ -48,9 +48,9 @@ function addAuthenticationMethod(
         });
 
         // You are now logged in, and you have the access token
-        req.session.loggedIn = true;
-        req.session.loginProvider = name;
-        req.session.accessToken = accessToken;
+        req.session.isLoggedIn = true;
+        req.session.authenticationProvider = name;
+        req.session.authenticationToken = accessToken;
         res.render("login_success");
       } catch (e) {
         // Access token error

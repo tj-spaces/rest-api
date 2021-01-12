@@ -12,6 +12,35 @@
 	</div>
 </div>
 
+{{!--
+SpaceInhabitant {
+sessionId: string;
+temporaryId: string;
+accountId?: string;
+isGuest: boolean;
+displayName: string;
+displayColor: string;
+displayStatus:
+| "agree"
+| "disagree"
+| "faster"
+| "slower"
+| "raised-hand"
+| "none";
+
+canPresent: boolean;
+canActivateCamera: boolean;
+canActivateMicrophone: boolean;
+isAdministrator: boolean;
+isModerator: boolean;
+isPresenting: boolean;
+
+position: {
+location: {x, y};
+rotation;
+}
+--}}
+
 {{!-- Socket.io scripts --}}
 <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
 <script type="text/javascript">
@@ -20,11 +49,11 @@
 	const peers = {};
 	socket.emit("join space", SPACE_ID);
 
-	socket.on("peer join", () => {
+	socket.on("peer_joined", () => {
 		document.getElementById("here").innerHTML += "Peer joined<br/>";
 	});
 
-	socket.on("peer leave", () => {
+	socket.on("peer_left", () => {
 		document.getElementById("here").innerHTML += "Peer left<br/>";
 	});
 </script>

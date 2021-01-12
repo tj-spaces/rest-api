@@ -1,6 +1,14 @@
 import createUuid from "./lib/createUuid";
-import { Socket } from "socket.io";
+import { Ping } from "./ping";
 import { CustomSocket } from "./socket";
+
+export type DisplayStatus =
+  | "agree"
+  | "disagree"
+  | "faster"
+  | "slower"
+  | "raised-hand"
+  | "none";
 
 /**
  * Where the user is in the space.
@@ -24,16 +32,11 @@ export interface SpaceInhabitant {
   sessionId: string;
 
   /**
-   * A single-use ID assigned to somebody when they join the Space
+   * An ID assigned to somebody when they join the Space
    * If a user joins as a guest from the browser, this ID stays with them even if they
-   * join different spaces
+   * join different spaces. If a user joins as a registered user, this is just their account id.
    */
   temporaryId: string;
-
-  /**
-   * The ID of the account this user logged in with
-   */
-  accountId?: string;
 
   /**
    * Users can log in as Guests in some spaces. This can be turned off
@@ -53,18 +56,22 @@ export interface SpaceInhabitant {
   /**
    * Anything from 'agree' to 'disagree' to 'go faster'
    */
-  displayStatus:
-    | "agree"
-    | "disagree"
-    | "faster"
-    | "slower"
-    | "raised-hand"
-    | "none";
+  displayStatus: DisplayStatus;
 
   /**
    * Whether the user has been granted permission to present
    */
   canPresent: boolean;
+
+  /**
+   * Whether the user is allowed to turn on their microphone
+   */
+  canActivateMicrophone: boolean;
+
+  /**
+   * Whether the user is allowed to turn on their camera
+   */
+  canActivateCamera: boolean;
 
   /**
    * Whether the user is an administrator
@@ -77,15 +84,27 @@ export interface SpaceInhabitant {
   isModerator: boolean;
 
   /**
-   * Whether the user has been muted by a moderator or administrator
-   */
-  isForceMuted: boolean;
-
-  /**
    * Whether the user is currently presenting
    */
   isPresenting: boolean;
 
+  /**
+   * Info about this user's location
+   */
+  position: SpacePositionInfo;
+}
+
+export interface SpaceCreationOptions {
+  waitingRoom: boolean;
+  loginRequiredToJoin: boolean;
+}
+
+export class SpaceConnection {
+  ping: Ping;
+  constructor(public socket: CustomSocket) {}
+}
+
+export interface SpacePositionInfo {
   /**
    * Where the user is in the space.
    * This is a 2D location, because as of now, the spaces are "2.5-dimensional" worlds
@@ -96,26 +115,6 @@ export interface SpaceInhabitant {
    * The 2D rotation of the user
    */
   rotation?: number;
-
-  /**
-   * UNIX time for when the last ping was sent
-   */
-  lastPingSendTime: number;
-
-  /**
-   * UNIX time for when the last ping was received
-   */
-  lastPingReceiveTime: number;
-
-  /**
-   * The Socket.io connection to this user
-   */
-  socket: SocketIO.Socket;
-}
-
-export interface SpaceCreationOptions {
-  waitingRoom: boolean;
-  loginRequiredToJoin: boolean;
 }
 
 export class Space {
@@ -123,6 +122,8 @@ export class Space {
    * Key is equal to `inhabitant.temporaryId`
    */
   inhabitants: Map<string, SpaceInhabitant>;
+
+  connections: Map<string, SpaceConnection>;
 
   isWaitingRoomEnabled: boolean;
   inhabitantsInWaitingRoom: Map<string, SpaceInhabitant>;
@@ -140,6 +141,40 @@ export class Space {
     this.isLoginRequiredToJoin = loginRequiredToJoin;
   }
 
+  getJoinPosition(): SpacePositionInfo {
+    return {
+      location: {
+        x: 0,
+        y: 0,
+      },
+      rotation: 0,
+    };
+  }
+
+  getDefaultCanPresent() {
+    return false;
+  }
+
+  getDefaultDisplayName() {
+    return "User";
+  }
+
+  getDefaultDisplayStatus(): DisplayStatus {
+    return "none";
+  }
+
+  getDefaultDisplayColor() {
+    return "red";
+  }
+
+  getDefaultCanActivateCamera() {
+    return true;
+  }
+
+  getDefaultCanActivateMicrophone() {
+    return true;
+  }
+
   tryJoin(socket: CustomSocket) {
     const session = socket.request.session;
     const isLoggedIn = session.isLoggedIn ?? false;
@@ -155,17 +190,16 @@ export class Space {
         sessionId,
         temporaryId: session.temporaryId,
         isGuest: !isLoggedIn,
-        displayColor: "red",
-        displayName: "User",
-        displayStatus: "none",
-        canPresent: false,
+        displayColor: this.getDefaultDisplayColor(),
+        displayName: this.getDefaultDisplayName(),
+        displayStatus: this.getDefaultDisplayStatus(),
+        canPresent: this.getDefaultCanPresent(),
+        canActivateCamera: this.getDefaultCanActivateCamera(),
+        canActivateMicrophone: this.getDefaultCanActivateMicrophone(),
         isAdministrator: false,
         isModerator: false,
-        isForceMuted: false,
         isPresenting: false,
-        lastPingReceiveTime: 0,
-        lastPingSendTime: 0,
-        socket,
+        position: this.getJoinPosition(),
       };
 
       if (this.isWaitingRoomEnabled) {
@@ -173,7 +207,8 @@ export class Space {
         socket.emit("in_waiting_room");
       } else {
         this.inhabitants.set(temporaryId, inhabitant);
-        socket.broadcast.emit("peer_joined");
+        socket.join("space_" + this.spaceId);
+        socket.broadcast.emit("peer_joined", inhabitant);
       }
     }
   }

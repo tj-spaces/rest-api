@@ -14,6 +14,10 @@ export interface CustomSocket extends Socket {
   request: Request<ParamsDictionary, ResBody, ReqBody, ReqQuery>;
 }
 
+/**
+ * Sets up the callbacks and returns a newly-created Socket.io instance
+ * @param server The http server to bind to
+ */
 export const createIo = (server: http.Server) => {
   const io = new SocketIOServer(server);
 

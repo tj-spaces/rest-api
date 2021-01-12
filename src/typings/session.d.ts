@@ -1,4 +1,5 @@
 import * as session from "express-session";
+import { AccessToken } from "simple-oauth2";
 
 // This line is necessary, or else the declaration below completely overwrites the "express-session" module
 export = session;
@@ -21,7 +22,7 @@ declare module "express-session" {
     /**
      * Access token used for the user
      */
-    authenticationToken?: string;
+    authenticationToken?: AccessToken;
 
     /**
      * A temporary ID stored with each user in a given session
