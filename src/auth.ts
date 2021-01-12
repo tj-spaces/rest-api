@@ -51,13 +51,10 @@ function addAuthenticationMethod(
         req.session.isLoggedIn = true;
         req.session.authenticationProvider = name;
         req.session.authenticationToken = accessToken;
-        res.render("login_success");
+        res.redirect("/");
       } catch (e) {
         // Access token error
-        res.status(400);
-        res.render("login", {
-          message: "There was a problem, try logging in again.",
-        });
+        res.redirect(url.join(AUTH_URL_BASE, "login-error"));
       }
   });
 
@@ -77,6 +74,14 @@ export interface AuthMethodJsonSpec {
 }
 
 export const router = Router();
+
+router.get("/login-error", (req, res) => {
+  res.status(400);
+  res.render("login", {
+    message: "There was a problem, try logging in again.",
+    title: "Login Error",
+  });
+});
 
 export function bootloadAuthMethods() {
   const methods: AuthMethodJsonSpec = JSON.parse(

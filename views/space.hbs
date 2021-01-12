@@ -1,4 +1,16 @@
-<div class="text-center">
+<style>
+	.full-width {
+		width: 100%;
+	}
+
+	.chat {
+		display: flex;
+		flex-direction: column;
+		font-family: 'Courier New', Courier, monospace;
+	}
+</style>
+
+<div class="text-center full-width" style="overflow:auto;">
 	<h1>
 		{{name}}
 	</h1>
@@ -6,8 +18,27 @@
 		Created by {{createdBy}}
 	</i>
 
-	<div id="here">
+	<div>
+		<div id="connection-status">
 
+		</div>
+		Connection: <span id="connection-latency" />
+	</div>
+
+	<div class="row">
+		<div class="chat col-md-4">
+			<div id="chat">
+
+			</div>
+			<div>
+				<input type="text" id="chat-input">
+				<button onclick="sendChatMessage();">Send</button>
+			</div>
+		</div>
+
+		<div id="here" class="col-md-8">
+
+		</div>
 	</div>
 </div>
 
@@ -43,16 +74,100 @@ rotation;
 {{!-- Socket.io scripts --}}
 <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
 <script type="text/javascript">
+	function createAvatar(photoUrl) {
+		const image = document.createElement("img");
+		image.src = photoUrl;
+		image.style.width = "100px";
+		return image;
+	}
+
+	const elements = {
+		chat: document.getElementById("chat"),
+		connectionStatus: document.getElementById("connection-status"),
+		connectionLatency: document.getElementById("connection-latency"),
+		space: document.getElementById("space"),
+	};
+
+	const CONNECTION_HEALTH_LEVELS = {
+		50: "excellent",
+		100: "good",
+		500: "ok",
+	};
+
+	function getConnectionHealthLevel(milliseconds) {
+		for (let [millisecondLimit, code] of Object.entries(CONNECTION_HEALTH_LEVELS)) {
+			if (milliseconds < millisecondLimit) {
+				return code;
+			}
+		}
+
+		return "poor";
+	}
+
+	function capitalize(string) {
+		return string.slice(0, 1).toUpperCase() + string.slice(1);
+	}
+
+	function sendChatMessage() {
+		let input = document.getElementById("chat-input");
+		let value = input.value;
+
+		if (typeof value == "string" && value.length > 0) {
+			socket.emit("chat_message", value);
+			input.value = "";
+		}
+	}
+
+	function renderChatMessage(content, color = "white") {
+		const element = document.createElement("span");
+		element.innerText = content;
+		element.style.color = color;
+		elements.chat.appendChild(element);
+		elements.chat.appendChild(document.createElement("br"));
+	}
+
+	const $ = document.querySelectorAll;
+
 	const SPACE_ID = "{{spaceId}}";
 	const socket = io("/");
 	const peers = {};
+
 	socket.emit("join_space", SPACE_ID);
 
-	socket.on("peer_joined", () => {
-		document.getElementById("here").innerHTML += "Peer joined<br/>";
+	socket.on("space_not_found", () =>
+		elements.connectionStatus.innerHTML = "<h1>Space not found</h1>"
+	);
+
+	socket.on("ping", (key, lastLatency) => {
+		socket.emit("ping", key);
+		elements.connectionLatency.innerHTML = capitalize(getConnectionHealthLevel(lastLatency));
+	});
+
+	socket.on("peer_joined", ({ displayName }) => {
+		renderChatMessage(displayName + " joined", "yellow");
 	});
 
 	socket.on("peer_left", () => {
-		document.getElementById("here").innerHTML += "Peer left<br/>";
+		renderChatMessage("Peer left", "yellow");
+	});
+
+	socket.on("chat_message", (messageContent, senderId) => {
+		renderChatMessage(senderId + ": " + messageContent, "#8eff61");
+	});
+</script>
+
+<script>
+	const keys = {};
+
+	window.addEventListener("keydown", (ev) => {
+		if (!ev.repeat && (keys[ev.key] !== true)) {
+			socket.emit("keydown", ev.key);
+			keys[ev.key] = true;
+		}
+	});
+
+	window.addEventListener("keyup", (ev) => {
+		socket.emit("keyup", ev.key);
+		keys[ev.key] = false;
 	});
 </script>

@@ -33,7 +33,7 @@ export const createIo = (server: http.Server) => {
     }
 
     socket.on("disconnect", () => {
-      socket.broadcast.emit("peer leave");
+      socket.broadcast.emit("peer_left");
     });
 
     socket.on("join_space", (spaceId: string) => {
@@ -42,7 +42,6 @@ export const createIo = (server: http.Server) => {
         socket.emit("space_not_found");
       } else {
         space.tryJoin(socket);
-        socket.broadcast.emit("peer_joined");
       }
     });
   });

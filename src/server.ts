@@ -7,10 +7,11 @@ import * as http from "http";
 import * as auth from "./auth";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
+import { createSpace, getPublicSpaces, getSpace } from "./space";
 
 const app = express();
 const httpServer = http.createServer(app);
-createIo(httpServer);
+const io = createIo(httpServer);
 
 app.set("view engine", "hbs");
 
@@ -30,25 +31,41 @@ app.use(getSessionMiddleware());
 auth.bootloadAuthMethods();
 app.use("/auth", auth.router);
 
-const spaces = {
-  tourist: {
+createSpace(
+  "tourist",
+  {
+    waitingRoom: false,
+    loginRequiredToJoin: false,
     name: "First Space",
     createdBy: "michael",
+    isPublic: true,
   },
-};
+  io
+);
+
+app.get("/spaces/explore", (req, res) => {
+  res.render("space_explorer", { publicSpaces: getPublicSpaces() });
+});
+
+app.get("/spaces/create", (req, res) => {
+  res.render("space_create");
+});
 
 app.get("/space/:spaceId", (req, res) => {
   const { spaceId } = req.params;
-  if (spaceId in spaces) {
-    const { name, createdBy } = spaces[spaceId];
-    res.render("space", { title: name, name, createdBy, spaceId });
+  const space = getSpace(spaceId);
+  if (space) {
+    const { name, createdBy } = space;
+    res.render("space", {
+      title: name,
+      name,
+      createdBy,
+      spaceId,
+      layout: "fullscreen",
+    });
   } else {
     res.render("space_not_found");
   }
-});
-
-app.get("/create-space", (req, res) => {
-  res.render("space_create");
 });
 
 app.get("/", (req, res) => {
