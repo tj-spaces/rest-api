@@ -4,6 +4,7 @@ dotenv.config();
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
+import { getUserFromId } from "./auth/accountUtil";
 import * as auth from "./auth/index";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
@@ -64,6 +65,17 @@ app.get("/space/:spaceId", (req, res) => {
     });
   } else {
     res.render("space_not_found");
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  if (req.session.isLoggedIn) {
+    res.render("profile", {
+      title: "Profile",
+      profile: await getUserFromId(req.session.accountId),
+    });
+  } else {
+    res.render("please_login");
   }
 });
 

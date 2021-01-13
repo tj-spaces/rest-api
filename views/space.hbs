@@ -23,158 +23,159 @@
 		<div id="connection-status">
 
 		</div>
-		Connection: <span id="connection-latency" />
+		Connection: <span id="connection-latency">Good</span>
 	</div>
 
-	<div class="row">
-		<div class="chat col-md-4">
-			<div id="chat">
+	{{!-- <div class="row"> --}}
+		{{!-- <div class="chat col-md-4"> --}}
+			<div class="chat">
+				<div id="chat">
 
+				</div>
+				<div>
+					<input type="text" id="chat-input">
+					<button onclick="sendChatMessage();">Send</button>
+				</div>
 			</div>
-			<div>
-				<input type="text" id="chat-input">
-				<button onclick="sendChatMessage();">Send</button>
-			</div>
+
+			{{!-- <div id="here" class="col-md-8">
+
+			</div> --}}
 		</div>
+		{{!-- </div> --}}
 
-		<div id="here" class="col-md-8">
+	{{!--
+	SpaceInhabitant {
+	sessionId: string;
+	temporaryId: string;
+	accountId?: string;
+	isGuest: boolean;
+	displayName: string;
+	displayColor: string;
+	displayStatus:
+	| "agree"
+	| "disagree"
+	| "faster"
+	| "slower"
+	| "raised-hand"
+	| "none";
 
-		</div>
-	</div>
-</div>
+	canPresent: boolean;
+	canActivateCamera: boolean;
+	canActivateMicrophone: boolean;
+	isAdministrator: boolean;
+	isModerator: boolean;
+	isPresenting: boolean;
 
-{{!--
-SpaceInhabitant {
-sessionId: string;
-temporaryId: string;
-accountId?: string;
-isGuest: boolean;
-displayName: string;
-displayColor: string;
-displayStatus:
-| "agree"
-| "disagree"
-| "faster"
-| "slower"
-| "raised-hand"
-| "none";
-
-canPresent: boolean;
-canActivateCamera: boolean;
-canActivateMicrophone: boolean;
-isAdministrator: boolean;
-isModerator: boolean;
-isPresenting: boolean;
-
-position: {
-location: {x, y};
-rotation;
-}
---}}
-
-{{!-- Socket.io scripts --}}
-<script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
-<script type="text/javascript">
-	function createAvatar(photoUrl) {
-		const image = document.createElement("img");
-		image.src = photoUrl;
-		image.style.width = "100px";
-		return image;
+	position: {
+	location: {x, y};
+	rotation;
 	}
+	--}}
 
-	const elements = {
-		chat: document.getElementById("chat"),
-		connectionStatus: document.getElementById("connection-status"),
-		connectionLatency: document.getElementById("connection-latency"),
-		space: document.getElementById("space"),
-	};
+	{{!-- Socket.io scripts --}}
+	<script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+	<script type="text/javascript">
+		function createAvatar(photoUrl) {
+			const image = document.createElement("img");
+			image.src = photoUrl;
+			image.style.width = "100px";
+			return image;
+		}
 
-	const CONNECTION_HEALTH_LEVELS = {
-		50: "excellent",
-		100: "good",
-		500: "ok",
-	};
+		const elements = {
+			chat: document.getElementById("chat"),
+			connectionStatus: document.getElementById("connection-status"),
+			connectionLatency: document.getElementById("connection-latency"),
+			space: document.getElementById("space"),
+		};
 
-	function getConnectionHealthLevel(milliseconds) {
-		for (let [millisecondLimit, code] of Object.entries(CONNECTION_HEALTH_LEVELS)) {
-			if (milliseconds < millisecondLimit) {
-				return code;
+		const CONNECTION_HEALTH_LEVELS = {
+			50: "excellent",
+			100: "good",
+			500: "ok",
+		};
+
+		function getConnectionHealthLevel(milliseconds) {
+			for (let [millisecondLimit, code] of Object.entries(CONNECTION_HEALTH_LEVELS)) {
+				if (milliseconds < millisecondLimit) {
+					return code;
+				}
+			}
+
+			return "poor";
+		}
+
+		function capitalize(string) {
+			return string.slice(0, 1).toUpperCase() + string.slice(1);
+		}
+
+		document.getElementById("chat-input").addEventListener("keyup", (ev) => {
+			if (ev.keyCode === 13) {
+				sendChatMessage();
+			}
+		});
+
+		function sendChatMessage() {
+			let input = document.getElementById("chat-input");
+			let value = input.value;
+
+			if (typeof value == "string" && value.length > 0) {
+				socket.emit("chat_message", value);
+				input.value = "";
 			}
 		}
 
-		return "poor";
-	}
-
-	function capitalize(string) {
-		return string.slice(0, 1).toUpperCase() + string.slice(1);
-	}
-
-	document.getElementById("chat-input").addEventListener("keyup", (ev) => {
-		if (ev.keyCode === 13) {
-			sendChatMessage();
+		function renderChatMessage(content, color = "white") {
+			const element = document.createElement("span");
+			element.innerText = content;
+			element.style.color = color;
+			elements.chat.appendChild(element);
+			elements.chat.appendChild(document.createElement("br"));
 		}
-	});
 
-	function sendChatMessage() {
-		let input = document.getElementById("chat-input");
-		let value = input.value;
+		const $ = document.querySelectorAll;
 
-		if (typeof value == "string" && value.length > 0) {
-			socket.emit("chat_message", value);
-			input.value = "";
-		}
-	}
+		const SPACE_ID = "{{spaceId}}";
+		const socket = io("/");
+		const peers = {};
 
-	function renderChatMessage(content, color = "white") {
-		const element = document.createElement("span");
-		element.innerText = content;
-		element.style.color = color;
-		elements.chat.appendChild(element);
-		elements.chat.appendChild(document.createElement("br"));
-	}
+		socket.emit("join_space", SPACE_ID);
 
-	const $ = document.querySelectorAll;
+		socket.on("space_not_found", () =>
+			elements.connectionStatus.innerHTML = "<h1>Space not found</h1>"
+		);
 
-	const SPACE_ID = "{{spaceId}}";
-	const socket = io("/");
-	const peers = {};
+		socket.on("ping", (key, lastLatency) => {
+			socket.emit("ping", key);
+			elements.connectionLatency.innerHTML = capitalize(getConnectionHealthLevel(lastLatency));
+		});
 
-	socket.emit("join_space", SPACE_ID);
+		socket.on("peer_joined", ({ displayName }) => {
+			renderChatMessage(displayName + " joined", "yellow");
+		});
 
-	socket.on("space_not_found", () =>
-		elements.connectionStatus.innerHTML = "<h1>Space not found</h1>"
-	);
+		socket.on("peer_left", () => {
+			renderChatMessage("Peer left", "yellow");
+		});
 
-	socket.on("ping", (key, lastLatency) => {
-		socket.emit("ping", key);
-		elements.connectionLatency.innerHTML = capitalize(getConnectionHealthLevel(lastLatency));
-	});
+		socket.on("chat_message", (messageContent, senderId) => {
+			renderChatMessage(senderId + ": " + messageContent, "#8eff61");
+		});
+	</script>
 
-	socket.on("peer_joined", ({ displayName }) => {
-		renderChatMessage(displayName + " joined", "yellow");
-	});
+	<script>
+		const keys = {};
 
-	socket.on("peer_left", () => {
-		renderChatMessage("Peer left", "yellow");
-	});
+		window.addEventListener("keydown", (ev) => {
+			if (!ev.repeat && (keys[ev.key] !== true)) {
+				socket.emit("keydown", ev.key);
+				keys[ev.key] = true;
+			}
+		});
 
-	socket.on("chat_message", (messageContent, senderId) => {
-		renderChatMessage(senderId + ": " + messageContent, "#8eff61");
-	});
-</script>
-
-<script>
-	const keys = {};
-
-	window.addEventListener("keydown", (ev) => {
-		if (!ev.repeat && (keys[ev.key] !== true)) {
-			socket.emit("keydown", ev.key);
-			keys[ev.key] = true;
-		}
-	});
-
-	window.addEventListener("keyup", (ev) => {
-		socket.emit("keyup", ev.key);
-		keys[ev.key] = false;
-	});
-</script>
+		window.addEventListener("keyup", (ev) => {
+			socket.emit("keyup", ev.key);
+			keys[ev.key] = false;
+		});
+	</script>
