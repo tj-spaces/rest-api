@@ -1,11 +1,11 @@
-import * as dotenv from "dotenv";
+import * as auth from "auth/index";
 dotenv.config();
 
+import { getUserFromId } from "database/tables/users";
+import * as dotenv from "dotenv";
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
-import { getUserFromId } from "./auth/accountUtil";
-import * as auth from "./auth/index";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
 import { createSpace, getPublicSpaces, getSpace } from "./space";

@@ -1,5 +1,5 @@
-import * as google from "./google";
-import * as ion from "./ion";
+import * as google from "./google/routes";
+import * as ion from "./ion/routes";
 import { Router } from "express";
 
 const router = Router();
@@ -9,8 +9,6 @@ router.use("/ion", ion.router);
 
 router.get("/logout", (req, res) => {
   delete req.session.accountId;
-  delete req.session.authenticationProvider;
-  delete req.session.authenticationToken;
   req.session.isLoggedIn = false;
 
   res.redirect("/");

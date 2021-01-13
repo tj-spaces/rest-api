@@ -1,10 +1,13 @@
 import * as googleapis from "googleapis";
 import { Router } from "express";
 import axios from "axios";
-import readCredentials from "./readCredentials";
-import getRedirectUrl from "./getRedirectUrl";
-import { GoogleProfile } from "../profile/googleProfile";
-import { getUserFromEmail, registerFromGoogleProfile } from "./accountUtil";
+import readCredentials from "auth/readCredentials";
+import getRedirectUrl from "auth/getRedirectUrl";
+import { GoogleProfile } from "./profile";
+import {
+  getUserFromEmail,
+  registerFromGoogleProfile,
+} from "database/tables/users";
 
 export const router = Router();
 
@@ -30,7 +33,6 @@ router.get("/callback", async (req, res) => {
       ({ id } = user);
     }
 
-    req.session.authenticationProvider = "google";
     req.session.accountId = id;
     req.session.isLoggedIn = true;
 

@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { AuthorizationCode } from "simple-oauth2";
-import { getUserFromEmail, registerFromIonProfile } from "./accountUtil";
-import getLoginErrorUrl from "./getLoginErrorUrl";
-import getRedirectUrl from "./getRedirectUrl";
-import readCredentials from "./readCredentials";
+import {
+  getUserFromEmail,
+  registerFromIonProfile,
+} from "database/tables/users";
+import getLoginErrorUrl from "auth/getLoginErrorUrl";
+import getRedirectUrl from "auth/getRedirectUrl";
+import readCredentials from "auth/readCredentials";
 import axios from "axios";
 
 export const router = Router();
@@ -49,7 +52,6 @@ router.get("/callback", async (req, res) => {
         ({ id } = user);
       }
 
-      req.session.authenticationProvider = "ion";
       req.session.accountId = id;
       req.session.isLoggedIn = true;
 

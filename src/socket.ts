@@ -4,8 +4,7 @@ import { getSpace } from "./space";
 import { getSessionMiddleware } from "./session";
 import { ParamsDictionary, Request } from "express-serve-static-core";
 import { ParsedQs } from "qs";
-import createUuid from "./lib/createUuid";
-import { getUserFromId } from "./auth/accountUtil";
+import { getUserFromId } from "./database/tables/users";
 
 type ResBody = any;
 type ReqBody = any;
