@@ -4,7 +4,7 @@ dotenv.config();
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
-import * as auth from "./auth";
+import * as auth from "./auth/index";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
 import { createSpace, getPublicSpaces, getSpace } from "./space";

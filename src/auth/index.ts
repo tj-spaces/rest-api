@@ -2,7 +2,7 @@ import * as google from "./google";
 import * as ion from "./ion";
 import { Router } from "express";
 
-export const router = Router();
+const router = Router();
 
 router.use("/google", google.router);
 router.use("/ion", ion.router);
@@ -14,3 +14,5 @@ router.get("/login-error", (req, res) => {
     title: "Login Error",
   });
 });
+
+export { router };

@@ -27,11 +27,11 @@ const authorizationUrl = authorizationCode.authorizeURL({
   redirect_uri: redirectUrl,
 });
 
-router.get("/" + name + "/success", async (req, res) => {
+router.get("/callback", async (req, res) => {
   let { code } = req.query;
 
   if (typeof code !== "string") {
-    // Access token error
+    res.redirect(getLoginErrorUrl());
   } else
     try {
       let accessToken = await authorizationCode.getToken({
@@ -56,6 +56,6 @@ router.get("/" + name + "/success", async (req, res) => {
 });
 
 // Add login function
-router.get("/" + name + "/login", async (req, res) => {
+router.get("/login", async (req, res) => {
   res.redirect(authorizationUrl);
 });
