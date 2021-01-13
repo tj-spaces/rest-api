@@ -245,6 +245,7 @@ export class Space {
   deregisterParticipantFromSpace(participantId: string) {
     const { socket } = this.connections.get(participantId);
 
+    socket.leave("space_" + this.spaceId);
     socket.removeAllListeners("chat_message");
   }
 
@@ -254,7 +255,9 @@ export class Space {
     this.participants.set(participantId, participant);
 
     socket.on("chat_message", (messageContent) => {
-      socket.broadcast.emit("chat_message", messageContent, participantId);
+      this.io
+        .in("space_" + this.spaceId)
+        .emit("chat_message", messageContent, participantId);
     });
 
     socket.join("space_" + this.spaceId);
