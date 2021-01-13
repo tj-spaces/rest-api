@@ -20,6 +20,11 @@ declare module "express-session" {
     authenticationProvider?: string;
 
     /**
+     * The account ID of the user, if they are logged in
+     */
+    accountId?: string;
+
+    /**
      * Access token used for the user
      */
     authenticationToken?: AccessToken;

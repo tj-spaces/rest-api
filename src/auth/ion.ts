@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { AuthorizationCode } from "simple-oauth2";
+import { getUserFromEmail, registerFromIonProfile } from "./accountUtil";
 import getLoginErrorUrl from "./getLoginErrorUrl";
 import getRedirectUrl from "./getRedirectUrl";
 import readCredentials from "./readCredentials";
+import axios from "axios";
 
 export const router = Router();
 
@@ -34,20 +36,24 @@ router.get("/callback", async (req, res) => {
     res.redirect(getLoginErrorUrl());
   } else
     try {
-      let accessToken = await authorizationCode.getToken({
-        code,
-        redirect_uri: redirectUrl,
-        scope: "read",
-      });
+      const ionUser = await getIonUser(code);
 
-      // You are now logged in, and you have the access token
-      req.session.isLoggedIn = true;
+      const user = await getUserFromEmail(ionUser.tj_email);
+      let isNewAccount = user == null;
+
+      let id: string;
+
+      if (isNewAccount) {
+        ({ id } = await registerFromIonProfile(ionUser));
+      } else {
+        ({ id } = user);
+      }
+
       req.session.authenticationProvider = "ion";
-      req.session.authenticationToken = accessToken;
+      req.session.accountId = id;
+      req.session.isLoggedIn = true;
 
-      // Check if the user exists
-
-      res.redirect("/");
+      res.redirect(isNewAccount ? "/new-account" : "/");
     } catch (e) {
       console.log(e);
       // Access token error
@@ -59,3 +65,17 @@ router.get("/callback", async (req, res) => {
 router.get("/login", async (req, res) => {
   res.redirect(authorizationUrl);
 });
+
+async function getIonUser(code: string) {
+  let accessToken = await authorizationCode.getToken({
+    code,
+    redirect_uri: redirectUrl,
+    scope: "read",
+  });
+
+  const profileUrl =
+    "https://ion.tjhsst.edu/api/profile?format=json&access_token=" +
+    accessToken.token.access_token;
+
+  return (await axios.get(profileUrl)).data;
+}

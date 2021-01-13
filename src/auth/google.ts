@@ -4,6 +4,7 @@ import axios from "axios";
 import readCredentials from "./readCredentials";
 import getRedirectUrl from "./getRedirectUrl";
 import { GoogleProfile } from "../profile/googleProfile";
+import { getUserFromEmail, registerFromGoogleProfile } from "./accountUtil";
 
 export const router = Router();
 
@@ -17,9 +18,27 @@ router.get("/callback", async (req, res) => {
 
   try {
     const googleUser = await getGoogleUser(code);
-    res.json(googleUser);
+
+    const user = await getUserFromEmail(googleUser.email);
+    let isNewAccount = user == null;
+
+    let id: string;
+
+    if (isNewAccount) {
+      ({ id } = await registerFromGoogleProfile(googleUser));
+    } else {
+      ({ id } = user);
+    }
+
+    req.session.authenticationProvider = "google";
+    req.session.accountId = id;
+    req.session.isLoggedIn = true;
+
+    res.redirect(isNewAccount ? "/new-account" : "/");
   } catch (e) {
     console.error(e);
+
+    res.status(500);
   }
 });
 
