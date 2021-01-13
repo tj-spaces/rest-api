@@ -1,0 +1,68 @@
+import * as googleapis from "googleapis";
+import { Router } from "express";
+import axios from "axios";
+import readCredentials from "./readCredentials";
+
+export const router = Router();
+
+router.get("/callback", (req, res) => {
+  const { code } = req.query;
+
+  if (typeof code !== "string") {
+    res.status(400);
+    return;
+  }
+
+  const googleUser = getGoogleUser(code);
+  res.json(googleUser);
+});
+
+router.get("/login", (req, res) => {
+  res.redirect(getGoogleAuthURL());
+});
+
+const credentials = readCredentials("google");
+
+const oauth2Client = new googleapis.Auth.OAuth2Client({
+  clientId: credentials.id,
+  clientSecret: credentials.secret,
+});
+
+function getGoogleAuthURL() {
+  /*
+   * Generate a url that asks permissions to the user's email and profile
+   */
+  const scopes = [
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/userinfo.email",
+  ];
+
+  return oauth2Client.generateAuthUrl({
+    access_type: "offline",
+    prompt: "consent",
+    scope: scopes, // If you only need one scope you can pass it as string
+  });
+}
+
+async function getGoogleUser(code: string) {
+  const { tokens } = await oauth2Client.getToken(code);
+
+  oauth2Client.setCredentials(tokens);
+
+  // Fetch the user's profile with the access token and bearer
+  const googleUser = await axios
+    .get(
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokens.id_token}`,
+        },
+      }
+    )
+    .then((res) => res.data)
+    .catch((error) => {
+      throw new Error(error.message);
+    });
+
+  return googleUser;
+}

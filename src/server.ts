@@ -28,7 +28,6 @@ app.use("/static", express.static("static/"));
 
 app.use(getSessionMiddleware());
 
-auth.bootloadAuthMethods();
 app.use("/auth", auth.router);
 
 createSpace(
@@ -78,4 +77,4 @@ app.get("/", (req, res) => {
 
 const port = process.env.PORT ?? 5000;
 
-httpServer.listen(port, () => console.log(`Listening on *:${port}`));
+httpServer.listen(port, () => console.log("Listening on port", port));
