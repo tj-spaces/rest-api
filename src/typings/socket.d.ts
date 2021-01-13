@@ -18,7 +18,7 @@ declare module "socket.io" {
       messageContent: string,
       senderUserId: string
     ): this;
-    emit(ev: "space_inhabitants", users: Map<string, SpaceParticipant>): this;
+    emit(ev: "peers", users: Map<string, SpaceParticipant>): this;
     emit(
       ev:
         | "space_in_waiting_room"
@@ -29,7 +29,10 @@ declare module "socket.io" {
 
     on(ev: "chat_message", cb: (messageContent: string) => void): this;
     on(ev: "disconnect", cb: () => void): this;
-    on(ev: "join_space", cb: (spaceId: string) => void): this;
+    on(
+      ev: "join_space",
+      cb: (spaceId: string, displayName?: string) => void
+    ): this;
     on(ev: "ping", cb: (key: string) => void): this;
   }
 }

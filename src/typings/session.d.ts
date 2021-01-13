@@ -15,19 +15,9 @@ declare module "express-session" {
     isLoggedIn: boolean;
 
     /**
-     * How the user is authenticated
-     */
-    authenticationProvider?: string;
-
-    /**
      * The account ID of the user, if they are logged in
      */
     accountId?: string;
-
-    /**
-     * Access token used for the user
-     */
-    authenticationToken?: AccessToken;
 
     /**
      * A temporary ID stored with each user in a given session

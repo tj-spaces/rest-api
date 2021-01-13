@@ -5,6 +5,7 @@ import { getSessionMiddleware } from "./session";
 import { ParamsDictionary, Request } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import createUuid from "./lib/createUuid";
+import { getUserFromId } from "./auth/accountUtil";
 
 type ResBody = any;
 type ReqBody = any;
@@ -27,20 +28,20 @@ export const createIo = (server: http.Server) => {
   });
 
   io.on("connection", (socket: CustomSocket) => {
-    const { session } = socket.request;
-    if (!session.temporaryId) {
-      session.temporaryId = createUuid();
-    }
-
     socket.on("disconnect", () => {
       socket.broadcast.emit("peer_left");
     });
 
-    socket.on("join_space", (spaceId: string) => {
+    socket.on("join_space", async (spaceId: string, displayName?: string) => {
       const space = getSpace(spaceId);
       if (space == null) {
         socket.emit("space_not_found");
       } else {
+        if (socket.request.session.isLoggedIn) {
+          let user = await getUserFromId(socket.request.session.accountId);
+          displayName = user.name;
+        }
+
         space.tryJoin(socket);
       }
     });

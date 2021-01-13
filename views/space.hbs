@@ -31,8 +31,8 @@
 
 		</div>
 		<div>
-			<input type="text" id="chat-input">
-			<button onclick="sendChatMessage();">Send</button>
+			<input type="text" id="chat-input" class="full-width">
+			{{!-- <button onclick="sendChatMessage();">Send</button> --}}
 		</div>
 	</div>
 </div>
@@ -40,8 +40,7 @@
 {{!--
 SpaceInhabitant {
 sessionId: string;
-temporaryId: string;
-accountId?: string;
+participantId: string;
 isGuest: boolean;
 displayName: string;
 displayColor: string;
@@ -131,7 +130,7 @@ rotation;
 
 	const SPACE_ID = "{{spaceId}}";
 	const socket = io("/");
-	const peers = {};
+	const peers = new Map();
 
 	socket.emit("join_space", SPACE_ID);
 
@@ -144,8 +143,32 @@ rotation;
 		elements.connectionLatency.innerHTML = capitalize(getConnectionHealthLevel(lastLatency));
 	});
 
-	socket.on("peer_joined", ({ displayName }) => {
-		renderChatMessage(displayName + " joined", "yellow");
+	socket.on("peer_info", (participant) => {
+		peers.set(participant.participantId, participant);
+	});
+
+	socket.on("peers", (peers) => {
+		renderChatMessage("Welcome to the Space!");
+
+		let peerEntries = Object.entries(peers);
+
+		if (peerEntries.length == 0) {
+			renderChatMessage("You are the first one here.");
+		} else {
+			renderChatMessage("Currently here:");
+		}
+
+		for (let [participantId, peer] of peerEntries) {
+			peers.set(participantId, peer);
+			renderChatMessage(peer.displayName, "#ff7878")
+		}
+
+		renderChatMessage("");
+	});
+
+	socket.on("peer_joined", (peer) => {
+		peers.set(peer.participantId, peer);
+		renderChatMessage(peer.displayName + " joined", "yellow");
 	});
 
 	socket.on("peer_left", () => {
@@ -153,7 +176,7 @@ rotation;
 	});
 
 	socket.on("chat_message", (messageContent, senderId) => {
-		renderChatMessage(senderId + ": " + messageContent, "#8eff61");
+		renderChatMessage(peers.get(senderId).displayName + ": " + messageContent, "#8eff61");
 	});
 </script>
 

@@ -61,7 +61,7 @@ app.get("/space/:spaceId", (req, res) => {
       name,
       createdBy,
       spaceId,
-      layout: "fullscreen",
+      // layout: "fullscreen",
     });
   } else {
     res.render("space_not_found");

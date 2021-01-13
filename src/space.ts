@@ -124,7 +124,7 @@ export class SpaceConnection {
   constructor(public socket: CustomSocket) {
     socket.on("ping", (key) => {
       if (key === this.pingKey) {
-        this.lastPingReceiveTime = new Date().getTime();
+        this.lastPingReceiveTime = Date.now();
         this.latency = this.lastPingReceiveTime - this.lastPingSendTime;
 
         // Send a max of one ping every 500 ms
@@ -140,7 +140,7 @@ export class SpaceConnection {
 
   sendPing() {
     this.pingKey = createUuid();
-    this.lastPingSendTime = new Date().getTime();
+    this.lastPingSendTime = Date.now();
     this.socket.emit("ping", this.pingKey, this.latency);
   }
 }
@@ -262,6 +262,8 @@ export class Space {
 
     socket.join("space_" + this.spaceId);
     socket.emit("space_join_complete");
+    socket.emit("peer_info", participant);
+    socket.emit("peers", this.participants);
     socket.broadcast.emit("peer_joined", participant);
   }
 
@@ -292,13 +294,13 @@ export class Space {
     }
   }
 
-  tryJoin(socket: CustomSocket) {
+  tryJoin(socket: CustomSocket, displayName?: string) {
     const session = socket.request.session;
     const isLoggedIn = session.isLoggedIn ?? false;
 
     if (!this.isLoginRequiredToJoin || isLoggedIn) {
       const sessionId = createUuid();
-      const participantId = session.temporaryId;
+      const participantId = isLoggedIn ? session.accountId : createUuid();
       if (participantId == null) {
         throw new Error("participantId is NULL");
       }
@@ -308,7 +310,7 @@ export class Space {
         participantId,
         isGuest: !isLoggedIn,
         displayColor: this.getDefaultDisplayColor(),
-        displayName: this.getDefaultDisplayName(),
+        displayName: displayName || this.getDefaultDisplayName(),
         displayStatus: this.getDefaultDisplayStatus(),
         canPresent: this.getDefaultCanPresent(),
         canActivateCamera: this.getDefaultCanActivateCamera(),
