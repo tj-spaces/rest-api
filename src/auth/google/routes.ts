@@ -1,13 +1,13 @@
 import * as googleapis from "googleapis";
 import { Router } from "express";
 import axios from "axios";
-import readCredentials from "auth/readCredentials";
-import getRedirectUrl from "auth/getRedirectUrl";
+import readCredentials from "../readCredentials";
+import getRedirectUrl from "../getRedirectUrl";
 import { GoogleProfile } from "./profile";
 import {
   getUserFromEmail,
   registerFromGoogleProfile,
-} from "database/tables/users";
+} from "../../database/tables/users";
 
 export const router = Router();
 

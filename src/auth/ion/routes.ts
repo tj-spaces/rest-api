@@ -1,13 +1,13 @@
+import axios from "axios";
 import { Router } from "express";
 import { AuthorizationCode } from "simple-oauth2";
+import getLoginErrorUrl from "../getLoginErrorUrl";
+import getRedirectUrl from "../getRedirectUrl";
+import readCredentials from "../readCredentials";
 import {
   getUserFromEmail,
   registerFromIonProfile,
-} from "database/tables/users";
-import getLoginErrorUrl from "auth/getLoginErrorUrl";
-import getRedirectUrl from "auth/getRedirectUrl";
-import readCredentials from "auth/readCredentials";
-import axios from "axios";
+} from "../../database/tables/users";
 
 export const router = Router();
 

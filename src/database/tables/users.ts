@@ -1,7 +1,7 @@
 import { getDatabaseConnection } from "../index";
-import createUuid from "lib/createUuid";
-import { GoogleProfile } from "auth/google/profile";
-import { IonProfile } from "auth/ion/profile";
+import createUuid from "../../lib/createUuid";
+import { GoogleProfile } from "../../auth/google/profile";
+import { IonProfile } from "../../auth/ion/profile";
 
 export interface User {
   id: string; // A string of digits

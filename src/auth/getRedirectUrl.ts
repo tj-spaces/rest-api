@@ -1,4 +1,4 @@
-import * as url from "/url";
+import * as url from "../url";
 
 const AUTH_URL_BASE = url.join(url.ROOT_URL, "auth");
 

@@ -1,8 +1,8 @@
-import * as auth from "auth/index";
+import * as dotenv from "dotenv";
 dotenv.config();
 
-import { getUserFromId } from "database/tables/users";
-import * as dotenv from "dotenv";
+import * as auth from "./auth/index";
+import { getUserFromId } from "./database/tables/users";
 import * as express from "express";
 import * as exphbs from "express-handlebars";
 import * as http from "http";
