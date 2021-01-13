@@ -42,7 +42,7 @@ export const createIo = (server: http.Server) => {
           displayName = user.name;
         }
 
-        space.tryJoin(socket);
+        space.tryJoin(socket, displayName);
       }
     });
   });
