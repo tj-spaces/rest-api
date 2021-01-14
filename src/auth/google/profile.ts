@@ -1,3 +1,6 @@
+import axios from "axios";
+import { client } from "./client";
+
 export interface GoogleProfile {
   id: number; // A string of digits
   email: string;

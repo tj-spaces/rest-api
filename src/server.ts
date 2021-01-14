@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
+import * as api from "./api/index";
 import * as auth from "./auth/index";
 import { getUserFromId } from "./database/tables/users";
 import * as bodyParser from "body-parser";
@@ -35,8 +36,8 @@ app.use(getSessionMiddleware());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/auth", auth.router);
-
 app.use("/spaces", spaces.router);
+app.use("/api", api.router);
 
 app.use("/new-account", (req, res) => {
   res.render("new_account");
