@@ -54,7 +54,7 @@ export async function doesSpaceMemberExist(spaceId: string, userId: string) {
  */
 export async function getUserJoinedSpaces(userId: string) {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceMember[]>((resolve, reject) => {
+  return new Promise<string[]>((resolve, reject) => {
     db.query(
       "SELECT space_id FROM `space_members` WHERE `user_id` = ?",
       [userId],
@@ -73,7 +73,7 @@ export async function getUserJoinedSpaces(userId: string) {
  */
 export async function getSpaceMembers(spaceId: string) {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceMember[]>((resolve, reject) => {
+  return new Promise<string[]>((resolve, reject) => {
     db.query(
       "SELECT user_id FROM `space_members` WHERE `space_id` = ?",
       [spaceId],
@@ -87,13 +87,13 @@ export async function getSpaceMembers(spaceId: string) {
 
 export async function deleteSpaceMembership(spaceId: string, userId: string) {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceMember[]>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     db.query(
       "DELETE FROM `space_members` WHERE `space_id` = ? AND `user_id` = ?",
       [spaceId, userId],
-      (err, result) => {
+      (err) => {
         if (err) reject(err);
-        resolve(result);
+        resolve();
       }
     );
   });
