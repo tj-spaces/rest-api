@@ -8,8 +8,9 @@ import * as exphbs from "express-handlebars";
 import * as http from "http";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
-import { createSpace, getPublicSpaces, getSpace } from "./space";
+import { createSpace, getSpace } from "./spaces/server";
 import { nextId } from "./lib/snowflakeId";
+import * as spaces from "./spaces/routes";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -44,13 +45,7 @@ createSpace(
   io
 );
 
-app.get("/spaces/explore", (req, res) => {
-  res.render("space_explorer", { publicSpaces: getPublicSpaces() });
-});
-
-app.get("/spaces/create", (req, res) => {
-  res.render("space_create");
-});
+app.use("/spaces", spaces.router);
 
 app.get("/space/:spaceId", (req, res) => {
   const spaceId = parseInt(req.params.spaceId, 36);

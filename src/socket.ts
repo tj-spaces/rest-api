@@ -1,6 +1,6 @@
 import * as http from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import { getSpace } from "./space";
+import { getSpace } from "./spaces/server";
 import { getSessionMiddleware } from "./session";
 import { ParamsDictionary, Request } from "express-serve-static-core";
 import { ParsedQs } from "qs";

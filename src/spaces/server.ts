@@ -1,8 +1,8 @@
-import createUuid from "./lib/createUuid";
-import { CustomSocket } from "./socket";
+import createUuid from "../lib/createUuid";
+import { CustomSocket } from "../socket";
 import { Server as SocketIOServer } from "socket.io";
-import isDevelopmentMode from "./lib/isDevelopment";
-import { nextId } from "./lib/snowflakeId";
+import isDevelopmentMode from "../lib/isDevelopment";
+import { nextId } from "../lib/snowflakeId";
 
 export type DisplayStatus =
   | "agree"

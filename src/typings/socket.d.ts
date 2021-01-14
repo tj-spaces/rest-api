@@ -5,7 +5,7 @@
 // type ReqQuery = ParsedQs;
 
 // import * as SIO from "socket.io";
-import { SpaceParticipant } from "../space";
+import { SpaceParticipant } from "../spaces/server";
 
 declare module "socket.io" {
   interface Socket {
