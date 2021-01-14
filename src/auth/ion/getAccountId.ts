@@ -1,22 +1,16 @@
 import {
-  doesUserExistWithEmail,
   getUserFromEmail,
   registerFromIonProfile,
 } from "../../database/tables/users";
-import { getIonUser } from "./getUser";
+import { getIonProfile } from "./profile";
 
-export default async function getAccountId(code: string) {
-  const profile = await getIonUser(code);
-  const email = profile.tj_email;
+export default async function getAccountIdFromIonCode(code: string) {
+  const profile = await getIonProfile(code);
   const user = await getUserFromEmail(profile.tj_email);
 
-  let accountId: number;
-
-  if (!doesUserExistWithEmail(email)) {
-    accountId = await registerFromIonProfile(profile);
+  if (user == null) {
+    return await registerFromIonProfile(profile);
   } else {
-    accountId = user.id;
+    return user.id;
   }
-
-  return accountId;
 }

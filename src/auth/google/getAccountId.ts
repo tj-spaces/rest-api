@@ -2,10 +2,10 @@ import {
   getUserFromEmail,
   registerFromGoogleProfile,
 } from "../../database/tables/users";
-import { getGoogleUser } from "./profile";
+import { getGoogleProfile } from "./profile";
 
 export default async function getAccountId(code: string): Promise<number> {
-  const profile = await getGoogleUser(code);
+  const profile = await getGoogleProfile(code);
   const user = await getUserFromEmail(profile.email);
 
   if (user == null) {

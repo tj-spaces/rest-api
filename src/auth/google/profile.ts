@@ -11,3 +11,18 @@ export interface GoogleProfile {
   picture: string; // URL to a profile photo
   locale: "en"; // The user's preferred language
 }
+
+export async function getGoogleProfile(code: string): Promise<GoogleProfile> {
+  const { tokens } = await client.getToken(code);
+
+  const profileUrl = `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`;
+
+  // Fetch the user's profile with the access token and bearer
+  return (
+    await axios.get(profileUrl, {
+      headers: {
+        Authorization: `Bearer ${tokens.access_token}`,
+      },
+    })
+  ).data;
+}
