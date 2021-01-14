@@ -1,3 +1,4 @@
+import * as cors from "cors";
 import * as http from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
@@ -32,8 +33,8 @@ export const createIo = (server: http.Server) => {
     });
 
     socket.on("join_space", async (spaceId: number, displayName?: string) => {
-      const space = getSpaceServer(spaceId);
-      if (space == null) {
+      const spaceServer = await getSpaceServer(spaceId, io);
+      if (spaceServer == null) {
         socket.emit("space_not_found");
       } else {
         if (socket.request.session.isLoggedIn) {
@@ -41,7 +42,7 @@ export const createIo = (server: http.Server) => {
           displayName = user.name;
         }
 
-        space.tryJoin(socket, displayName);
+        spaceServer.tryJoin(socket, displayName);
       }
     });
   });

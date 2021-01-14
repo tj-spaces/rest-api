@@ -3,7 +3,7 @@ import createSessionFromCodeAndProvider from "./createSessionFromCodeAndProvider
 
 const router = Router();
 
-router.post("/create_session", (req, res) => {
+router.post("/create_session", async (req, res) => {
   const { provider, code } = req.body;
 
   if (
@@ -20,9 +20,20 @@ router.post("/create_session", (req, res) => {
     res.json({ error: "invalid_code" });
   }
 
-  res.json({
-    session_id: createSessionFromCodeAndProvider(code, provider),
-  });
+  try {
+    const session_id = await createSessionFromCodeAndProvider(code, provider);
+
+    res.status(200);
+    res.json({
+      session_id: session_id,
+    });
+  } catch (e) {
+    console.error("ERROR DURING CODE REQUEST");
+    res.json({
+      error: "invalid_code",
+    });
+    res.status(400);
+  }
 });
 
 router.get("/logout", (req, res) => {
