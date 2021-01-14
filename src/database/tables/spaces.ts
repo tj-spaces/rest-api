@@ -1,21 +1,28 @@
 import { getDatabaseConnection } from "..";
 import createUuid from "../../lib/createUuid";
 
-export default interface Space {
+export interface Space {
   id: number;
   creator_id: number;
   name: string;
-  created_on: string;
-  updated_on: string;
+  created_at: string;
+  updated_at: string;
+  visibility: SpaceVisibility;
 }
 
-export async function createSpace(creator_id: number, name: string) {
+export type SpaceVisibility = "public" | "unlisted";
+
+export async function createSpace(
+  creatorId: number,
+  name: string,
+  visibility: SpaceVisibility
+) {
   const db = await getDatabaseConnection();
   const id = createUuid();
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `spaces` (`id`, `creator_id`, `name`) VALUES (?, ?, ?)",
-      [id, creator_id, name],
+      "INSERT INTO `spaces` (`id`, `creator_id`, `name`, `visibility`) VALUES (?, ?, ?, ?, ?)",
+      [id, creatorId, name, visibility],
       (err) => {
         if (err) reject(err);
         resolve(id);
@@ -66,6 +73,23 @@ export async function setSpaceName(id: number, newName: string) {
     db.query(
       "UPDATE `spaces` SET `name` = ?, `updated_on` = CURRENT_TIMESTAMP WHERE `id` = ?",
       [newName, id],
+      (err) => {
+        if (err) reject(err);
+        resolve();
+      }
+    );
+  });
+}
+
+export async function setSpaceVisibility(
+  id: number,
+  newVisibility: SpaceVisibility
+) {
+  const db = await getDatabaseConnection();
+  return new Promise<void>((resolve, reject) => {
+    db.query(
+      "UPDATE `spaces` SET `visibility` = ?, `updated_on` = CURRENT_TIMESTAMP WHERE `id` = ?",
+      [newVisibility, id],
       (err) => {
         if (err) reject(err);
         resolve();
