@@ -7,12 +7,12 @@ CREATE TABLE IF NOT EXISTS `space_avatars` (
 
 	PRIMARY KEY (`space_id`, `user_id`),
 
-	CONSTRAINT `fk_user`
+	CONSTRAINT `fk_space_avatar_user`
 		FOREIGN KEY (`user_id`)
 			REFERENCES `users`(`id`)	
 				ON DELETE CASCADE,
 
-	CONSTRAINT `fk_space`
+	CONSTRAINT `fk_space_avatar_space`
 		FOREIGN KEY (`space_id`)
 			REFERENCES `spaces`(`id`)
 				ON DELETE CASCADE

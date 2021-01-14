@@ -6,9 +6,21 @@ function getDatabaseUrl() {
   return process.env.DATABASE_URL ?? process.env.DIRECTOR_DATABASE_URL;
 }
 
-export function getDatabaseConnection() {
+export async function getDatabaseConnection() {
   if (connection == null) {
-    return (connection = mysql.createConnection(getDatabaseUrl()));
+    connection = mysql.createConnection(getDatabaseUrl());
+
+    await new Promise<void>((resolve, reject) => {
+      connection.connect((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    return connection;
   } else {
     return connection;
   }

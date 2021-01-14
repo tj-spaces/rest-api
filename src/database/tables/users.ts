@@ -15,7 +15,7 @@ export interface User {
 }
 
 export async function getUserFromEmail(email: string): Promise<User | null> {
-  const db = getDatabaseConnection();
+  const db = await getDatabaseConnection();
 
   if (email in userFromEmailCache) {
     let timeSinceCacheUpdate =
@@ -57,7 +57,7 @@ const userFromEmailCache: {
 const MAX_CACHE_AGE = 3600;
 
 export async function getUserFromId(id: string): Promise<User | null> {
-  const db = getDatabaseConnection();
+  const db = await getDatabaseConnection();
 
   if (id in userFromIdCache) {
     let timeSinceCacheUpdate = Date.now() - userFromIdCache[id].updateTime;
@@ -84,7 +84,7 @@ export async function getUserFromId(id: string): Promise<User | null> {
 }
 
 export async function registerFromIonProfile(profile: IonProfile) {
-  const db = getDatabaseConnection();
+  const db = await getDatabaseConnection();
 
   let id = createUuid();
 
@@ -113,7 +113,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
 }
 
 export async function registerFromGoogleProfile(profile: GoogleProfile) {
-  const db = getDatabaseConnection();
+  const db = await getDatabaseConnection();
 
   let id = createUuid();
 
