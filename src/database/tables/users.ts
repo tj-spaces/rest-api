@@ -6,10 +6,10 @@ import { IonProfile } from "../../auth/ion/profile";
 export interface User {
   id: string; // A string of digits
   email: string;
-  verifiedEmail: boolean;
+  verified_email: boolean;
   name: string; // This is the full name
-  givenName: string; // In most of Europe, this is the first name, e.g. John
-  familyName: string; // In most of Europe, this is the last name, e.g. Cena
+  given_name: string; // In most of Europe, this is the first name, e.g. John
+  family_name: string; // In most of Europe, this is the last name, e.g. Cena
   picture: string; // URL to a profile photo
   locale: "en"; // The user's preferred language
 }
@@ -119,7 +119,7 @@ export async function registerFromGoogleProfile(profile: GoogleProfile) {
 
   return new Promise<{ id: string }>((resolve, reject) => {
     db.query(
-      "INSERT INTO `users` (`id`, `email`, `verifiedEmail`, `name`, `givenName`, `familyName`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO `users` (`id`, `email`, `verified_email`, `name`, `given_name`, `family_name`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         id,
         profile.email,
