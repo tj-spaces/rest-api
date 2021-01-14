@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { getPublicSpaces } from "./server";
-import { createSpace, SpaceVisibility } from "../database/tables/spaces";
+import { createSpace, getPublicSpaces } from "../database/tables/spaces";
 
 const router = Router();
 

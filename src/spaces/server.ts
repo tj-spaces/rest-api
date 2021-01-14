@@ -3,6 +3,7 @@ import { CustomSocket } from "../socket";
 import { Server as SocketIOServer } from "socket.io";
 import isDevelopmentMode from "../lib/isDevelopment";
 import { nextId } from "../lib/snowflakeId";
+import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
 
 export type DisplayStatus =
   | "agree"
@@ -39,11 +40,6 @@ export interface SpaceParticipant {
    * join different spaces. If a user joins as a registered user, this is just their account id.
    */
   participantId: number;
-
-  /**
-   * Users can log in as Guests in some spaces. This can be turned off
-   */
-  isGuest: boolean;
 
   /**
    * Nickname to display for the user
@@ -159,42 +155,26 @@ export interface SpacePositionInfo {
   rotation?: number;
 }
 
-export class Space {
+const SPACE_CACHE_EXPIRE_TIME = 60;
+export class SpaceServer {
   /**
    * Key is equal to `participant.participantId`
    */
   participants = new Map<number, SpaceParticipant>();
-
   connections = new Map<number, SpaceConnection>();
+  cachedSpace: Space;
+  lastCacheLoadTime: -1;
 
-  isWaitingRoomEnabled: boolean;
-  participantsInWaitingRoom = new Map<number, SpaceParticipant>();
-  participantsThatWereKicked = new Set<number>();
-
-  isLoginRequiredToJoin: boolean;
-
-  name: string;
-  createdBy: string;
-
-  isPublic: boolean;
-
-  constructor(
-    {
-      waitingRoom = true,
-      loginRequiredToJoin = false,
-      name,
-      createdBy,
-      isPublic,
-    }: SpaceCreationOptions,
-    public io: SocketIOServer,
-    public spaceId: number
-  ) {
-    this.isWaitingRoomEnabled = waitingRoom;
-    this.isLoginRequiredToJoin = loginRequiredToJoin;
+  constructor(public io: SocketIOServer, public spaceId: number) {
     this.spaceId = spaceId;
-    this.name = name;
-    this.createdBy = createdBy;
-    this.isPublic = isPublic;
+  }
+
+  async getSpace(): Promise<Space> {
+    if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_EXPIRE_TIME) {
+      return this.cachedSpace;
+    } else {
+      return await getSpaceById(this.spaceId);
+    }
   }
 
   getJoinPosition(): SpacePositionInfo {
@@ -231,18 +211,6 @@ export class Space {
     return true;
   }
 
-  broadcastParticipants() {}
-
-  addParticipantToWaitingRoom(
-    participantId: number,
-    participant: SpaceParticipant
-  ) {
-    const { socket } = this.connections.get(participantId);
-
-    this.participantsInWaitingRoom.set(participantId, participant);
-    socket.emit("in_waiting_room");
-  }
-
   deregisterParticipantFromSpace(participantId: number) {
     const { socket } = this.connections.get(participantId);
 
@@ -268,48 +236,17 @@ export class Space {
     socket.broadcast.emit("peer_joined", participant);
   }
 
-  /**
-   * Admits a participant from the waiting room
-   * @param participantId The participant to admit
-   */
-  admitWaitingRoomParticipant(participantId: number) {
-    if (this.participantsInWaitingRoom.has(participantId)) {
-      const participant = this.participantsInWaitingRoom.get(participantId);
-
-      // Remove from the waiting room
-      this.participantsInWaitingRoom.delete(participantId);
-
-      this.addParticipantToSpace(participantId, participant);
-    }
-  }
-
-  /**
-   * Denies a participant from the waiting room
-   * @param participantId The participant to deny
-   */
-  denyWaitingRoomParticipant(participantId: number) {
-    if (this.participantsInWaitingRoom.has(participantId)) {
-      this.participantsInWaitingRoom.delete(participantId);
-      const { socket } = this.connections.get(participantId);
-      socket.emit("space_join_denied");
-    }
-  }
-
   tryJoin(socket: CustomSocket, displayName?: string) {
     const session = socket.request.session;
     const isLoggedIn = session.isLoggedIn ?? false;
 
-    if (!this.isLoginRequiredToJoin || isLoggedIn) {
+    if (isLoggedIn) {
       const sessionId = nextId();
-      const participantId = isLoggedIn ? session.accountId : nextId();
-      if (participantId == null) {
-        throw new Error("participantId is NULL");
-      }
+      const participantId = session.accountId;
 
       const participant: SpaceParticipant = {
         sessionId,
         participantId,
-        isGuest: !isLoggedIn,
         displayColor: this.getDefaultDisplayColor(),
         displayName: displayName || this.getDefaultDisplayName(),
         displayStatus: this.getDefaultDisplayStatus(),
@@ -323,12 +260,7 @@ export class Space {
       };
 
       this.connections.set(participantId, new SpaceConnection(socket));
-
-      if (this.isWaitingRoomEnabled) {
-        this.addParticipantToWaitingRoom(participantId, participant);
-      } else {
-        this.addParticipantToSpace(participantId, participant);
-      }
+      this.addParticipantToSpace(participantId, participant);
     }
   }
 }
@@ -336,23 +268,31 @@ export class Space {
 /**
  * For internal use only. The key is the space id.
  */
-const spaces = new Map<number, Space>();
+const spaceServers = new Map<number, SpaceServer>();
 
-export function createSpace(
+export function createSpaceServer(spaceId: number, io: SocketIOServer) {
+  const spaceServer = new SpaceServer(io, spaceId);
+  spaceServers.set(spaceId, spaceServer);
+  return spaceServer;
+}
+
+/**
+ * Returns a server used to host a space.
+ * If no server exists, it is created.
+ * If the space doesn't exist, this returns null.
+ * @param spaceId The id of the space
+ */
+export async function getSpaceServer(
   spaceId: number,
-  options: SpaceCreationOptions,
   io: SocketIOServer
-) {
-  spaces.set(spaceId, new Space(options, io, spaceId));
-}
-
-export function getPublicSpaces(): Space[] {
-  return Array.from(spaces.values()).filter((space) => space.isPublic);
-}
-
-export function getSpace(spaceId: number): Space | null {
-  if (spaces.has(spaceId)) {
-    return spaces.get(spaceId);
+): Promise<SpaceServer | null> {
+  const spaceExists = await doesSpaceExist(spaceId);
+  if (spaceExists) {
+    if (spaceServers.has(spaceId)) {
+      return spaceServers.get(spaceId);
+    } else {
+      return createSpaceServer(spaceId, io);
+    }
   } else {
     return null;
   }

@@ -1,6 +1,6 @@
 import * as http from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import { getSpace } from "./spaces/server";
+import { getSpaceServer } from "./spaces/server";
 import { getSessionMiddleware } from "./session";
 import { ParamsDictionary, Request } from "express-serve-static-core";
 import { ParsedQs } from "qs";
@@ -32,7 +32,7 @@ export const createIo = (server: http.Server) => {
     });
 
     socket.on("join_space", async (spaceId: number, displayName?: string) => {
-      const space = getSpace(spaceId);
+      const space = getSpaceServer(spaceId);
       if (space == null) {
         socket.emit("space_not_found");
       } else {

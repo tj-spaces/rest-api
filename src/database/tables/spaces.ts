@@ -81,6 +81,23 @@ export async function setSpaceName(id: number, newName: string) {
   });
 }
 
+/**
+ * Returns all spaces that have a visibility of 'public'.
+ */
+export async function getPublicSpaces() {
+  const db = await getDatabaseConnection();
+  return new Promise<Space[]>((resolve, reject) => {
+    db.query(
+      "SELECT * FROM `spaces` WHERE `visibility` = 'public'",
+      [],
+      (err, result) => {
+        if (err) reject(err);
+        resolve(result);
+      }
+    );
+  });
+}
+
 export async function setSpaceVisibility(
   id: number,
   newVisibility: SpaceVisibility

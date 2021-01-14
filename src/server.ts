@@ -9,8 +9,7 @@ import * as exphbs from "express-handlebars";
 import * as http from "http";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
-import { createSpace, getSpace } from "./spaces/server";
-import { nextId } from "./lib/snowflakeId";
+import { getSpaceServer } from "./spaces/server";
 import * as spaces from "./spaces/routes";
 
 const app = express();
@@ -36,32 +35,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/auth", auth.router);
 
-createSpace(
-  nextId(),
-  {
-    waitingRoom: false,
-    loginRequiredToJoin: false,
-    name: "First Space",
-    createdBy: "michael",
-    isPublic: true,
-  },
-  io
-);
-
 app.use("/spaces", spaces.router);
 
-app.get("/space/:spaceId", (req, res) => {
+app.get("/space/:spaceId", async (req, res) => {
   const spaceId = parseInt(req.params.spaceId, 36);
 
-  const space = getSpace(spaceId);
-  if (space) {
-    const { name, createdBy } = space;
+  // Start up a space server if not loaded already
+  const spaceServer = await getSpaceServer(spaceId, io);
+  if (spaceServer) {
+    const space = await spaceServer.getSpace();
     res.render("space", {
-      title: name,
-      name,
-      createdBy,
+      title: space.name,
+      name: space.name,
       spaceId,
-      // layout: "fullscreen",
     });
   } else {
     res.render("space_not_found");
