@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { createSpace, getPublicSpaces } from "../database/tables/spaces";
+import requireAuth from "../middleware/requireAuth";
+import requireAuthPostRequest from "../middleware/requireAuthPostRequest";
 
 const router = Router();
 
@@ -10,11 +12,11 @@ router.get("/explore", (req, res) => {
   });
 });
 
-router.get("/create", (req, res) => {
+router.get("/create", requireAuth, (req, res) => {
   res.render("space_create", { title: "Create a space" });
 });
 
-router.post("/create", (req, res) => {
+router.post("/create", requireAuthPostRequest, (req, res) => {
   if (!req.session.isLoggedIn) {
     return res.status(401);
   }

@@ -11,6 +11,7 @@ import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
 import { getSpaceServer } from "./spaces/server";
 import * as spaces from "./spaces/routes";
+import requireAuth from "./middleware/requireAuth";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -37,7 +38,11 @@ app.use("/auth", auth.router);
 
 app.use("/spaces", spaces.router);
 
-app.get("/space/:spaceId", async (req, res) => {
+app.use("/new-account", (req, res) => {
+  res.render("new_account");
+});
+
+app.get("/space/:spaceId", requireAuth, async (req, res) => {
   const spaceId = parseInt(req.params.spaceId, 36);
 
   // Start up a space server if not loaded already
@@ -54,7 +59,7 @@ app.get("/space/:spaceId", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", requireAuth, async (req, res) => {
   if (req.session.isLoggedIn) {
     res.render("profile", {
       title: "Profile",
