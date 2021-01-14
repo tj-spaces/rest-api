@@ -16,7 +16,7 @@ declare module "socket.io" {
     emit(
       ev: "chat_message",
       messageContent: string,
-      senderUserId: string
+      senderUserId: number
     ): this;
     emit(ev: "peers", users: Map<string, SpaceParticipant>): this;
     emit(
@@ -31,7 +31,7 @@ declare module "socket.io" {
     on(ev: "disconnect", cb: () => void): this;
     on(
       ev: "join_space",
-      cb: (spaceId: string, displayName?: string) => void
+      cb: (spaceId: number, displayName?: string) => void
     ): this;
     on(ev: "ping", cb: (key: string) => void): this;
   }

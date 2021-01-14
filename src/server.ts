@@ -9,6 +9,7 @@ import * as http from "http";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
 import { createSpace, getPublicSpaces, getSpace } from "./space";
+import { nextId } from "./lib/snowflakeId";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -32,7 +33,7 @@ app.use(getSessionMiddleware());
 app.use("/auth", auth.router);
 
 createSpace(
-  "tourist",
+  nextId(),
   {
     waitingRoom: false,
     loginRequiredToJoin: false,
@@ -52,7 +53,8 @@ app.get("/spaces/create", (req, res) => {
 });
 
 app.get("/space/:spaceId", (req, res) => {
-  const { spaceId } = req.params;
+  const spaceId = parseInt(req.params.spaceId, 36);
+
   const space = getSpace(spaceId);
   if (space) {
     const { name, createdBy } = space;

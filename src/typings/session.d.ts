@@ -17,12 +17,12 @@ declare module "express-session" {
     /**
      * The account ID of the user, if they are logged in
      */
-    accountId?: string;
+    accountId?: number;
 
     /**
      * A temporary ID stored with each user in a given session
      */
-    temporaryId: string;
+    temporaryId: number;
 
     /**
      * Used to enforce IP bans

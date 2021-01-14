@@ -7,7 +7,7 @@ import createUuid from "../../lib/createUuid";
  * For now, all channels are both text AND voice channels
  */
 export interface Channel {
-  id: string;
+  id: number;
   name: string;
   color: string;
 }
@@ -30,7 +30,7 @@ export async function createChannel(name: string, color: string) {
   });
 }
 
-export async function getChannelById(id: string) {
+export async function getChannelById(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<Channel | null>((resolve, reject) => {
     db.query(
@@ -45,7 +45,7 @@ export async function getChannelById(id: string) {
   });
 }
 
-export async function setChannelName(id: string, newName: string) {
+export async function setChannelName(id: number, newName: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
@@ -59,7 +59,7 @@ export async function setChannelName(id: string, newName: string) {
   });
 }
 
-export async function setChannelColor(id: string, newColor: string) {
+export async function setChannelColor(id: number, newColor: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
@@ -73,7 +73,7 @@ export async function setChannelColor(id: string, newColor: string) {
   });
 }
 
-export async function deleteChannel(id: string) {
+export async function deleteChannel(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query("DELETE FROM `channels` WHERE `id` = ?", [id], (err) => {

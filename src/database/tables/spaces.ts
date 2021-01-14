@@ -2,14 +2,14 @@ import { getDatabaseConnection } from "..";
 import createUuid from "../../lib/createUuid";
 
 export default interface Space {
-  id: string;
-  creator_id: string;
+  id: number;
+  creator_id: number;
   name: string;
   created_on: string;
   updated_on: string;
 }
 
-export async function createSpace(creator_id: string, name: string) {
+export async function createSpace(creator_id: number, name: string) {
   const db = await getDatabaseConnection();
   const id = createUuid();
   return new Promise<string>((resolve, reject) => {
@@ -24,7 +24,7 @@ export async function createSpace(creator_id: string, name: string) {
   });
 }
 
-export async function doesSpaceExist(id: string) {
+export async function doesSpaceExist(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {
     db.query("SELECT 1 FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
@@ -35,7 +35,7 @@ export async function doesSpaceExist(id: string) {
   });
 }
 
-export async function getSpaceById(id: string) {
+export async function getSpaceById(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<Space | null>((resolve, reject) => {
     db.query("SELECT * FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
@@ -46,7 +46,7 @@ export async function getSpaceById(id: string) {
   });
 }
 
-export async function getSpacesByUser(creatorId: string) {
+export async function getSpacesByUser(creatorId: number) {
   const db = await getDatabaseConnection();
   return new Promise<Space[]>((resolve, reject) => {
     db.query(
@@ -60,7 +60,7 @@ export async function getSpacesByUser(creatorId: string) {
   });
 }
 
-export async function setSpaceName(id: string, newName: string) {
+export async function setSpaceName(id: number, newName: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
@@ -74,7 +74,7 @@ export async function setSpaceName(id: string, newName: string) {
   });
 }
 
-export async function deleteSpace(id: string) {
+export async function deleteSpace(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query("DELETE FROM `spaces` WHERE `id` = ?", [id], (err) => {

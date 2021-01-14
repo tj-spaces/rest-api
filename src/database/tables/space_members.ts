@@ -3,13 +3,13 @@ import { doesSpaceExist } from "./spaces";
 import { doesUserExistWithId } from "./users";
 
 export interface SpaceMember {
-  space_id: string;
-  user_id: string;
+  space_id: number;
+  user_id: number;
 }
 
 export async function createSpaceMember(
-  spaceId: string,
-  userId: string,
+  spaceId: number,
+  userId: number,
   skipCheck: boolean = false
 ) {
   if (!skipCheck) {
@@ -33,7 +33,7 @@ export async function createSpaceMember(
   });
 }
 
-export async function doesSpaceMemberExist(spaceId: string, userId: string) {
+export async function doesSpaceMemberExist(spaceId: number, userId: number) {
   const db = await getDatabaseConnection();
   return new Promise<SpaceMember[]>((resolve, reject) => {
     db.query(
@@ -52,7 +52,7 @@ export async function doesSpaceMemberExist(spaceId: string, userId: string) {
  * Returns an array of strings, which are SpaceIDs.
  * @param userId The user
  */
-export async function getUserJoinedSpaces(userId: string) {
+export async function getUserJoinedSpaces(userId: number) {
   const db = await getDatabaseConnection();
   return new Promise<string[]>((resolve, reject) => {
     db.query(
@@ -71,7 +71,7 @@ export async function getUserJoinedSpaces(userId: string) {
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getSpaceMembers(spaceId: string) {
+export async function getSpaceMembers(spaceId: number) {
   const db = await getDatabaseConnection();
   return new Promise<string[]>((resolve, reject) => {
     db.query(
@@ -85,7 +85,7 @@ export async function getSpaceMembers(spaceId: string) {
   });
 }
 
-export async function deleteSpaceMembership(spaceId: string, userId: string) {
+export async function deleteSpaceMembership(spaceId: number, userId: number) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(

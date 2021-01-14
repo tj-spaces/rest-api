@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `messages` (
-	`id` VARCHAR(256),
-	`channel_id` VARCHAR(256),
-	`sender_id` VARCHAR(256),
+	`id` BIGINT(8),
+	`channel_id` BIGINT(8),
+	`sender_id` BIGINT(8),
 	`content` VARCHAR(4096),
 	`sent_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `messages` (
 	-- however, it can still be used in a report
 	`was_unsent` BOOL,
 
-	CONSTRAINT `fk_message_channel`
+	CONSTRAINT `fk_message__channel`
 		FOREIGN KEY (`channel_id`)
 			REFERENCES `channels`(`id`)
 				ON DELETE CASCADE,

@@ -31,7 +31,7 @@ export const createIo = (server: http.Server) => {
       socket.broadcast.emit("peer_left");
     });
 
-    socket.on("join_space", async (spaceId: string, displayName?: string) => {
+    socket.on("join_space", async (spaceId: number, displayName?: string) => {
       const space = getSpace(spaceId);
       if (space == null) {
         socket.emit("space_not_found");

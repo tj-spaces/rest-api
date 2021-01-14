@@ -2,6 +2,7 @@ import createUuid from "./lib/createUuid";
 import { CustomSocket } from "./socket";
 import { Server as SocketIOServer } from "socket.io";
 import isDevelopmentMode from "./lib/isDevelopment";
+import { nextId } from "./lib/snowflakeId";
 
 export type DisplayStatus =
   | "agree"
@@ -30,14 +31,14 @@ export interface SpaceParticipant {
    * A single-use ID representing a single person joining a single space.
    * This is assigned as soon as a user joins the space, even if they go to the waiting room.
    */
-  sessionId: string;
+  sessionId: number;
 
   /**
    * An ID assigned to somebody when they join the Space
    * If a user joins as a guest from the browser, this ID stays with them even if they
    * join different spaces. If a user joins as a registered user, this is just their account id.
    */
-  participantId: string;
+  participantId: number;
 
   /**
    * Users can log in as Guests in some spaces. This can be turned off
@@ -162,13 +163,13 @@ export class Space {
   /**
    * Key is equal to `participant.participantId`
    */
-  participants = new Map<string, SpaceParticipant>();
+  participants = new Map<number, SpaceParticipant>();
 
-  connections = new Map<string, SpaceConnection>();
+  connections = new Map<number, SpaceConnection>();
 
   isWaitingRoomEnabled: boolean;
-  participantsInWaitingRoom = new Map<string, SpaceParticipant>();
-  participantsThatWereKicked: string[] = [];
+  participantsInWaitingRoom = new Map<number, SpaceParticipant>();
+  participantsThatWereKicked = new Set<number>();
 
   isLoginRequiredToJoin: boolean;
 
@@ -186,7 +187,7 @@ export class Space {
       isPublic,
     }: SpaceCreationOptions,
     public io: SocketIOServer,
-    public spaceId: string
+    public spaceId: number
   ) {
     this.isWaitingRoomEnabled = waitingRoom;
     this.isLoginRequiredToJoin = loginRequiredToJoin;
@@ -233,7 +234,7 @@ export class Space {
   broadcastParticipants() {}
 
   addParticipantToWaitingRoom(
-    participantId: string,
+    participantId: number,
     participant: SpaceParticipant
   ) {
     const { socket } = this.connections.get(participantId);
@@ -242,14 +243,14 @@ export class Space {
     socket.emit("in_waiting_room");
   }
 
-  deregisterParticipantFromSpace(participantId: string) {
+  deregisterParticipantFromSpace(participantId: number) {
     const { socket } = this.connections.get(participantId);
 
     socket.leave("space_" + this.spaceId);
     socket.removeAllListeners("chat_message");
   }
 
-  addParticipantToSpace(participantId: string, participant: SpaceParticipant) {
+  addParticipantToSpace(participantId: number, participant: SpaceParticipant) {
     const { socket } = this.connections.get(participantId);
 
     this.participants.set(participantId, participant);
@@ -271,7 +272,7 @@ export class Space {
    * Admits a participant from the waiting room
    * @param participantId The participant to admit
    */
-  admitWaitingRoomParticipant(participantId: string) {
+  admitWaitingRoomParticipant(participantId: number) {
     if (this.participantsInWaitingRoom.has(participantId)) {
       const participant = this.participantsInWaitingRoom.get(participantId);
 
@@ -286,7 +287,7 @@ export class Space {
    * Denies a participant from the waiting room
    * @param participantId The participant to deny
    */
-  denyWaitingRoomParticipant(participantId: string) {
+  denyWaitingRoomParticipant(participantId: number) {
     if (this.participantsInWaitingRoom.has(participantId)) {
       this.participantsInWaitingRoom.delete(participantId);
       const { socket } = this.connections.get(participantId);
@@ -299,8 +300,8 @@ export class Space {
     const isLoggedIn = session.isLoggedIn ?? false;
 
     if (!this.isLoginRequiredToJoin || isLoggedIn) {
-      const sessionId = createUuid();
-      const participantId = isLoggedIn ? session.accountId : createUuid();
+      const sessionId = nextId();
+      const participantId = isLoggedIn ? session.accountId : nextId();
       if (participantId == null) {
         throw new Error("participantId is NULL");
       }
@@ -335,10 +336,10 @@ export class Space {
 /**
  * For internal use only. The key is the space id.
  */
-const spaces = new Map<string, Space>();
+const spaces = new Map<number, Space>();
 
 export function createSpace(
-  spaceId: string,
+  spaceId: number,
   options: SpaceCreationOptions,
   io: SocketIOServer
 ) {
@@ -349,7 +350,7 @@ export function getPublicSpaces(): Space[] {
   return Array.from(spaces.values()).filter((space) => space.isPublic);
 }
 
-export function getSpace(spaceId: string): Space | null {
+export function getSpace(spaceId: number): Space | null {
   if (spaces.has(spaceId)) {
     return spaces.get(spaceId);
   } else {

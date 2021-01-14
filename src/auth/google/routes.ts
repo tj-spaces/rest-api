@@ -25,12 +25,12 @@ router.get("/callback", async (req, res) => {
     const user = await getUserFromEmail(googleUser.email);
     let isNewAccount = user == null;
 
-    let id: string;
+    let id: number;
 
     if (isNewAccount) {
-      ({ id } = await registerFromGoogleProfile(googleUser));
+      id = await registerFromGoogleProfile(googleUser);
     } else {
-      ({ id } = user);
+      id = user.id;
     }
 
     req.session.accountId = id;

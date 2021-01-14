@@ -1,5 +1,5 @@
 export interface GoogleProfile {
-  id: string; // A string of digits
+  id: number; // A string of digits
   email: string;
   verified_email: boolean;
   name: string; // This is the full name

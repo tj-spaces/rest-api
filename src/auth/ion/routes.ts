@@ -44,12 +44,12 @@ router.get("/callback", async (req, res) => {
       const user = await getUserFromEmail(ionUser.tj_email);
       let isNewAccount = user == null;
 
-      let id: string;
+      let id: number;
 
       if (isNewAccount) {
-        ({ id } = await registerFromIonProfile(ionUser));
+        id = await registerFromIonProfile(ionUser);
       } else {
-        ({ id } = user);
+        id = user.id;
       }
 
       req.session.accountId = id;

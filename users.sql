@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS `users` (
-	`id` VARCHAR(256) PRIMARY KEY,
+	`id` BIGINT(8) PRIMARY KEY,
 	`email` VARCHAR(256),
-	`verifiedEmail` BOOL,
+	`verified_email` BOOL,
 	`name` VARCHAR(256),
-	`givenName` VARCHAR(256),
-	`familyName` VARCHAR(256),
+	`given_name` VARCHAR(256),
+	`family_name` VARCHAR(256),
 	`picture` VARCHAR(1024),
 	`locale` VARCHAR(32)
 );

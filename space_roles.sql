@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS `space_roles` (
-	`id` VARCHAR(256),
-	`space_id` VARCHAR(256),
+	`id` BIGINT(8),
+	`space_id` BIGINT(8),
 	`name` VARCHAR(256),
 	`color` VARCHAR(32),
 
-	CONSTRAINT `fk_space_role_space`
+	CONSTRAINT `fk_space_role__space`
 		FOREIGN KEY (`space_id`)
 			REFERENCES `spaces`(`id`)
 				ON DELETE CASCADE,

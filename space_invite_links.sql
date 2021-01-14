@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS `space_invite_links` (
-	`id` VARCHAR(256),
+	`id` BIGINT(8),
 	`slug` VARCHAR(256), -- The display text of the channel
-	`space_id` VARCHAR(256),
+	`space_id` BIGINT(8),
 
 	
-	CONSTRAINT `fk_space_invite_link_space`
+	CONSTRAINT `fk_space_invite_link__space`
 		FOREIGN KEY (`space_id`)
 			REFERENCES `spaces`(`id`)
 				ON DELETE CASCADE,

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `spaces` (
-	`id` VARCHAR(256) PRIMARY KEY,
-	`creator_id` VARCHAR(256), -- References `users`
+	`id` BIGINT(8) PRIMARY KEY,
+	`creator_id` BIGINT(8), -- References `users`
 	`name` VARCHAR(256),
 	`created_on` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	`updated_on` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

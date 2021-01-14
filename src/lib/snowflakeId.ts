@@ -6,7 +6,7 @@
 
 import { getTimeSinceSpacesEpoch } from "./spacesEpoch";
 
-class SnowflakeProcess {
+export class SnowflakeProcess {
   private lastTimestamp = -1;
   private generatedThisMillis = 0;
   private generatedThisMillisMask = (1 << 12) - 1;
@@ -42,4 +42,10 @@ class SnowflakeProcess {
   private waitUntil(targetTime: number) {
     while (getTimeSinceSpacesEpoch() < targetTime) {}
   }
+}
+
+const __process = new SnowflakeProcess(0, 0);
+
+export function nextId() {
+  return __process.nextId();
 }

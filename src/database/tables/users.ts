@@ -1,10 +1,10 @@
 import { getDatabaseConnection } from "../index";
-import createUuid from "../../lib/createUuid";
 import { GoogleProfile } from "../../auth/google/profile";
 import { IonProfile } from "../../auth/ion/profile";
+import { nextId } from "../../lib/snowflakeId";
 
 export interface User {
-  id: string; // A string of digits
+  id: number; // A string of digits
   email: string;
   verified_email: boolean;
   name: string; // This is the full name
@@ -29,7 +29,7 @@ export async function doesUserExistWithEmail(email: string) {
   });
 }
 
-export async function doesUserExistWithId(id: string) {
+export async function doesUserExistWithId(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {
     db.query("SELECT 1 FROM `users` WHERE `id` = ?", [id], (err, results) => {
@@ -73,7 +73,7 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
 }
 
 const userFromIdCache: {
-  [id: string]: { updateTime: number; user: User };
+  [id: number]: { updateTime: number; user: User };
 } = {};
 
 const userFromEmailCache: {
@@ -82,7 +82,7 @@ const userFromEmailCache: {
 
 const MAX_CACHE_AGE = 3600;
 
-export async function getUserFromId(id: string): Promise<User | null> {
+export async function getUserFromId(id: number): Promise<User | null> {
   const db = await getDatabaseConnection();
 
   if (id in userFromIdCache) {
@@ -109,12 +109,15 @@ export async function getUserFromId(id: string): Promise<User | null> {
   });
 }
 
+/**
+ * Returns the ID of the newly-created user
+ */
 export async function registerFromIonProfile(profile: IonProfile) {
   const db = await getDatabaseConnection();
 
-  let id = createUuid();
+  let id = nextId();
 
-  return new Promise<{ id: string }>((resolve, reject) => {
+  return new Promise<number>((resolve, reject) => {
     db.query(
       "INSERT INTO `users` (`id`, `email`, `verifiedEmail`, `name`, `givenName`, `familyName`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
       [
@@ -131,7 +134,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
         if (error) {
           reject(error);
         } else {
-          resolve({ id });
+          resolve(id);
         }
       }
     );
@@ -141,9 +144,9 @@ export async function registerFromIonProfile(profile: IonProfile) {
 export async function registerFromGoogleProfile(profile: GoogleProfile) {
   const db = await getDatabaseConnection();
 
-  let id = createUuid();
+  let id = nextId();
 
-  return new Promise<{ id: string }>((resolve, reject) => {
+  return new Promise<number>((resolve, reject) => {
     db.query(
       "INSERT INTO `users` (`id`, `email`, `verified_email`, `name`, `given_name`, `family_name`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
       [
@@ -160,7 +163,7 @@ export async function registerFromGoogleProfile(profile: GoogleProfile) {
         if (error) {
           reject(error);
         } else {
-          resolve({ id });
+          resolve(id);
         }
       }
     );

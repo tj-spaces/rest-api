@@ -2,9 +2,9 @@ import { getDatabaseConnection } from "..";
 import createUuid from "../../lib/createUuid";
 
 export interface Message {
-  id: string;
-  channel_id: string;
-  sender_id: string; // references users
+  id: number;
+  channel_id: number;
+  sender_id: number; // references users
   content: string;
   sent_at: string;
   edited_at: string;
@@ -12,8 +12,8 @@ export interface Message {
 }
 
 export async function createMessage(
-  channelId: string,
-  senderId: string,
+  channelId: number,
+  senderId: number,
   content: string
 ) {
   const db = await getDatabaseConnection();
@@ -35,7 +35,7 @@ export async function createMessage(
  * Marks a message as unsent, so the content is not send with the message when it goes to the client
  * @param id The message to unsend
  */
-export async function unsendMessage(id: string) {
+export async function unsendMessage(id: number) {
   const db = await getDatabaseConnection();
 
   return new Promise<void>((resolve, reject) => {
@@ -50,7 +50,7 @@ export async function unsendMessage(id: string) {
   });
 }
 
-export async function getMessage(id: string) {
+export async function getMessage(id: number) {
   const db = await getDatabaseConnection();
 
   return new Promise<Message | null>((resolve, reject) => {
@@ -66,7 +66,7 @@ export async function getMessage(id: string) {
   });
 }
 
-export async function getMessageHideUnsent(id: string) {
+export async function getMessageHideUnsent(id: number) {
   const message = await getMessage(id);
 
   if (message.was_unsent) {
@@ -76,7 +76,7 @@ export async function getMessageHideUnsent(id: string) {
   return message;
 }
 
-export async function getMessagesInChannel(channelId: string) {
+export async function getMessagesInChannel(channelId: number) {
   const db = await getDatabaseConnection();
 
   return new Promise<Message[]>((resolve, reject) => {
