@@ -24,6 +24,42 @@ export async function createSpace(creator_id: string, name: string) {
   });
 }
 
+export async function doesSpaceExist(id: string) {
+  const db = await getDatabaseConnection();
+  return new Promise<boolean>((resolve, reject) => {
+    db.query("SELECT 1 FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
+      if (err) reject(err);
+
+      resolve(results.length > 0);
+    });
+  });
+}
+
+export async function getSpaceById(id: string) {
+  const db = await getDatabaseConnection();
+  return new Promise<Space | null>((resolve, reject) => {
+    db.query("SELECT * FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
+      if (err) reject(err);
+      if (results.length === 0) resolve(null);
+      else resolve(results[0]);
+    });
+  });
+}
+
+export async function getSpacesByUser(creatorId: string) {
+  const db = await getDatabaseConnection();
+  return new Promise<Space[]>((resolve, reject) => {
+    db.query(
+      "SELECT * FROM `spaces` WHERE `creator_id` = ?",
+      [creatorId],
+      (err, results) => {
+        if (err) reject(err);
+        resolve(results);
+      }
+    );
+  });
+}
+
 export async function setSpaceName(id: string, newName: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {

@@ -14,6 +14,32 @@ export interface User {
   locale: "en"; // The user's preferred language
 }
 
+export async function doesUserExistWithEmail(email: string) {
+  const db = await getDatabaseConnection();
+  return new Promise<boolean>((resolve, reject) => {
+    db.query(
+      "SELECT 1 FROM `users` WHERE `email` = ?",
+      [email],
+      (err, results) => {
+        if (err) reject(err);
+
+        resolve(results.length > 0);
+      }
+    );
+  });
+}
+
+export async function doesUserExistWithId(id: string) {
+  const db = await getDatabaseConnection();
+  return new Promise<boolean>((resolve, reject) => {
+    db.query("SELECT 1 FROM `users` WHERE `id` = ?", [id], (err, results) => {
+      if (err) reject(err);
+
+      resolve(results.length > 0);
+    });
+  });
+}
+
 export async function getUserFromEmail(email: string): Promise<User | null> {
   const db = await getDatabaseConnection();
 
