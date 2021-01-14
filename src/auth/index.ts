@@ -1,11 +1,29 @@
-import * as google from "./google/routes";
-import * as ion from "./ion/routes";
 import { Router } from "express";
+import createSessionFromCodeAndProvider from "./createSessionFromCodeAndProvider";
 
 const router = Router();
 
-router.use("/google", google.router);
-router.use("/ion", ion.router);
+router.post("/create_session", (req, res) => {
+  const { provider, code } = req.body;
+
+  if (
+    typeof provider !== "string" ||
+    (provider !== "ion" && provider !== "google")
+  ) {
+    res.status(400);
+    res.json({ error: "invalid_provider" });
+    return;
+  }
+
+  if (typeof code !== "string") {
+    res.status(400);
+    res.json({ error: "invalid_code" });
+  }
+
+  res.json({
+    session_id: createSessionFromCodeAndProvider(code, provider),
+  });
+});
 
 router.get("/logout", (req, res) => {
   delete req.session.accountId;
