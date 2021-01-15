@@ -49,3 +49,5 @@ router.get("/info", requireApiAuth, async (req, res) => {
     res.json({ status: "success", group: await getGroup(groupId) });
   }
 });
+
+export { router };
