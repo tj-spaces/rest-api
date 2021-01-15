@@ -1,11 +1,7 @@
-import * as session from "express-session";
+// import * as session from "express-session";
 import { RequestHandler } from "express";
 import { nextId } from "./lib/snowflakeId";
-
-export interface SessionData {
-  isLoggedIn: boolean;
-  accountId: number;
-}
+import { SessionData } from "./typings/session";
 
 export interface Session {
   expiresAt: number;
@@ -51,16 +47,23 @@ export function createSession(accountId: number): number {
 /**
  * The cached sessionMiddleware, to be shared across the server
  */
-let sessionMiddleware: RequestHandler | null = null;
+let sessionMiddleware: RequestHandler = (req, res, next) => {
+  const auth = req.headers.authorization;
+  if (typeof auth === "string" && auth.startsWith("Bearer ")) {
+    const token = parseInt(auth.slice(7));
+    req.session = getSessionDataById(token);
+    console.log("Sessions:", MEMORY_STORED_SESSIONS);
+    next();
+  } else {
+    next();
+  }
+};
 
 export function getSessionMiddleware(): RequestHandler {
-  if (sessionMiddleware == null) {
-    return (sessionMiddleware = session({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-    }));
-  } else {
-    return sessionMiddleware;
-  }
+  return sessionMiddleware;
+  // sessionMiddleware = session({
+  //   secret: process.env.SESSION_SECRET,
+  //   resave: false,
+  //   saveUninitialized: false,
+  // });
 }

@@ -1,18 +1,11 @@
-import * as cors from "cors";
 import * as http from "http";
-import { Server as SocketIOServer, Socket } from "socket.io";
+import { Server as SocketIOServer } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
 import { getSessionDataById, getSessionMiddleware } from "./session";
-import { ParamsDictionary, Request } from "express-serve-static-core";
-import { ParsedQs } from "qs";
 import { getUserFromId } from "./database/tables/users";
 import { createMessage } from "./database/tables/messages";
 import isDevelopmentMode from "./lib/isDevelopment";
 import createUuid from "./lib/createUuid";
-
-type ResBody = any;
-type ReqBody = any;
-type ReqQuery = ParsedQs;
 
 export class Connection {
   /**
@@ -32,7 +25,7 @@ export class Connection {
 
   latency: number = 0;
 
-  constructor(public socket: CustomSocket) {
+  constructor(public socket: SocketIO.Socket) {
     socket.on("ping", (key) => {
       if (key === this.pingKey) {
         this.lastPingReceiveTime = Date.now();
@@ -54,10 +47,6 @@ export class Connection {
     this.lastPingSendTime = Date.now();
     this.socket.emit("ping", this.pingKey, this.latency);
   }
-}
-
-export interface CustomSocket extends Socket {
-  request: Request<ParamsDictionary, ResBody, ReqBody, ReqQuery>;
 }
 
 export function emitToChannel() {}
@@ -84,7 +73,7 @@ export const createIo = (server: http.Server) => {
     getSessionMiddleware()(socket.request, {}, next);
   });
 
-  io.on("connection", (socket: CustomSocket) => {
+  io.on("connection", (socket: SocketIO.Socket) => {
     const sessionId = socket.handshake.query["sessionId"];
     const session = getSessionDataById(sessionId);
 

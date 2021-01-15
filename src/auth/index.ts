@@ -18,16 +18,17 @@ router.post("/create_session", async (req, res) => {
   if (typeof code !== "string") {
     res.status(400);
     res.json({ error: "invalid_code" });
+    return;
   }
 
   try {
     const session_id = await createSessionFromCodeAndProvider(code, provider);
-
     res.status(200);
     res.json({
-      session_id: session_id,
+      session_id,
     });
   } catch (e) {
+    console.error("Error creating session:", e.message);
     res.json({
       error: "invalid_code",
     });

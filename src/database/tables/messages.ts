@@ -8,7 +8,7 @@ export interface Message {
   content: string;
   sent_at: string;
   edited_at: string;
-  was_unsent: string;
+  was_unsent: boolean;
 }
 
 export async function createMessage(

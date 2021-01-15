@@ -1,7 +1,8 @@
 import { RequestHandler } from "express";
 
 const requireApiAuth: RequestHandler = (req, res, next) => {
-  if (!req.session.isLoggedIn) {
+  console.log(req.session);
+  if (req.session == null || !req.session.isLoggedIn) {
     res.status(401);
     res.json({ error: "unauthorized" });
   } else {

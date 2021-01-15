@@ -1,96 +1,11 @@
-import createUuid from "../lib/createUuid";
-import { Connection, CustomSocket } from "../socket";
+import { Connection } from "../socket";
 import { Server as SocketIOServer } from "socket.io";
-import isDevelopmentMode from "../lib/isDevelopment";
 import { nextId } from "../lib/snowflakeId";
 import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
-
-export type DisplayStatus =
-  | "agree"
-  | "disagree"
-  | "faster"
-  | "slower"
-  | "raised-hand"
-  | "none";
-
-/**
- * Where the user is in the space.
- * This is a 2D location, because as of now, the spaces are "2.5-dimensional" worlds
- */
-export interface SpaceLocation {
-  x: number;
-  y: number;
-}
-
-/**
- * An Participant in a space is anybody in the space that is either a guest or a user with an account.
- * This is not the same as an Account, which holds necessary information such as a user's email, username,
- * birthday, and etc.
- */
-export interface SpaceParticipant {
-  /**
-   * A single-use ID representing a single person joining a single space.
-   * This is assigned as soon as a user joins the space, even if they go to the waiting room.
-   */
-  sessionId: number;
-
-  /**
-   * An ID assigned to somebody when they join the Space
-   * If a user joins as a guest from the browser, this ID stays with them even if they
-   * join different spaces. If a user joins as a registered user, this is just their account id.
-   */
-  participantId: number;
-
-  /**
-   * Nickname to display for the user
-   */
-  displayName: string;
-
-  /**
-   * Color of the user's avatar
-   */
-  displayColor: string;
-
-  /**
-   * Anything from 'agree' to 'disagree' to 'go faster'
-   */
-  displayStatus: DisplayStatus;
-
-  /**
-   * Whether the user has been granted permission to present
-   */
-  canPresent: boolean;
-
-  /**
-   * Whether the user is allowed to turn on their microphone
-   */
-  canActivateMicrophone: boolean;
-
-  /**
-   * Whether the user is allowed to turn on their camera
-   */
-  canActivateCamera: boolean;
-
-  /**
-   * Whether the user is an administrator
-   */
-  isAdministrator: boolean;
-
-  /**
-   * Whether the user is a moderator
-   */
-  isModerator: boolean;
-
-  /**
-   * Whether the user is currently presenting
-   */
-  isPresenting: boolean;
-
-  /**
-   * Info about this user's location
-   */
-  position: SpacePositionInfo;
-}
+import { SpaceParticipant } from "./SpaceParticipant";
+import { SpacePositionInfo } from "./SpacePositionInfo";
+import { DisplayStatus } from "./DisplayStatus";
+import { getSessionDataById } from "../session";
 
 export interface SpaceCreationOptions {
   waitingRoom?: boolean;
@@ -98,19 +13,6 @@ export interface SpaceCreationOptions {
   name: string;
   createdBy: string;
   isPublic: boolean;
-}
-
-export interface SpacePositionInfo {
-  /**
-   * Where the user is in the space.
-   * This is a 2D location, because as of now, the spaces are "2.5-dimensional" worlds
-   */
-  location?: SpaceLocation;
-
-  /**
-   * The 2D rotation of the user
-   */
-  rotation?: number;
 }
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
@@ -122,6 +24,10 @@ export class SpaceServer {
   connections = new Map<number, Connection>();
   cachedSpace: Space;
   lastCacheLoadTime: -1;
+  recentMessages: {
+    senderId: number;
+    content: string;
+  }[] = [];
 
   constructor(public io: SocketIOServer, public spaceId: number) {
     this.spaceId = spaceId;
@@ -169,11 +75,23 @@ export class SpaceServer {
     return true;
   }
 
+  getRoomName() {
+    return "space_" + this.spaceId;
+  }
+
+  addMessage(senderId: number, content: string) {
+    this.recentMessages.push({ senderId, content });
+    this.io.in(this.getRoomName()).emit("chat_message", senderId, content);
+  }
+
   deregisterParticipantFromSpace(participantId: number) {
     const { socket } = this.connections.get(participantId);
 
-    socket.leave("space_" + this.spaceId);
+    this.participants.delete(participantId);
     socket.removeAllListeners("chat_message");
+    socket.broadcast.emit("peer_left", participantId);
+
+    socket.leave(this.getRoomName());
   }
 
   addParticipantToSpace(participantId: number, participant: SpaceParticipant) {
@@ -181,24 +99,22 @@ export class SpaceServer {
 
     this.participants.set(participantId, participant);
 
-    socket.on("chat_message", (messageContent, channelId) => {
-      this.io
-        .in("space_" + this.spaceId)
-        .emit("chat_message", messageContent, participantId);
-    });
-
-    socket.join("space_" + this.spaceId);
+    socket.join(this.getRoomName());
     socket.emit("space_join_complete");
     socket.emit("peer_info", participant);
     socket.emit("peers", this.participants);
     socket.broadcast.emit("peer_joined", participant);
+
+    socket.on("chat_message", (messageContent) => {
+      this.addMessage(participantId, messageContent);
+    });
   }
 
-  tryJoin(socket: CustomSocket, displayName?: string) {
-    const session = socket.request.session;
-    const isLoggedIn = session.isLoggedIn ?? false;
+  tryJoin(socket: SocketIO.Socket, displayName?: string) {
+    const sessionId = socket.handshake.query["sessionId"];
+    const session = getSessionDataById(sessionId);
 
-    if (isLoggedIn) {
+    if (session?.isLoggedIn) {
       const sessionId = nextId();
       const participantId = session.accountId;
 
