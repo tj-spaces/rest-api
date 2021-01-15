@@ -7,7 +7,7 @@ export interface SpaceMember {
   user_id: number;
 }
 
-export async function createSpaceMember(
+export async function joinSpace(
   spaceId: number,
   userId: number,
   skipCheck: boolean = false
@@ -53,11 +53,14 @@ export async function isUserInSpace(spaceId: number, userId: number) {
  * Returns an array of strings, which are SpaceIDs.
  * @param userId The user
  */
-export async function getUserJoinedSpaces(userId: number) {
+export async function getSpacesWithMember(userId: number) {
   const db = await getDatabaseConnection();
   return new Promise<string[]>((resolve, reject) => {
     db.query(
-      "SELECT space_id FROM `space_members` WHERE `user_id` = ?",
+      "SELECT `spaces.*`\
+       FROM `space_members`\
+       INNER JOIN ON `spaces.id` = `space_members.space_id`\
+       WHERE `space_members.user_id` = ?",
       [userId],
       (err, result) => {
         if (err) reject(err);

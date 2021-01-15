@@ -103,17 +103,17 @@ export async function getSpaceThatHasChannelWithId(
   });
 }
 
-export async function getChannelsInSpace(spaceId: number): Promise<number[]> {
+export async function getChannelsInSpace(spaceId: number): Promise<Channel[]> {
   const db = await getDatabaseConnection();
 
-  return await new Promise<number[]>((resolve, reject) => {
+  return await new Promise<Channel[]>((resolve, reject) => {
     db.query(
-      "SELECT `id` FROM `channels` WHERE `type` = 'space' AND `space_id` = ?",
+      "SELECT * FROM `channels` WHERE `type` = 'space' AND `space_id` = ?",
       [spaceId],
-      (err, result) => {
+      (err, results) => {
         if (err) reject(err);
 
-        resolve(result.map((row: Channel) => row.id));
+        resolve(results);
       }
     );
   });

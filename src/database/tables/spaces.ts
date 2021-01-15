@@ -1,6 +1,8 @@
 import { getDatabaseConnection } from "..";
 import { nextId } from "../../lib/snowflakeId";
 
+export type SpaceVisibility = "public" | "unlisted";
+
 export interface Space {
   id: number;
   creator_id: number;
@@ -9,8 +11,6 @@ export interface Space {
   updated_at: string;
   visibility: SpaceVisibility;
 }
-
-export type SpaceVisibility = "public" | "unlisted";
 
 export async function createSpace(
   creatorId: number,
@@ -53,7 +53,7 @@ export async function getSpaceById(id: number) {
   });
 }
 
-export async function getSpacesByUser(creatorId: number) {
+export async function getSpacesCreatedByUser(creatorId: number) {
   const db = await getDatabaseConnection();
   return new Promise<Space[]>((resolve, reject) => {
     db.query(

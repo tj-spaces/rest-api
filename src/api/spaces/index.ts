@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { getChannelsInSpace } from "../../database/tables/channels";
 import { createSpace, getPublicSpaces } from "../../database/tables/spaces";
-import { isUserInSpace } from "../../database/tables/space_members";
+import {
+  isUserInSpace,
+  getSpacesWithMember,
+} from "../../database/tables/space_members";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
 const router = Router();
@@ -67,8 +70,14 @@ router.get("/channels", requireApiAuth, async (req, res) => {
   }
 });
 
-router.get("/public", (req, res) => {
-  res.json(getPublicSpaces());
+router.get("/list", requireApiAuth, async (req, res) => {
+  const { accountId } = req.session;
+  const spaces = await getSpacesWithMember(accountId);
+  res.json({ status: "success", spaces });
+});
+
+router.get("/public", async (req, res) => {
+  res.json(await getPublicSpaces());
 });
 
 export { router };
