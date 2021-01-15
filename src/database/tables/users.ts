@@ -29,6 +29,22 @@ export async function doesUserExistWithEmail(email: string) {
   });
 }
 
+/**
+ * Function to ensure that all users exist
+ * @param userIds The set of user ids to check
+ */
+export async function doAllUsersExistWithIds(
+  userIds: Set<number>
+): Promise<boolean> {
+  const results = await Promise.all(
+    Array.from(userIds).map((userId) => {
+      return doesUserExistWithId(userId);
+    })
+  );
+
+  return results.every((exists) => exists);
+}
+
 export async function doesUserExistWithId(id: number) {
   const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {

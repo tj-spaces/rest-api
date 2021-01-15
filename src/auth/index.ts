@@ -28,7 +28,6 @@ router.post("/create_session", async (req, res) => {
       session_id: session_id,
     });
   } catch (e) {
-    console.error("ERROR DURING CODE REQUEST");
     res.json({
       error: "invalid_code",
     });

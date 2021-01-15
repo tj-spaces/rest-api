@@ -1,5 +1,5 @@
 import createUuid from "../lib/createUuid";
-import { CustomSocket } from "../socket";
+import { Connection, CustomSocket } from "../socket";
 import { Server as SocketIOServer } from "socket.io";
 import isDevelopmentMode from "../lib/isDevelopment";
 import { nextId } from "../lib/snowflakeId";
@@ -100,48 +100,6 @@ export interface SpaceCreationOptions {
   isPublic: boolean;
 }
 
-export class SpaceConnection {
-  /**
-   * UNIX time for when the last ping was sent
-   */
-  lastPingSendTime?: number;
-
-  /**
-   * UNIX time for when the last ping was received
-   */
-  lastPingReceiveTime?: number;
-
-  /**
-   * Key for the last ping
-   */
-  pingKey: string;
-
-  latency: number = 0;
-
-  constructor(public socket: CustomSocket) {
-    socket.on("ping", (key) => {
-      if (key === this.pingKey) {
-        this.lastPingReceiveTime = Date.now();
-        this.latency = this.lastPingReceiveTime - this.lastPingSendTime;
-
-        // Send a max of one ping every 500 ms
-        let timeToWaitUntilNextPing = Math.max(0, 500 - this.latency);
-        setTimeout(() => this.sendPing(), timeToWaitUntilNextPing);
-      }
-    });
-
-    if (!isDevelopmentMode()) {
-      this.sendPing();
-    }
-  }
-
-  sendPing() {
-    this.pingKey = createUuid();
-    this.lastPingSendTime = Date.now();
-    this.socket.emit("ping", this.pingKey, this.latency);
-  }
-}
-
 export interface SpacePositionInfo {
   /**
    * Where the user is in the space.
@@ -161,7 +119,7 @@ export class SpaceServer {
    * Key is equal to `participant.participantId`
    */
   participants = new Map<number, SpaceParticipant>();
-  connections = new Map<number, SpaceConnection>();
+  connections = new Map<number, Connection>();
   cachedSpace: Space;
   lastCacheLoadTime: -1;
 
@@ -223,7 +181,7 @@ export class SpaceServer {
 
     this.participants.set(participantId, participant);
 
-    socket.on("chat_message", (messageContent) => {
+    socket.on("chat_message", (messageContent, channelId) => {
       this.io
         .in("space_" + this.spaceId)
         .emit("chat_message", messageContent, participantId);
@@ -259,7 +217,7 @@ export class SpaceServer {
         position: this.getJoinPosition(),
       };
 
-      this.connections.set(participantId, new SpaceConnection(socket));
+      this.connections.set(participantId, new Connection(socket));
       this.addParticipantToSpace(participantId, participant);
     }
   }

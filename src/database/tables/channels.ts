@@ -1,5 +1,7 @@
 import { getDatabaseConnection } from "..";
 import createUuid from "../../lib/createUuid";
+import { nextId } from "../../lib/snowflakeId";
+import { doesSpaceExist } from "./spaces";
 
 /**
  * This just stores the id of the channel, the name, and the channel color.
@@ -15,16 +17,46 @@ export interface Channel {
 /**
  * @return Channel id
  */
-export async function createChannel(name: string, color: string) {
+async function createChannel(name: string, color: string): Promise<number> {
   const db = await getDatabaseConnection();
-  const id = createUuid();
-  return new Promise<string>((resolve, reject) => {
+  const id = nextId();
+  return new Promise<number>((resolve, reject) => {
     db.query(
       "INSERT INTO `channels` (`id`, `name`, `color`) VALUES (?, ?, ?)",
       [id, name, color],
       (err) => {
-        if (err) reject(err);
-        else resolve(id);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(id);
+        }
+      }
+    );
+  });
+}
+
+export async function createChannelInSpace(
+  spaceId: number,
+  name: string,
+  color: string
+): Promise<number> {
+  const channelId = await createChannel(name, color);
+  const db = await getDatabaseConnection();
+
+  if (!doesSpaceExist(spaceId)) {
+    throw new Error("Space does not exist: " + spaceId);
+  }
+
+  return new Promise<number>((resolve, reject) => {
+    db.query(
+      "INSERT INTO `space_channels` (`space_id`, `channel_id`) VALUES (?, ?)",
+      [spaceId, channelId],
+      (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(channelId);
+        }
       }
     );
   });

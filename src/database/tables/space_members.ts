@@ -33,15 +33,16 @@ export async function createSpaceMember(
   });
 }
 
-export async function doesSpaceMemberExist(spaceId: number, userId: number) {
+export async function isUserInSpace(spaceId: number, userId: number) {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceMember[]>((resolve, reject) => {
+
+  return new Promise<boolean>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `space_members` WHERE `space_id` = ? AND `user_id` = ?",
+      "SELECT 1 FROM `space_members` WHERE `space_id` = ? AND `user_id` = ?",
       [spaceId, userId],
-      (err, result) => {
+      (err, results) => {
         if (err) reject(err);
-        resolve(result);
+        resolve(results.length > 0);
       }
     );
   });

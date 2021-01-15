@@ -3,14 +3,8 @@
 
 CREATE TABLE IF NOT EXISTS `groups` (
 	`id` BIGINT(8),
-	`channel_id` BIGINT(8),
 	`name` VARCHAR(256),
 	`picture` VARCHAR(1024),
-
-	CONSTRAINT `fk_group__channel`
-		FOREIGN KEY (`channel_id`)
-			REFERENCES `channels`(`id`)
-				ON DELETE CASCADE,
 
 	PRIMARY KEY (`id`)
 );
