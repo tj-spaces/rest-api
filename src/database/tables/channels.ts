@@ -1,5 +1,4 @@
 import { getDatabaseConnection } from "..";
-import createUuid from "../../lib/createUuid";
 import { nextId } from "../../lib/snowflakeId";
 import { doesSpaceExist } from "./spaces";
 
@@ -8,11 +7,25 @@ import { doesSpaceExist } from "./spaces";
  * Maybe we'll add the ability to lock channels in the future.
  * For now, all channels are both text AND voice channels
  */
-export interface Channel {
+export type Channel = {
   id: number;
   name: string;
   color: string;
-}
+} & (
+  | {
+      type: "direct";
+      user_a_id: number;
+      user_b_id: number;
+    }
+  | {
+      type: "group";
+      group_id: number;
+    }
+  | {
+      type: "space";
+      space_id: number;
+    }
+);
 
 /**
  * @return Channel id
@@ -57,6 +70,50 @@ export async function createChannelInSpace(
         } else {
           resolve(channelId);
         }
+      }
+    );
+  });
+}
+
+/**
+ *
+ * @param id The channel
+ * @return The ID of the space that has the channel
+ */
+export async function getSpaceThatHasChannelWithId(
+  id: number
+): Promise<number> {
+  const db = await getDatabaseConnection();
+  return new Promise<number>((resolve, reject) => {
+    db.query(
+      "SELECT `space_id` FROM `channels` WHERE `type` = 'space' AND `id` = ?",
+      [id],
+      (err, results: Channel[]) => {
+        if (err) reject(err);
+        else {
+          if (results.length === 0) {
+            resolve(null);
+          } else {
+            // @ts-ignore
+            resolve(results[0].space_id);
+          }
+        }
+      }
+    );
+  });
+}
+
+export async function getChannelsInSpace(spaceId: number): Promise<number[]> {
+  const db = await getDatabaseConnection();
+
+  return await new Promise<number[]>((resolve, reject) => {
+    db.query(
+      "SELECT `id` FROM `channels` WHERE `type` = 'space' AND `space_id` = ?",
+      [spaceId],
+      (err, result) => {
+        if (err) reject(err);
+
+        resolve(result.map((row: Channel) => row.id));
       }
     );
   });

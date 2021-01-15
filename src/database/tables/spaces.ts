@@ -1,5 +1,5 @@
 import { getDatabaseConnection } from "..";
-import createUuid from "../../lib/createUuid";
+import { nextId } from "../../lib/snowflakeId";
 
 export interface Space {
   id: number;
@@ -18,8 +18,8 @@ export async function createSpace(
   visibility: SpaceVisibility
 ) {
   const db = await getDatabaseConnection();
-  const id = createUuid();
-  return new Promise<string>((resolve, reject) => {
+  const id = nextId();
+  return new Promise<number>((resolve, reject) => {
     db.query(
       "INSERT INTO `spaces` (`id`, `creator_id`, `name`, `visibility`) VALUES (?, ?, ?, ?, ?)",
       [id, creatorId, name, visibility],

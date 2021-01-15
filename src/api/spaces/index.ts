@@ -1,5 +1,7 @@
 import { Router } from "express";
+import { getChannelsInSpace } from "../../database/tables/channels";
 import { createSpace, getPublicSpaces } from "../../database/tables/spaces";
+import { isUserInSpace } from "../../database/tables/space_members";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
 const router = Router();
@@ -29,7 +31,40 @@ router.post("/create", requireApiAuth, (req, res) => {
     return;
   }
 
-  createSpace(accountId, name, visibility);
+  createSpace(accountId, name, visibility)
+    .then((id) => {
+      res.status(200);
+      res.json({ status: "success", id });
+    })
+    .catch((err) => {
+      console.error("Error when creating a space: ", err);
+      res.status(500);
+      res.json({ error: "internal_server_error" });
+    });
+});
+
+/**
+ * Gets a list of channels in this space.
+ */
+router.get("/channels", requireApiAuth, async (req, res) => {
+  const { accountId } = req.session;
+
+  if (typeof req.query.space_id !== "string") {
+    res.status(400);
+    res.json({ error: "invalid_group_id" });
+    return;
+  }
+
+  const spaceId = parseInt(req.query.space_id);
+  const inSpace = await isUserInSpace(spaceId, accountId);
+
+  if (!inSpace) {
+    res.status(401);
+    res.json({ error: "not_in_space" });
+  } else {
+    // If we are in the group, then the group must exist
+    res.json({ status: "success", channels: getChannelsInSpace(spaceId) });
+  }
 });
 
 router.get("/public", (req, res) => {
