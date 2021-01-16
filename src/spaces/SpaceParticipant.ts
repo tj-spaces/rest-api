@@ -1,3 +1,6 @@
+import { DisplayStatus } from "./DisplayStatus";
+import { SpacePositionInfo } from "./SpacePositionInfo";
+
 /**
  * An Participant in a space is anybody in the space that is either a guest or a user with an account.
  * This is not the same as an Account, which holds necessary information such as a user's email, username,

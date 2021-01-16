@@ -7,14 +7,6 @@ import { SpacePositionInfo } from "./SpacePositionInfo";
 import { DisplayStatus } from "./DisplayStatus";
 import { getSessionDataById } from "../session";
 
-export interface SpaceCreationOptions {
-  waitingRoom?: boolean;
-  loginRequiredToJoin?: boolean;
-  name: string;
-  createdBy: string;
-  isPublic: boolean;
-}
-
 const SPACE_CACHE_EXPIRE_TIME = 60;
 export class SpaceServer {
   /**
@@ -29,9 +21,7 @@ export class SpaceServer {
     content: string;
   }[] = [];
 
-  constructor(public io: SocketIOServer, public spaceId: number) {
-    this.spaceId = spaceId;
-  }
+  constructor(public io: SocketIOServer, public spaceId: number) {}
 
   async getSpace(): Promise<Space> {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_EXPIRE_TIME) {

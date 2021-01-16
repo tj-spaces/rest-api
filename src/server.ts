@@ -14,10 +14,16 @@ import { createIo } from "./socket";
 import { getSpaceServer } from "./spaces/server";
 import * as spaces from "./spaces/routes";
 import requireAuth from "./middleware/requireAuth";
+// import { ExpressPeerServer } from "peer";
 
 const app = express();
 const httpServer = http.createServer(app);
 const io = createIo(httpServer);
+// const peerServer = ExpressPeerServer(httpServer, {
+//   path: "/peerjs",
+// });
+
+// app.use("/peerjs", peerServer);
 
 app.set("view engine", "hbs");
 
