@@ -1,10 +1,10 @@
 users
-spaces
-space_roles
-space_members
-space_member_roles
-space_avatars
+clusters
+cluster_roles
+cluster_members
+cluster_member_roles
+cluster_avatars
 groups
-channels
+spaces
 pings
 group_members

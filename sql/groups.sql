@@ -1,5 +1,5 @@
--- These are different from Spaces: it's a single channel that only a certain group of people is a part of
--- This is why channels aren't directly associated with spaces: so the table can be used for groups as well
+-- These are different from Clusters: it's a single space that only a certain group of people is a part of
+-- This is why spaces aren't directly associated with clusters: so the table can be used for groups as well
 
 DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (

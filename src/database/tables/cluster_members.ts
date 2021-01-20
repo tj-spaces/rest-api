@@ -1,20 +1,20 @@
 import { getDatabaseConnection } from "..";
-import { doesSpaceExist } from "./spaces";
+import { doesClusterExist } from "./clusters";
 import { doesUserExistWithId } from "./users";
 
-export interface SpaceMember {
-  space_id: string;
+export interface ClusterMember {
+  cluster_id: string;
   user_id: string;
 }
 
-export async function joinSpace(
-  spaceId: string,
+export async function joinCluster(
+  clusterId: string,
   userId: string,
   skipCheck: boolean = false
 ) {
   if (!skipCheck) {
-    if (!(await doesSpaceExist(spaceId))) {
-      throw new Error("Space does not exist with id: " + spaceId);
+    if (!(await doesClusterExist(clusterId))) {
+      throw new Error("Cluster does not exist with id: " + clusterId);
     } else if (!(await doesUserExistWithId(userId))) {
       throw new Error("User does not exist with id: " + userId);
     }
@@ -23,8 +23,8 @@ export async function joinSpace(
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "INSERT INTO `space_members` (`space_id`, `user_id`) VALUES (?, ?)",
-      [spaceId, userId],
+      "INSERT INTO `cluster_members` (`cluster_id`, `user_id`) VALUES (?, ?)",
+      [clusterId, userId],
       (err) => {
         if (err) reject(err);
         resolve();
@@ -33,13 +33,13 @@ export async function joinSpace(
   });
 }
 
-export async function isUserInSpace(spaceId: string, userId: string) {
+export async function didUserJoinCluster(clusterId: string, userId: string) {
   const db = await getDatabaseConnection();
 
   return new Promise<boolean>((resolve, reject) => {
     db.query(
-      "SELECT 1 FROM `space_members` WHERE `space_id` = ? AND `user_id` = ?",
-      [spaceId, userId],
+      "SELECT 1 FROM `cluster_members` WHERE `cluster_id` = ? AND `user_id` = ?",
+      [clusterId, userId],
       (err, results) => {
         if (err) reject(err);
         resolve(results.length > 0);
@@ -49,52 +49,52 @@ export async function isUserInSpace(spaceId: string, userId: string) {
 }
 
 /**
- * Get a list of which spaces a user has joined.
- * Returns an array of strings, which are SpaceIDs.
+ * Get a list of which clusters a user has joined.
+ * Returns an array of strings, which are ClusterIds.
  * @param userId The user
  */
-export async function getSpacesWithMember(userId: string) {
+export async function getClustersWithUser(userId: string) {
   const db = await getDatabaseConnection();
   return new Promise<string[]>((resolve, reject) => {
     db.query(
-      "SELECT `spaces.*`\
-       FROM `space_members`\
-       INNER JOIN ON `spaces.id` = `space_members.space_id`\
-       WHERE `space_members.user_id` = ?",
+      "SELECT `clusters.*`\
+       FROM `cluster_members`\
+       INNER JOIN ON `clusters.id` = `cluster_members.cluster_id`\
+       WHERE `cluster_members.user_id` = ?",
       [userId],
       (err, result) => {
         if (err) reject(err);
-        resolve(result.map((row: SpaceMember) => row.space_id));
+        resolve(result.map((row: ClusterMember) => row.cluster_id));
       }
     );
   });
 }
 
 /**
- * Get a list of the members of a space.
+ * Get a list of the members of a cluster.
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getSpaceMembers(spaceId: string) {
+export async function getUsersInCluster(clusterId: string) {
   const db = await getDatabaseConnection();
   return new Promise<string[]>((resolve, reject) => {
     db.query(
-      "SELECT user_id FROM `space_members` WHERE `space_id` = ?",
-      [spaceId],
+      "SELECT user_id FROM `cluster_members` WHERE `cluster_id` = ?",
+      [clusterId],
       (err, result) => {
         if (err) reject(err);
-        resolve(result.map((row: SpaceMember) => row.user_id));
+        resolve(result.map((row: ClusterMember) => row.user_id));
       }
     );
   });
 }
 
-export async function deleteSpaceMembership(spaceId: string, userId: string) {
+export async function deleteUserFromCluster(clusterId: string, userId: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "DELETE FROM `space_members` WHERE `space_id` = ? AND `user_id` = ?",
-      [spaceId, userId],
+      "DELETE FROM `cluster_members` WHERE `cluster_id` = ? AND `user_id` = ?",
+      [clusterId, userId],
       (err) => {
         if (err) reject(err);
         resolve();

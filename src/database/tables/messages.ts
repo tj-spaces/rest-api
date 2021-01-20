@@ -3,7 +3,7 @@ import createUuid from "../../lib/createUuid";
 
 export interface Message {
   id: string;
-  channel_id: string;
+  space_id: string;
   sender_id: string; // references users
   content: string;
   sent_at: string;
@@ -12,7 +12,7 @@ export interface Message {
 }
 
 export async function createMessage(
-  channelId: string,
+  spaceId: string,
   senderId: string,
   content: string
 ) {
@@ -21,8 +21,8 @@ export async function createMessage(
 
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `messages` (id, channel_id, sender_id, content) VALUES (?, ?, ?, ?)",
-      [id, channelId, senderId, content],
+      "INSERT INTO `messages` (id, space_id, sender_id, content) VALUES (?, ?, ?, ?)",
+      [id, spaceId, senderId, content],
       (err) => {
         if (err) reject(err);
         resolve(id);
@@ -76,13 +76,13 @@ export async function getMessageHideUnsent(id: string) {
   return message;
 }
 
-export async function getMessagesInChannel(channelId: string) {
+export async function getMessagesInSpace(spaceId: string) {
   const db = await getDatabaseConnection();
 
   return new Promise<Message[]>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `messages` WHERE `channel_id` = ?",
-      [channelId],
+      "SELECT * FROM `messages` WHERE `space_id` = ?",
+      [spaceId],
       (err, results) => {
         if (err) reject(err);
         resolve(results);

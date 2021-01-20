@@ -2,15 +2,24 @@
 DROP TABLE IF EXISTS `spaces`;
 CREATE TABLE `spaces` (
 	`id` VARCHAR(36),
-	`creator_id` VARCHAR(36), -- References `users`
 	`name` VARCHAR(256),
-	`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	`visibility` ENUM('public', 'unlisted'),
+	`color` VARCHAR(32),
+	`type` ENUM('group', 'cluster'),
 
-	CONSTRAINT `fk_space__creator_id`
-		FOREIGN KEY (`creator_id`)
-			REFERENCES `users`(`id`)
+	-- Can be NULL
+	`cluster_id` VARCHAR(36),
+
+	-- Can be NULL
+	`group_id` VARCHAR(36),
+
+	CONSTRAINT `fk_space__cluster`
+		FOREIGN KEY (`cluster_id`)
+			REFERENCES `clusters`(`id`)
+				ON DELETE CASCADE,
+
+	CONSTRAINT `fk_space__group`
+		FOREIGN KEY (`group_id`)
+			REFERENCES `groups`(`id`)
 				ON DELETE CASCADE,
 
 	PRIMARY KEY (`id`)

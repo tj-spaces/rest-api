@@ -1,83 +1,21 @@
 import { Router } from "express";
-import { getChannelsInSpace } from "../../database/tables/channels";
-import { createSpace, getPublicSpaces } from "../../database/tables/spaces";
-import {
-  isUserInSpace,
-  getSpacesWithMember,
-} from "../../database/tables/space_members";
-import requireApiAuth from "../../middleware/requireApiAuth";
+import { doesSpaceExist } from "../../database/tables/spaces";
 
-const router = Router();
+/* ROUTES TO MAKE:
 
-/**
- * Requires params:
- *  - `name`: string, max 256 chars
- *  - `visibility`: either 'public' or 'unlisted'
- * Requires authentication
- */
-router.post("/create", requireApiAuth, (req, res) => {
-  const { visibility, name } = req.query;
-  const { accountId } = req.session;
+ - GET /api/spaces/:spaceId
 
-  if (typeof name !== "string" || name.length > 255) {
-    res.status(400);
-    res.json({
-      error: "invalid_name",
-      message: "Name must be string and <256 chars",
-    });
-    return;
-  }
+ Note: You cannot directly create a space. It is either created automatically in a group,
+ or it can be added to a Cluster with POST /api/clusters/:clusterId/create_space.
 
-  if (visibility !== "public" && visibility !== "unlisted") {
-    res.status(400);
-    res.json({ error: "invalid_visibility" });
-    return;
-  }
+*/
 
-  createSpace(accountId, name, visibility)
-    .then((id) => {
-      res.status(200);
-      res.json({ status: "success", id });
-    })
-    .catch((err) => {
-      console.error("Error when creating a space: ", err);
-      res.status(500);
-      res.json({ error: "internal_server_error" });
-    });
-});
+export const router = Router();
 
-/**
- * Gets a list of channels in this space.
- */
-router.get("/channels", requireApiAuth, async (req, res) => {
-  const { accountId } = req.session;
+router.get("/:spaceId", async (req, res) => {
+  const { spaceId } = req.params;
+  const spaceExists = await doesSpaceExist(spaceId);
 
-  if (typeof req.query.space_id !== "string") {
-    res.status(400);
-    res.json({ error: "invalid_group_id" });
-    return;
-  }
-
-  const spaceId = req.query.space_id;
-  const inSpace = await isUserInSpace(spaceId, accountId);
-
-  if (!inSpace) {
-    res.status(401);
-    res.json({ error: "not_in_space" });
-  } else {
-    // If we are in the group, then the group must exist
-    res.json({ status: "success", channels: getChannelsInSpace(spaceId) });
+  if (!spaceExists) {
   }
 });
-
-router.get("/list", requireApiAuth, async (req, res) => {
-  const { accountId } = req.session;
-  const spaces = await getSpacesWithMember(accountId);
-  res.json({ status: "success", spaces });
-});
-
-router.get("/public", async (req, res) => {
-  res.json(await getPublicSpaces());
-});
-
-export { router };

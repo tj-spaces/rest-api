@@ -1,21 +1,21 @@
 import { getDatabaseConnection } from "..";
 import createUuid from "../../lib/createUuid";
-import { doesSpaceExist } from "./spaces";
+import { doesClusterExist } from "./clusters";
 
-export interface SpaceInviteLink {
+export interface ClusterInviteLink {
   id: string;
   slug: string;
-  space_id: string;
+  cluster_id: string;
 }
 
-export async function createSpaceInviteLink(
+export async function createClusterInviteLink(
   slug: string,
-  spaceId: string,
+  clusterId: string,
   skipCheck: boolean = false
 ) {
   if (!skipCheck) {
-    if (!(await doesSpaceExist(spaceId))) {
-      throw new Error("Space does not exist with id: " + spaceId);
+    if (!(await doesClusterExist(clusterId))) {
+      throw new Error("Cluster does not exist with id: " + clusterId);
     }
   }
 
@@ -24,8 +24,8 @@ export async function createSpaceInviteLink(
 
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "INSERT INTO `space_invite_links` (`id`, `slug`, `space_id`) VALUES (?, ?, ?)",
-      [id, slug, spaceId],
+      "INSERT INTO `cluster_invite_links` (`id`, `slug`, `cluster_id`) VALUES (?, ?, ?)",
+      [id, slug, clusterId],
       (err) => {
         if (err) reject(err);
         resolve();
@@ -40,9 +40,9 @@ export async function createSpaceInviteLink(
  */
 export async function getInviteLinkWithSlug(slug: string) {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceInviteLink | null>((resolve, reject) => {
+  return new Promise<ClusterInviteLink | null>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `space_invite_links` WHERE `slug` = ?",
+      "SELECT * FROM `cluster_invite_links` WHERE `slug` = ?",
       [slug],
       (err, results) => {
         if (err) reject(err);
@@ -54,20 +54,19 @@ export async function getInviteLinkWithSlug(slug: string) {
 }
 
 /**
- * Get a list of the members of a space.
+ * Get a list of the members of a cluster.
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getInviteLinksWithSpaceId(spaceId: string) {
+export async function getInviteLinksWithClusterId(clusterId: string) {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceInviteLink>((resolve, reject) => {
+  return new Promise<ClusterInviteLink>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `space_invite_links` WHERE `space_id` = ?",
-      [spaceId],
+      "SELECT * FROM `cluster_invite_links` WHERE `cluster_id` = ?",
+      [clusterId],
       (err, results) => {
         if (err) reject(err);
-
-        resolve(results);
+        else resolve(results);
       }
     );
   });
@@ -77,11 +76,11 @@ export async function deleteInviteLinkWithId(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "DELETE FROM `space_invite_links` WHERE `id` = ?",
+      "DELETE FROM `cluster_invite_links` WHERE `id` = ?",
       [id],
       (err, result) => {
         if (err) reject(err);
-        resolve(result);
+        else resolve(result);
       }
     );
   });

@@ -1,6 +1,10 @@
 import { Connection } from "../socket";
 import { Server as SocketIOServer } from "socket.io";
-import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
+import {
+  doesClusterExist,
+  getClusterById,
+  Cluster,
+} from "../database/tables/clusters";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 import { DisplayStatus } from "./DisplayStatus";
@@ -14,7 +18,7 @@ export class SpaceServer {
    */
   participants = new Map<string, SpaceParticipant>();
   connections = new Map<string, Connection>();
-  cachedSpace: Space;
+  cachedSpace: Cluster;
   lastCacheLoadTime: -1;
   recentMessages: {
     senderId: string;
@@ -23,11 +27,11 @@ export class SpaceServer {
 
   constructor(public io: SocketIOServer, public spaceId: string) {}
 
-  async getSpace(): Promise<Space> {
+  async getSpace(): Promise<Cluster> {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_EXPIRE_TIME) {
       return this.cachedSpace;
     } else {
-      return await getSpaceById(this.spaceId);
+      return await getClusterById(this.spaceId);
     }
   }
 
@@ -149,7 +153,7 @@ export async function getSpaceServer(
   spaceId: string,
   io: SocketIOServer
 ): Promise<SpaceServer | null> {
-  const spaceExists = await doesSpaceExist(spaceId);
+  const spaceExists = await doesClusterExist(spaceId);
   if (spaceExists) {
     if (spaceServers.has(spaceId)) {
       return spaceServers.get(spaceId);

@@ -2,7 +2,7 @@
 DROP TABLE IF EXISTS `messages`;
 CREATE TABLE `messages` (
 	`id` VARCHAR(36),
-	`channel_id` VARCHAR(36),
+	`space_id` VARCHAR(36),
 	`sender_id` VARCHAR(36),
 	`content` VARCHAR(4096),
 	`sent_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -14,9 +14,9 @@ CREATE TABLE `messages` (
 	-- however, it can still be used in a report
 	`was_unsent` BOOL,
 
-	CONSTRAINT `fk_message__channel`
-		FOREIGN KEY (`channel_id`)
-			REFERENCES `channels`(`id`)
+	CONSTRAINT `fk_message__space`
+		FOREIGN KEY (`space_id`)
+			REFERENCES `spaces`(`id`)
 				ON DELETE CASCADE,
 
 	-- no foreign key for user, we want the messages to stay even if they delete their account

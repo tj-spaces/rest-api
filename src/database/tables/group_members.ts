@@ -13,7 +13,7 @@ export async function addGroupMember(
 ): Promise<void> {
   const groupExists = await doesGroupExistWithId(groupId);
   if (!groupExists) {
-    throw new Error("Space does not exist with id: " + groupId);
+    throw new Error("Cluster does not exist with id: " + groupId);
   }
 
   const userExists = await doesUserExistWithId(userId);
@@ -52,8 +52,8 @@ export async function isUserInGroup(
 }
 
 /**
- * Get a list of which spaces a user has joined.
- * Returns an array of strings, which are SpaceIDs.
+ * Get a list of which clusters a user has joined.
+ * Returns an array of strings, which are ClusterIDs.
  * @param userId The user
  */
 export async function getUserJoinedGroups(userId: string) {
@@ -71,7 +71,7 @@ export async function getUserJoinedGroups(userId: string) {
 }
 
 /**
- * Get a list of the members of a space.
+ * Get a list of the members of a cluster.
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */

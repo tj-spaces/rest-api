@@ -8,45 +8,33 @@ import requireApiAuth from "../../middleware/requireApiAuth";
 
 const router = Router();
 
-router.get("/members", requireApiAuth, async (req, res) => {
+router.get("/:groupId", requireApiAuth, async (req, res) => {
   const { accountId } = req.session;
+  const { groupId } = req.params;
 
-  if (typeof req.query.group_id !== "string") {
-    res.status(400);
-    res.json({ error: "invalid_group_id" });
-    return;
-  }
-
-  const groupId = req.query.group_id;
   const inGroup = await isUserInGroup(groupId, accountId);
 
   if (!inGroup) {
     res.status(401);
-    res.json({ error: "not_in_group" });
-  } else {
-    // If we are in the group, then the group must exist
-    res.json({ status: "success", members: await getGroupMembers(groupId) });
-  }
-});
-
-router.get("/info", requireApiAuth, async (req, res) => {
-  const { accountId } = req.session;
-
-  if (typeof req.query.group_id !== "string") {
-    res.status(400);
-    res.json({ error: "invalid_group_id" });
-    return;
-  }
-
-  const groupId = req.query.group_id;
-  const inGroup = await isUserInGroup(groupId, accountId);
-
-  if (!inGroup) {
-    res.status(401);
-    res.json({ error: "not_in_group" });
+    res.json({ status: "error", error: "not_in_group" });
   } else {
     // If we are in the group, then the group must exist
     res.json({ status: "success", group: await getGroup(groupId) });
+  }
+});
+
+router.get("/:groupId/members", requireApiAuth, async (req, res) => {
+  const { accountId } = req.session;
+  const { groupId } = req.params;
+
+  const inGroup = await isUserInGroup(groupId, accountId);
+
+  if (!inGroup) {
+    res.status(401);
+    res.json({ status: "error", error: "not_in_group" });
+  } else {
+    // If we are in the group, then the group must exist
+    res.json({ status: "success", members: await getGroupMembers(groupId) });
   }
 });
 
