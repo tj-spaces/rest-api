@@ -89,6 +89,14 @@ app.get("/", (req, res) => {
   }
 });
 
+import { getDatabaseConnection } from "./database/index";
+(async () => {
+  const db = await getDatabaseConnection();
+  db.query("SELECT * FROM `users`", [], (err, results) => {
+    console.log(typeof results[2].id);
+  });
+})();
+
 const port = process.env.PORT ?? 5000;
 
 httpServer.listen(port, () => console.log("Listening on port", port));

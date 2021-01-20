@@ -52,7 +52,6 @@ let sessionMiddleware: RequestHandler = (req, res, next) => {
   if (typeof auth === "string" && auth.startsWith("Bearer ")) {
     const token = parseInt(auth.slice(7));
     req.session = getSessionDataById(token);
-    console.log("Sessions:", MEMORY_STORED_SESSIONS);
     next();
   } else {
     next();
