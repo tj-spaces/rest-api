@@ -1,12 +1,4 @@
-// import { ParamsDictionary, Request } from "express-serve-static-core";
-// import { ParsedQs } from "qs";
-// type ResBody = any;
-// type ReqBody = any;
-// type ReqQuery = ParsedQs;
-
 import { SpaceParticipant } from "../spaces/SpaceParticipant";
-
-// import * as SIO from "socket.io";
 
 declare module "socket.io" {
   interface Socket {
@@ -26,16 +18,7 @@ declare module "socket.io" {
 
     on(ev: "chat_message", cb: (messageContent: string) => void): this;
     on(ev: "disconnect", cb: () => void): this;
-    on(
-      ev: "join_space",
-      cb: (spaceId: string, displayName?: string) => void
-    ): this;
+    on(ev: "join_space", cb: (spaceId: string) => void): this;
     on(ev: "ping", cb: (key: string) => void): this;
   }
 }
-
-// declare namespace SocketIO {
-//   interface Socket {
-//     request: Request<ParamsDictionary, ResBody, ReqBody, ReqQuery>;
-//   }
-// }

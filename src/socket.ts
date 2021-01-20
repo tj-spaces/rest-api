@@ -1,5 +1,5 @@
 import * as http from "http";
-import { Server as SocketIOServer } from "socket.io";
+import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
 import { getSessionDataById, getSessionMiddleware } from "./session";
 import { getUserFromId } from "./database/tables/users";
@@ -25,7 +25,7 @@ export class Connection {
 
   latency: number = 0;
 
-  constructor(public socket: SocketIO.Socket) {
+  constructor(public socket: Socket) {
     socket.on("ping", (key) => {
       if (key === this.pingKey) {
         this.lastPingReceiveTime = Date.now();
@@ -73,7 +73,7 @@ export const createIo = (server: http.Server) => {
     getSessionMiddleware()(socket.request, {}, next);
   });
 
-  io.on("connection", (socket: SocketIO.Socket) => {
+  io.on("connection", (socket: Socket) => {
     const sessionId = socket.handshake.query["sessionId"];
     const session = getSessionDataById(sessionId);
 
@@ -88,21 +88,13 @@ export const createIo = (server: http.Server) => {
       socket.broadcast.emit("peer_left");
     });
 
-    socket.on("chat_message", (messageContent, channelId) => {
-      createMessage(channelId, accountId, messageContent);
-    });
-
-    socket.on("join_space", async (spaceId: string, displayName?: string) => {
+    socket.on("join_space", async (spaceId: string) => {
       const spaceServer = await getSpaceServer(spaceId, io);
       if (spaceServer == null) {
         socket.emit("space_not_found");
       } else {
-        if (socket.request.session.isLoggedIn) {
-          let user = await getUserFromId(socket.request.session.accountId);
-          displayName = user.name;
-        }
-
-        spaceServer.tryJoin(socket, displayName);
+        let user = await getUserFromId(session.accountId);
+        spaceServer.tryJoin(socket, user.name);
       }
     });
   });
