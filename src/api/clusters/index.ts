@@ -3,14 +3,18 @@ import { getSpacesInCluster } from "../../database/tables/spaces";
 import {
   createCluster,
   doesClusterExist,
-  getPublicClusters,
+  getClusterById,
 } from "../../database/tables/clusters";
-import {
-  didUserJoinCluster,
-  getClustersWithUser,
-} from "../../database/tables/cluster_members";
+import { didUserJoinCluster } from "../../database/tables/cluster_members";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
+/**
+ * Main router for Clusters API.
+ * Contains routes:
+ *  - POST /: Create a cluster. Returns { cluster_id }
+ *  - GET /:clusterId: Get metadata about a Cluster.
+ *  - GET /:clusterId/spaces: Get a list of spaces in a Cluster.
+ */
 export const router = Router();
 
 /**
@@ -40,6 +44,19 @@ router.post("/", requireApiAuth, async (req, res) => {
   res.json({ status: "success", cluster_id: newClusterId });
 });
 
+router.get("/:clusterId", async (req, res) => {
+  const { clusterId } = req.params;
+
+  const cluster = await getClusterById(clusterId);
+
+  if (cluster == null) {
+    res.status(404);
+    res.json({ status: "error", error: "cluster_not_found" });
+  } else {
+    res.json({ status: "success", cluster });
+  }
+});
+
 /**
  * Gets a list of spaces in this cluster.
  * Requires params:
@@ -47,13 +64,7 @@ router.post("/", requireApiAuth, async (req, res) => {
  */
 router.get("/:clusterId/spaces", requireApiAuth, async (req, res) => {
   const { accountId } = req.session;
-  const clusterId = req.query.cluster_id;
-
-  if (typeof clusterId !== "string") {
-    res.status(404);
-    res.json({ status: "error", error: "cluster_not_found" });
-    return;
-  }
+  const { clusterId } = req.params;
 
   const clusterExists = await doesClusterExist(clusterId);
   if (!clusterExists) {

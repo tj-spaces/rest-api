@@ -6,7 +6,7 @@ import {
 } from "../../database/tables/group_members";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
-const router = Router();
+export const router = Router();
 
 router.get("/:groupId", requireApiAuth, async (req, res) => {
   const { accountId } = req.session;
@@ -37,5 +37,3 @@ router.get("/:groupId/members", requireApiAuth, async (req, res) => {
     res.json({ status: "success", members: await getGroupMembers(groupId) });
   }
 });
-
-export { router };
