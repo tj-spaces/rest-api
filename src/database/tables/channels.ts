@@ -1,4 +1,5 @@
 import { getDatabaseConnection } from "..";
+import createUuid from "../../lib/createUuid";
 import { nextId } from "../../lib/snowflakeId";
 import { doesSpaceExist } from "./spaces";
 
@@ -8,32 +9,32 @@ import { doesSpaceExist } from "./spaces";
  * For now, all channels are both text AND voice channels
  */
 export type Channel = {
-  id: number;
+  id: string;
   name: string;
   color: string;
 } & (
   | {
       type: "direct";
-      user_a_id: number;
-      user_b_id: number;
+      user_a_id: string;
+      user_b_id: string;
     }
   | {
       type: "group";
-      group_id: number;
+      group_id: string;
     }
   | {
       type: "space";
-      space_id: number;
+      space_id: string;
     }
 );
 
 /**
  * @return Channel id
  */
-async function createChannel(name: string, color: string): Promise<number> {
+async function createChannel(name: string, color: string): Promise<string> {
   const db = await getDatabaseConnection();
-  const id = nextId();
-  return new Promise<number>((resolve, reject) => {
+  const id = createUuid();
+  return new Promise<string>((resolve, reject) => {
     db.query(
       "INSERT INTO `channels` (`id`, `name`, `color`) VALUES (?, ?, ?)",
       [id, name, color],
@@ -49,10 +50,10 @@ async function createChannel(name: string, color: string): Promise<number> {
 }
 
 export async function createChannelInSpace(
-  spaceId: number,
+  spaceId: string,
   name: string,
   color: string
-): Promise<number> {
+): Promise<string> {
   const channelId = await createChannel(name, color);
   const db = await getDatabaseConnection();
 
@@ -60,7 +61,7 @@ export async function createChannelInSpace(
     throw new Error("Space does not exist: " + spaceId);
   }
 
-  return new Promise<number>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     db.query(
       "INSERT INTO `space_channels` (`space_id`, `channel_id`) VALUES (?, ?)",
       [spaceId, channelId],
@@ -81,10 +82,10 @@ export async function createChannelInSpace(
  * @return The ID of the space that has the channel
  */
 export async function getSpaceThatHasChannelWithId(
-  id: number
-): Promise<number> {
+  id: string
+): Promise<string> {
   const db = await getDatabaseConnection();
-  return new Promise<number>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     db.query(
       "SELECT `space_id` FROM `channels` WHERE `type` = 'space' AND `id` = ?",
       [id],
@@ -103,7 +104,7 @@ export async function getSpaceThatHasChannelWithId(
   });
 }
 
-export async function getChannelsInSpace(spaceId: number): Promise<Channel[]> {
+export async function getChannelsInSpace(spaceId: string): Promise<Channel[]> {
   const db = await getDatabaseConnection();
 
   return await new Promise<Channel[]>((resolve, reject) => {
@@ -119,7 +120,7 @@ export async function getChannelsInSpace(spaceId: number): Promise<Channel[]> {
   });
 }
 
-export async function getChannelById(id: number) {
+export async function getChannelById(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<Channel | null>((resolve, reject) => {
     db.query(
@@ -134,7 +135,7 @@ export async function getChannelById(id: number) {
   });
 }
 
-export async function setChannelName(id: number, newName: string) {
+export async function setChannelName(id: string, newName: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
@@ -148,7 +149,7 @@ export async function setChannelName(id: number, newName: string) {
   });
 }
 
-export async function setChannelColor(id: number, newColor: string) {
+export async function setChannelColor(id: string, newColor: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
@@ -162,7 +163,7 @@ export async function setChannelColor(id: number, newColor: string) {
   });
 }
 
-export async function deleteChannel(id: number) {
+export async function deleteChannel(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query("DELETE FROM `channels` WHERE `id` = ?", [id], (err) => {

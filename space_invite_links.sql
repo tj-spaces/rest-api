@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `space_invite_links` (
-	`id` BIGINT(8),
+	`id` VARCHAR(36),
 	`slug` VARCHAR(256), -- The display text of the channel
-	`space_id` BIGINT(8),
+	`space_id` VARCHAR(36),
 
 	
 	CONSTRAINT `fk_space_invite_link__space`

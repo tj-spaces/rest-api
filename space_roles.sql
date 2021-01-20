@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `space_roles` (
-	`id` BIGINT(8),
-	`space_id` BIGINT(8),
+	`id` VARCHAR(36),
+	`space_id` VARCHAR(36),
 	`name` VARCHAR(256),
 	`color` VARCHAR(32),
 

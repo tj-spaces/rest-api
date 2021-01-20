@@ -2,7 +2,7 @@ import axios from "axios";
 import { client } from "./client";
 
 export interface GoogleProfile {
-  id: number; // A string of digits
+  id: string; // A string of digits
   email: string;
   verified_email: boolean;
   name: string; // This is the full name

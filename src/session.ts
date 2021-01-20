@@ -1,6 +1,5 @@
-// import * as session from "express-session";
 import { RequestHandler } from "express";
-import { nextId } from "./lib/snowflakeId";
+import createUuid from "./lib/createUuid";
 import { SessionData } from "./typings/session";
 
 export interface Session {
@@ -8,9 +7,9 @@ export interface Session {
   data: SessionData;
 }
 
-const MEMORY_STORED_SESSIONS = new Map<number, Session>();
+const MEMORY_STORED_SESSIONS = new Map<string, Session>();
 
-export function getSessionDataById(sessionId: number): SessionData | null {
+export function getSessionDataById(sessionId: string): SessionData | null {
   if (MEMORY_STORED_SESSIONS.has(sessionId)) {
     const session = MEMORY_STORED_SESSIONS.get(sessionId);
     if (Date.now() < session.expiresAt) {
@@ -30,8 +29,8 @@ export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24;
  * Registers a session in the memory cache
  * @return Session id
  */
-export function createSession(accountId: number): number {
-  const id = nextId();
+export function createSession(accountId: string): string {
+  const id = createUuid();
 
   MEMORY_STORED_SESSIONS.set(id, {
     expiresAt: Date.now() + SESSION_LIFETIME_MS,
@@ -50,7 +49,7 @@ export function createSession(accountId: number): number {
 let sessionMiddleware: RequestHandler = (req, res, next) => {
   const auth = req.headers.authorization;
   if (typeof auth === "string" && auth.startsWith("Bearer ")) {
-    const token = parseInt(auth.slice(7));
+    const token = auth.slice(7);
     req.session = getSessionDataById(token);
     next();
   } else {

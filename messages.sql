@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `messages` (
-	`id` BIGINT(8),
-	`channel_id` BIGINT(8),
-	`sender_id` BIGINT(8),
+	`id` VARCHAR(36),
+	`channel_id` VARCHAR(36),
+	`sender_id` VARCHAR(36),
 	`content` VARCHAR(4096),
 	`sent_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

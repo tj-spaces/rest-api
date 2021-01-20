@@ -3,7 +3,7 @@
  */
 export interface SessionData {
   isLoggedIn: boolean;
-  accountId: number;
+  accountId: string;
 }
 
 declare global {

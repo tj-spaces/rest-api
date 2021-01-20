@@ -58,7 +58,7 @@ router.get("/channels", requireApiAuth, async (req, res) => {
     return;
   }
 
-  const spaceId = parseInt(req.query.space_id);
+  const spaceId = req.query.space_id;
   const inSpace = await isUserInSpace(spaceId, accountId);
 
   if (!inSpace) {

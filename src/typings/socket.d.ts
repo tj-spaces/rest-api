@@ -11,12 +11,12 @@ import { SpaceParticipant } from "../spaces/SpaceParticipant";
 declare module "socket.io" {
   interface Socket {
     emit(ev: "peer_joined", peer: SpaceParticipant): this;
-    emit(ev: "peer_left", peerId: number): this;
+    emit(ev: "peer_left", peerId: string): this;
     emit(ev: "peer_info", peer: SpaceParticipant): this;
     emit(ev: "ping", key: string, lastPingLatency: number): this;
     emit(
       ev: "chat_message",
-      senderUserId: number,
+      senderUserId: string,
       messageContent: string
     ): this;
     emit(ev: "peers", users: Map<string, SpaceParticipant>): this;
@@ -28,7 +28,7 @@ declare module "socket.io" {
     on(ev: "disconnect", cb: () => void): this;
     on(
       ev: "join_space",
-      cb: (spaceId: number, displayName?: string) => void
+      cb: (spaceId: string, displayName?: string) => void
     ): this;
     on(ev: "ping", cb: (key: string) => void): this;
   }

@@ -3,13 +3,13 @@ import { doesGroupExistWithId } from "./groups";
 import { doesUserExistWithId } from "./users";
 
 export interface GroupMember {
-  group_id: number;
-  user_id: number;
+  group_id: string;
+  user_id: string;
 }
 
 export async function addGroupMember(
-  groupId: number,
-  userId: number
+  groupId: string,
+  userId: string
 ): Promise<void> {
   const groupExists = await doesGroupExistWithId(groupId);
   if (!groupExists) {
@@ -35,8 +35,8 @@ export async function addGroupMember(
 }
 
 export async function isUserInGroup(
-  groupId: number,
-  userId: number
+  groupId: string,
+  userId: string
 ): Promise<boolean> {
   const db = await getDatabaseConnection();
   return await new Promise<boolean>((resolve, reject) => {
@@ -56,7 +56,7 @@ export async function isUserInGroup(
  * Returns an array of strings, which are SpaceIDs.
  * @param userId The user
  */
-export async function getUserJoinedGroups(userId: number) {
+export async function getUserJoinedGroups(userId: string) {
   const db = await getDatabaseConnection();
   return await new Promise<string[]>((resolve, reject) => {
     db.query(
@@ -75,7 +75,7 @@ export async function getUserJoinedGroups(userId: number) {
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getGroupMembers(groupId: number) {
+export async function getGroupMembers(groupId: string) {
   const db = await getDatabaseConnection();
   return await new Promise<string[]>((resolve, reject) => {
     db.query(
@@ -89,7 +89,7 @@ export async function getGroupMembers(groupId: number) {
   });
 }
 
-export async function removeFromGroup(groupId: number, userId: number) {
+export async function removeFromGroup(groupId: string, userId: string) {
   const db = await getDatabaseConnection();
   return await new Promise<void>((resolve, reject) => {
     db.query(

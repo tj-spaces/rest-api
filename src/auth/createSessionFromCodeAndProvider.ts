@@ -10,7 +10,7 @@ export default async function createSessionFromCodeAndProvider(
   code: string,
   provider: "google" | "ion"
 ) {
-  let accountId: number;
+  let accountId: string;
   if (provider === "google") {
     accountId = await getAccountIdFromGoogleCode(code);
   } else if (provider === "ion") {

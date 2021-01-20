@@ -16,7 +16,7 @@ export class SnowflakeProcess {
 
   constructor(private workerId: number, private processId: number) {}
 
-  nextId() {
+  createUuid() {
     let timestamp = getTimeSinceSpacesEpoch();
 
     if (this.lastTimestamp == timestamp) {
@@ -47,5 +47,5 @@ export class SnowflakeProcess {
 const __process = new SnowflakeProcess(0, 0);
 
 export function nextId() {
-  return __process.nextId();
+  return __process.createUuid();
 }

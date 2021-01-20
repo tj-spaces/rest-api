@@ -2,7 +2,7 @@ import axios from "axios";
 import { authorizationCode, redirectUrl } from "./client";
 
 export interface IonProfile {
-  id: number;
+  id: string;
   ion_username: string; // eg "2022mfatemi"
   sex: string; // Capitalized
   title: null;
@@ -40,7 +40,7 @@ export interface IonProfile {
   websites: string[];
 
   counselor?: {
-    id: number;
+    id: string;
 
     // Url to API endpoint for profile info
     url: string;

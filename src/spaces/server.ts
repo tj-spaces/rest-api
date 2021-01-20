@@ -1,27 +1,27 @@
 import { Connection } from "../socket";
 import { Server as SocketIOServer } from "socket.io";
-import { nextId } from "../lib/snowflakeId";
 import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 import { DisplayStatus } from "./DisplayStatus";
 import { getSessionDataById } from "../session";
+import createUuid from "../lib/createUuid";
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
 export class SpaceServer {
   /**
    * Key is equal to `participant.participantId`
    */
-  participants = new Map<number, SpaceParticipant>();
-  connections = new Map<number, Connection>();
+  participants = new Map<string, SpaceParticipant>();
+  connections = new Map<string, Connection>();
   cachedSpace: Space;
   lastCacheLoadTime: -1;
   recentMessages: {
-    senderId: number;
+    senderId: string;
     content: string;
   }[] = [];
 
-  constructor(public io: SocketIOServer, public spaceId: number) {}
+  constructor(public io: SocketIOServer, public spaceId: string) {}
 
   async getSpace(): Promise<Space> {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_EXPIRE_TIME) {
@@ -69,12 +69,12 @@ export class SpaceServer {
     return "space_" + this.spaceId;
   }
 
-  addMessage(senderId: number, content: string) {
+  addMessage(senderId: string, content: string) {
     this.recentMessages.push({ senderId, content });
     this.io.in(this.getRoomName()).emit("chat_message", senderId, content);
   }
 
-  deregisterParticipantFromSpace(participantId: number) {
+  deregisterParticipantFromSpace(participantId: string) {
     const { socket } = this.connections.get(participantId);
 
     this.participants.delete(participantId);
@@ -84,7 +84,7 @@ export class SpaceServer {
     socket.leave(this.getRoomName());
   }
 
-  addParticipantToSpace(participantId: number, participant: SpaceParticipant) {
+  addParticipantToSpace(participantId: string, participant: SpaceParticipant) {
     const { socket } = this.connections.get(participantId);
 
     this.participants.set(participantId, participant);
@@ -101,11 +101,10 @@ export class SpaceServer {
   }
 
   tryJoin(socket: SocketIO.Socket, displayName?: string) {
-    const sessionId = socket.handshake.query["sessionId"];
-    const session = getSessionDataById(sessionId);
+    const session = getSessionDataById(socket.handshake.query["sessionId"]);
 
     if (session?.isLoggedIn) {
-      const sessionId = nextId();
+      const sessionId = createUuid();
       const participantId = session.accountId;
 
       const participant: SpaceParticipant = {
@@ -132,9 +131,9 @@ export class SpaceServer {
 /**
  * For internal use only. The key is the space id.
  */
-const spaceServers = new Map<number, SpaceServer>();
+const spaceServers = new Map<string, SpaceServer>();
 
-export function createSpaceServer(spaceId: number, io: SocketIOServer) {
+export function createSpaceServer(spaceId: string, io: SocketIOServer) {
   const spaceServer = new SpaceServer(io, spaceId);
   spaceServers.set(spaceId, spaceServer);
   return spaceServer;
@@ -147,7 +146,7 @@ export function createSpaceServer(spaceId: number, io: SocketIOServer) {
  * @param spaceId The id of the space
  */
 export async function getSpaceServer(
-  spaceId: number,
+  spaceId: string,
   io: SocketIOServer
 ): Promise<SpaceServer | null> {
   const spaceExists = await doesSpaceExist(spaceId);

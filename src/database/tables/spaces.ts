@@ -1,11 +1,11 @@
 import { getDatabaseConnection } from "..";
-import { nextId } from "../../lib/snowflakeId";
+import createUuid from "../../lib/createUuid";
 
 export type SpaceVisibility = "public" | "unlisted";
 
 export interface Space {
-  id: number;
-  creator_id: number;
+  id: string;
+  creator_id: string;
   name: string;
   created_at: string;
   updated_at: string;
@@ -13,13 +13,13 @@ export interface Space {
 }
 
 export async function createSpace(
-  creatorId: number,
+  creatorId: string,
   name: string,
   visibility: SpaceVisibility
 ) {
   const db = await getDatabaseConnection();
-  const id = nextId();
-  return new Promise<number>((resolve, reject) => {
+  const id = createUuid();
+  return new Promise<string>((resolve, reject) => {
     db.query(
       "INSERT INTO `spaces` (`id`, `creator_id`, `name`, `visibility`) VALUES (?, ?, ?, ?, ?)",
       [id, creatorId, name, visibility],
@@ -31,7 +31,7 @@ export async function createSpace(
   });
 }
 
-export async function doesSpaceExist(id: number) {
+export async function doesSpaceExist(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {
     db.query("SELECT 1 FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
@@ -42,7 +42,7 @@ export async function doesSpaceExist(id: number) {
   });
 }
 
-export async function getSpaceById(id: number) {
+export async function getSpaceById(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<Space | null>((resolve, reject) => {
     db.query("SELECT * FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
@@ -53,7 +53,7 @@ export async function getSpaceById(id: number) {
   });
 }
 
-export async function getSpacesCreatedByUser(creatorId: number) {
+export async function getSpacesCreatedByUser(creatorId: string) {
   const db = await getDatabaseConnection();
   return new Promise<Space[]>((resolve, reject) => {
     db.query(
@@ -67,7 +67,7 @@ export async function getSpacesCreatedByUser(creatorId: number) {
   });
 }
 
-export async function setSpaceName(id: number, newName: string) {
+export async function setSpaceName(id: string, newName: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
@@ -99,7 +99,7 @@ export async function getPublicSpaces() {
 }
 
 export async function setSpaceVisibility(
-  id: number,
+  id: string,
   newVisibility: SpaceVisibility
 ) {
   const db = await getDatabaseConnection();
@@ -115,7 +115,7 @@ export async function setSpaceVisibility(
   });
 }
 
-export async function deleteSpace(id: number) {
+export async function deleteSpace(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query("DELETE FROM `spaces` WHERE `id` = ?", [id], (err) => {

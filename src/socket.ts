@@ -52,8 +52,8 @@ export class Connection {
 export function emitToChannel() {}
 
 export function sendMessage(
-  channelId: number,
-  senderId: number,
+  channelId: string,
+  senderId: string,
   message: string
 ) {
   createMessage(channelId, senderId, message);
@@ -92,7 +92,7 @@ export const createIo = (server: http.Server) => {
       createMessage(channelId, accountId, messageContent);
     });
 
-    socket.on("join_space", async (spaceId: number, displayName?: string) => {
+    socket.on("join_space", async (spaceId: string, displayName?: string) => {
       const spaceServer = await getSpaceServer(spaceId, io);
       if (spaceServer == null) {
         socket.emit("space_not_found");

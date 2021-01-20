@@ -1,14 +1,14 @@
 import { getDatabaseConnection } from "..";
-import { nextId } from "../../lib/snowflakeId";
-import { doAllUsersExistWithIds, User } from "./users";
+import createUuid from "../../lib/createUuid";
+import { doAllUsersExistWithIds } from "./users";
 
 export interface Group {
-  id: number;
+  id: string;
   name?: string;
   picture?: string;
 }
 
-export async function doesGroupExistWithId(id: number): Promise<boolean> {
+export async function doesGroupExistWithId(id: string): Promise<boolean> {
   const db = await getDatabaseConnection();
 
   return await new Promise<boolean>((resolve, reject) => {
@@ -23,7 +23,7 @@ export async function doesGroupExistWithId(id: number): Promise<boolean> {
  *
  * @param memberUserIds The set of user ids to add to the group
  */
-export async function createGroup(memberUserIds: Set<number>): Promise<number> {
+export async function createGroup(memberUserIds: Set<string>): Promise<string> {
   if (memberUserIds.size < 3) {
     throw new Error(
       "Not enough users in group; create a Direct Message instead"
@@ -37,9 +37,9 @@ export async function createGroup(memberUserIds: Set<number>): Promise<number> {
   }
 
   const db = await getDatabaseConnection();
-  const groupId = nextId();
+  const groupId = createUuid();
 
-  return await new Promise<number>((resolve, reject) =>
+  return await new Promise<string>((resolve, reject) =>
     db.query("INSERT INTO `groups` (`id`) VALUES (?)", [groupId], (err) => {
       if (err) reject(err);
       else {
@@ -67,7 +67,7 @@ export async function createGroup(memberUserIds: Set<number>): Promise<number> {
   );
 }
 
-export async function getGroup(id: number): Promise<Group | null> {
+export async function getGroup(id: string): Promise<Group | null> {
   const db = await getDatabaseConnection();
 
   return await new Promise<Group | null>((resolve, reject) => {

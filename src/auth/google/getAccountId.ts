@@ -4,7 +4,7 @@ import {
 } from "../../database/tables/users";
 import { getGoogleProfile } from "./profile";
 
-export default async function getAccountId(code: string): Promise<number> {
+export default async function getAccountId(code: string): Promise<string> {
   const profile = await getGoogleProfile(code);
   const user = await getUserFromEmail(profile.email);
 

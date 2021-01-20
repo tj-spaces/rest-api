@@ -2,7 +2,7 @@
 -- This is why channels aren't directly associated with spaces: so the table can be used for groups as well
 
 CREATE TABLE IF NOT EXISTS `groups` (
-	`id` BIGINT(8),
+	`id` VARCHAR(36),
 	`name` VARCHAR(256),
 	`picture` VARCHAR(1024),
 

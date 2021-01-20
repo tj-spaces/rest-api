@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS `users` (
-	`id` BIGINT(8) PRIMARY KEY,
+	`id` VARCHAR(36) PRIMARY KEY,
 	`email` VARCHAR(256),
 	`verified_email` BOOL,
 	`name` VARCHAR(256),

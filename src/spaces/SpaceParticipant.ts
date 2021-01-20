@@ -11,14 +11,14 @@ export interface SpaceParticipant {
    * A single-use ID representing a single person joining a single space.
    * This is assigned as soon as a user joins the space, even if they go to the waiting room.
    */
-  sessionId: number;
+  sessionId: string;
 
   /**
    * An ID assigned to somebody when they join the Space
    * If a user joins as a guest from the browser, this ID stays with them even if they
    * join different spaces. If a user joins as a registered user, this is just their account id.
    */
-  participantId: number;
+  participantId: string;
 
   /**
    * Nickname to display for the user

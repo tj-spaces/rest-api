@@ -54,7 +54,7 @@ app.use("/new-account", (req, res) => {
 });
 
 app.get("/space/:spaceId", requireAuth, async (req, res) => {
-  const spaceId = parseInt(req.params.spaceId, 36);
+  const { spaceId } = req.params;
 
   // Start up a space server if not loaded already
   const spaceServer = await getSpaceServer(spaceId, io);

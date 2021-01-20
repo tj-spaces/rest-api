@@ -1,8 +1,8 @@
 -- Connections between groups and group members
 
 CREATE TABLE IF NOT EXISTS `group_members` (
-	`user_id` BIGINT(8),
-	`group_id` BIGINT(8),
+	`user_id` VARCHAR(36),
+	`group_id` VARCHAR(36),
 	`user_type` ENUM('member', 'admin') DEFAULT 'member',
 
 	CONSTRAINT `fk_group_member__user`

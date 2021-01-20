@@ -17,7 +17,7 @@ router.get("/members", requireApiAuth, async (req, res) => {
     return;
   }
 
-  const groupId = parseInt(req.query.group_id);
+  const groupId = req.query.group_id;
   const inGroup = await isUserInGroup(groupId, accountId);
 
   if (!inGroup) {
@@ -38,7 +38,7 @@ router.get("/info", requireApiAuth, async (req, res) => {
     return;
   }
 
-  const groupId = parseInt(req.query.group_id);
+  const groupId = req.query.group_id;
   const inGroup = await isUserInGroup(groupId, accountId);
 
   if (!inGroup) {

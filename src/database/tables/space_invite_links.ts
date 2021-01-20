@@ -3,14 +3,14 @@ import createUuid from "../../lib/createUuid";
 import { doesSpaceExist } from "./spaces";
 
 export interface SpaceInviteLink {
-  id: number;
+  id: string;
   slug: string;
-  space_id: number;
+  space_id: string;
 }
 
 export async function createSpaceInviteLink(
   slug: string,
-  spaceId: number,
+  spaceId: string,
   skipCheck: boolean = false
 ) {
   if (!skipCheck) {
@@ -58,7 +58,7 @@ export async function getInviteLinkWithSlug(slug: string) {
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getInviteLinksWithSpaceId(spaceId: number) {
+export async function getInviteLinksWithSpaceId(spaceId: string) {
   const db = await getDatabaseConnection();
   return new Promise<SpaceInviteLink>((resolve, reject) => {
     db.query(
@@ -73,7 +73,7 @@ export async function getInviteLinksWithSpaceId(spaceId: number) {
   });
 }
 
-export async function deleteInviteLinkWithId(id: number) {
+export async function deleteInviteLinkWithId(id: string) {
   const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(

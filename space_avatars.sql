@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `space_avatars` (
-	`space_id` BIGINT(8),
-	`user_id` BIGINT(8),
+	`space_id` VARCHAR(36),
+	`user_id` VARCHAR(36),
 
 	`nickname` VARCHAR(256),
 	`color` VARCHAR(32),
