@@ -12,7 +12,7 @@ const MEMORY_STORED_SESSIONS = new Map<string, Session>();
 export function getSessionDataById(sessionId: string): SessionData | null {
   if (MEMORY_STORED_SESSIONS.has(sessionId)) {
     const session = MEMORY_STORED_SESSIONS.get(sessionId);
-    if (Date.now() < session.expiresAt) {
+    if (Date.now() > session.expiresAt) {
       MEMORY_STORED_SESSIONS.delete(sessionId);
       return null;
     } else {
@@ -48,9 +48,12 @@ export function createSession(accountId: string): string {
  */
 let sessionMiddleware: RequestHandler = (req, res, next) => {
   const auth = req.headers.authorization;
+  // console.log("Checking request with Authorization = " + auth);
   if (typeof auth === "string" && auth.startsWith("Bearer ")) {
     const token = auth.slice(7);
+    // console.log("Found token =", token);
     req.session = getSessionDataById(token);
+    // console.log("Session data was", req.session);
     next();
   } else {
     next();
