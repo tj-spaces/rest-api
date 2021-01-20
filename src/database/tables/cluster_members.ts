@@ -1,5 +1,5 @@
 import { getDatabaseConnection } from "..";
-import { doesClusterExist } from "./clusters";
+import { Cluster, doesClusterExist } from "./clusters";
 import { doesUserExistWithId } from "./users";
 
 export interface ClusterMember {
@@ -55,16 +55,19 @@ export async function didUserJoinCluster(clusterId: string, userId: string) {
  */
 export async function getClustersWithUser(userId: string) {
   const db = await getDatabaseConnection();
-  return new Promise<string[]>((resolve, reject) => {
+  return new Promise<Cluster[]>((resolve, reject) => {
     db.query(
-      "SELECT `clusters.*`\
+      "SELECT `clusters`.*\
        FROM `cluster_members`\
-       INNER JOIN `clusters` ON `clusters.id` = `cluster_members.cluster_id`\
-       WHERE `cluster_members.user_id` = ?",
+       INNER JOIN `clusters` ON `clusters`.`id` = `cluster_members`.`cluster_id`\
+       WHERE `cluster_members`.`user_id` = ?",
       [userId],
       (err, results) => {
         if (err) reject(err);
-        resolve(results.map((row: ClusterMember) => row.cluster_id));
+        else {
+          // results = Cluster[]
+          resolve(results);
+        }
       }
     );
   });

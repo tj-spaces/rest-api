@@ -21,7 +21,7 @@ export async function createCluster(
   const id = createUuid();
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `clusters` (`id`, `creator_id`, `name`, `visibility`) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO `clusters` (`id`, `creator_id`, `name`, `visibility`) VALUES (?, ?, ?, ?)",
       [id, creatorId, name, visibility],
       (err) => {
         if (err) reject(err);

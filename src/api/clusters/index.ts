@@ -1,11 +1,17 @@
 import { Router } from "express";
-import { getSpacesInCluster } from "../../database/tables/spaces";
+import {
+  createSpaceInCluster,
+  getSpacesInCluster,
+} from "../../database/tables/spaces";
 import {
   createCluster,
   doesClusterExist,
   getClusterById,
 } from "../../database/tables/clusters";
-import { didUserJoinCluster } from "../../database/tables/cluster_members";
+import {
+  didUserJoinCluster,
+  joinCluster,
+} from "../../database/tables/cluster_members";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
 /**
@@ -24,7 +30,7 @@ export const router = Router();
  * Requires authentication
  */
 router.post("/", requireApiAuth, async (req, res) => {
-  const { visibility, name } = req.query;
+  const { visibility, name } = req.body;
   const { accountId } = req.session;
 
   if (typeof name !== "string" || name.length > 255) {
@@ -39,9 +45,14 @@ router.post("/", requireApiAuth, async (req, res) => {
     return;
   }
 
-  const newClusterId = await createCluster(accountId, name, visibility);
+  const clusterId = await createCluster(accountId, name, visibility);
 
-  res.json({ status: "success", cluster_id: newClusterId });
+  await joinCluster(clusterId, accountId);
+
+  res.json({
+    status: "success",
+    cluster_id: clusterId,
+  });
 });
 
 router.get("/:clusterId", async (req, res) => {
@@ -54,6 +65,43 @@ router.get("/:clusterId", async (req, res) => {
     res.json({ status: "error", error: "cluster_not_found" });
   } else {
     res.json({ status: "success", cluster });
+  }
+});
+
+/**
+ * Creates a space in this cluster.
+ * Requires params:
+ *  - `name` The name of the space
+ */
+router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
+  const { accountId } = req.session;
+  const { clusterId } = req.params;
+  const { name } = req.body;
+
+  if (typeof name !== "string" || name.length == 0 || name.length > 255) {
+    res.status(400);
+    res.json({ status: "error", error: "invalid_space_name" });
+  }
+
+  const clusterExists = await doesClusterExist(clusterId);
+  if (!clusterExists) {
+    res.status(404);
+    res.json({ status: "error", error: "cluster_not_found" });
+    return;
+  }
+
+  const inCluster = await didUserJoinCluster(clusterId, accountId);
+
+  if (!inCluster) {
+    res.status(401);
+    res.json({ status: "error", error: "not_in_cluster" });
+  } else {
+    // If we are in the group, then the group must exist, and we can add spaces to it
+
+    res.json({
+      status: "success",
+      space_id: await createSpaceInCluster(clusterId, name, "blue"),
+    });
   }
 });
 
@@ -80,6 +128,9 @@ router.get("/:clusterId/spaces", requireApiAuth, async (req, res) => {
     res.json({ status: "error", error: "not_in_cluster" });
   } else {
     // If we are in the group, then the group must exist
-    res.json({ status: "success", spaces: getSpacesInCluster(clusterId) });
+    res.json({
+      status: "success",
+      spaces: await getSpacesInCluster(clusterId),
+    });
   }
 });
