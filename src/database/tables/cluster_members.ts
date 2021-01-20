@@ -59,12 +59,12 @@ export async function getClustersWithUser(userId: string) {
     db.query(
       "SELECT `clusters.*`\
        FROM `cluster_members`\
-       INNER JOIN ON `clusters.id` = `cluster_members.cluster_id`\
+       INNER JOIN `clusters` ON `clusters.id` = `cluster_members.cluster_id`\
        WHERE `cluster_members.user_id` = ?",
       [userId],
-      (err, result) => {
+      (err, results) => {
         if (err) reject(err);
-        resolve(result.map((row: ClusterMember) => row.cluster_id));
+        resolve(results.map((row: ClusterMember) => row.cluster_id));
       }
     );
   });
