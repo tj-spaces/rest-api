@@ -1,5 +1,5 @@
 import { Connection } from "../socket";
-import { Server as SocketIOServer } from "socket.io";
+import { Server as SocketIOServer, Socket } from "socket.io";
 import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
@@ -100,7 +100,7 @@ export class SpaceServer {
     });
   }
 
-  tryJoin(socket: SocketIO.Socket, displayName?: string) {
+  tryJoin(socket: Socket, displayName?: string) {
     const session = getSessionDataById(socket.handshake.query["sessionId"]);
 
     if (session?.isLoggedIn) {
@@ -124,6 +124,8 @@ export class SpaceServer {
 
       this.connections.set(participantId, new Connection(socket));
       this.addParticipantToSpace(participantId, participant);
+    } else {
+      socket.emit("unauthenticated");
     }
   }
 }
