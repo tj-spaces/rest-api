@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS `spaces` (
+
+DROP TABLE IF EXISTS `spaces`;
+CREATE TABLE `spaces` (
 	`id` VARCHAR(36),
 	`creator_id` VARCHAR(36), -- References `users`
 	`name` VARCHAR(256),

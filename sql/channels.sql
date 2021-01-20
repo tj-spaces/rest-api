@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS `channels` (
+
+DROP TABLE IF EXISTS `channels`;
+CREATE TABLE `channels` (
 	`id` VARCHAR(36),
 	`name` VARCHAR(256),
 	`color` VARCHAR(32),

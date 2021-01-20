@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS `messages` (
+
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE `messages` (
 	`id` VARCHAR(36),
 	`channel_id` VARCHAR(36),
 	`sender_id` VARCHAR(36),

@@ -1,6 +1,7 @@
 -- Connections between groups and group members
 
-CREATE TABLE IF NOT EXISTS `group_members` (
+DROP TABLE IF EXISTS `group_members`;
+CREATE TABLE `group_members` (
 	`user_id` VARCHAR(36),
 	`group_id` VARCHAR(36),
 	`user_type` ENUM('member', 'admin') DEFAULT 'member',

@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS `space_invite_links` (
+
+DROP TABLE IF EXISTS `space_invite_links`;
+CREATE TABLE `space_invite_links` (
 	`id` VARCHAR(36),
 	`slug` VARCHAR(256), -- The display text of the channel
 	`space_id` VARCHAR(36),

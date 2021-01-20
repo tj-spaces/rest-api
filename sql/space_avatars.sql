@@ -1,4 +1,6 @@
-CREATE TABLE IF NOT EXISTS `space_avatars` (
+
+DROP TABLE IF EXISTS `space_avatars`;
+CREATE TABLE `space_avatars` (
 	`space_id` VARCHAR(36),
 	`user_id` VARCHAR(36),
 
