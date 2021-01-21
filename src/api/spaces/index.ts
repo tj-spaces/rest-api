@@ -1,5 +1,7 @@
 import { Router } from "express";
-import { doesSpaceExist } from "../../database/tables/spaces";
+import { didUserJoinCluster } from "../../database/tables/cluster_members";
+import { getSpaceById } from "../../database/tables/spaces";
+import requireApiAuth from "../../middleware/requireApiAuth";
 
 /* ROUTES TO MAKE:
 
@@ -12,10 +14,23 @@ import { doesSpaceExist } from "../../database/tables/spaces";
 
 export const router = Router();
 
-router.get("/:spaceId", async (req, res) => {
+router.get("/:spaceId", requireApiAuth, async (req, res) => {
   const { spaceId } = req.params;
-  const spaceExists = await doesSpaceExist(spaceId);
+  const space = await getSpaceById(spaceId);
 
-  if (!spaceExists) {
+  if (space == null) {
+    res.status(404);
+    res.json({ status: "error", error: "space_not_found" });
+  } else {
+    if (space.type === "cluster") {
+      let { accountId } = req.session;
+      if (didUserJoinCluster(space.cluster_id, accountId)) {
+        res.json({ status: "success", space });
+      } else {
+        res.json({ status: "error", error: "not_in_cluster" });
+      }
+    } else {
+      res.json({ status: "success", space });
+    }
   }
 });

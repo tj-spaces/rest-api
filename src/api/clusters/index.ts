@@ -33,7 +33,7 @@ router.post("/", requireApiAuth, async (req, res) => {
   const { visibility, name } = req.body;
   const { accountId } = req.session;
 
-  if (typeof name !== "string" || name.length > 255) {
+  if (typeof name !== "string" || name.length === 0 || name.length > 255) {
     res.status(400);
     res.json({ status: "error", error: "invalid_cluster_name" });
     return;
@@ -81,6 +81,7 @@ router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
   if (typeof name !== "string" || name.length == 0 || name.length > 255) {
     res.status(400);
     res.json({ status: "error", error: "invalid_space_name" });
+    return;
   }
 
   const clusterExists = await doesClusterExist(clusterId);

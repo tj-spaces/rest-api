@@ -27,48 +27,28 @@ export type Space = {
     }
 );
 
-/**
- * @return Space id
- */
-async function createSpace(name: string, color: string): Promise<string> {
-  const db = await getDatabaseConnection();
-  const id = createUuid();
-  return new Promise<string>((resolve, reject) => {
-    db.query(
-      "INSERT INTO `spaces` (`id`, `name`, `color`) VALUES (?, ?, ?)",
-      [id, name, color],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(id);
-        }
-      }
-    );
-  });
-}
-
 export async function createSpaceInCluster(
   clusterId: string,
   name: string,
   color: string
 ): Promise<string> {
-  const spaceId = await createSpace(name, color);
   const db = await getDatabaseConnection();
 
-  if (!doesClusterExist(clusterId)) {
+  const clusterExists = await doesClusterExist(clusterId);
+  if (!clusterExists) {
     throw new Error("Cluster does not exist: " + clusterId);
   }
 
+  const id = createUuid();
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `cluster_spaces` (`cluster_id`, `space_id`) VALUES (?, ?)",
-      [clusterId, spaceId],
+      "INSERT INTO `spaces` (`id`, `name`, `color`, `type`, `cluster_id`) VALUES (?, ?, ?, ?, ?)",
+      [id, name, color, "cluster", clusterId],
       (err) => {
         if (err) {
           reject(err);
         } else {
-          resolve(spaceId);
+          resolve(id);
         }
       }
     );
