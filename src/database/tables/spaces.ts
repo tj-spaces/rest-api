@@ -1,5 +1,6 @@
 import { getDatabaseConnection } from "..";
 import createUuid from "../../lib/createUuid";
+import { getConnectionCount } from "../../spaces/server";
 import { doesClusterExist } from "./clusters";
 
 /**
@@ -83,17 +84,24 @@ export async function getClusterThatHasSpaceWithId(
   });
 }
 
-export async function getSpacesInCluster(clusterId: string): Promise<Space[]> {
+export async function getSpacesInCluster(
+  clusterId: string
+): Promise<SpaceWithOnlineCount[]> {
   const db = await getDatabaseConnection();
 
-  return await new Promise<Space[]>((resolve, reject) => {
+  return await new Promise<SpaceWithOnlineCount[]>((resolve, reject) => {
     db.query(
       "SELECT * FROM `spaces` WHERE `type` = 'cluster' AND `cluster_id` = ?",
       [clusterId],
       (err, results) => {
         if (err) reject(err);
 
-        resolve(results);
+        resolve(
+          results.map((space: Space) => ({
+            ...space,
+            online_count: getConnectionCount(space.id),
+          }))
+        );
       }
     );
   });
@@ -109,13 +117,23 @@ export async function doesSpaceExist(id: string) {
   });
 }
 
-export async function getSpaceById(id: string) {
+export type SpaceWithOnlineCount = Space & {
+  online_count: number;
+};
+
+export async function getSpaceById(
+  id: string
+): Promise<SpaceWithOnlineCount | null> {
   const db = await getDatabaseConnection();
-  return new Promise<Space | null>((resolve, reject) => {
+  return new Promise<SpaceWithOnlineCount | null>((resolve, reject) => {
     db.query("SELECT * FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
       if (err) reject(err);
       if (results.length === 0) resolve(null);
-      else resolve(results[0]);
+      else
+        resolve({
+          ...results[0],
+          online_count: getConnectionCount(id),
+        });
     });
   });
 }

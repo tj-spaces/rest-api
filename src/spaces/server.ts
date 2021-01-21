@@ -141,6 +141,14 @@ export function createSpaceServer(spaceId: string, io: SocketIOServer) {
   return spaceServer;
 }
 
+export function getConnectionCount(spaceId: string) {
+  if (!spaceServers.has(spaceId)) {
+    return 0;
+  } else {
+    return spaceServers.get(spaceId).connections.size;
+  }
+}
+
 /**
  * Returns a server used to host a space.
  * If no server exists, it is created.

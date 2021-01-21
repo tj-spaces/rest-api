@@ -5,6 +5,7 @@ import {
 } from "../../database/tables/spaces";
 import {
   createCluster,
+  deleteCluster,
   doesClusterExist,
   getClusterById,
 } from "../../database/tables/clusters";
@@ -65,6 +66,33 @@ router.get("/:clusterId", async (req, res) => {
     res.json({ status: "error", error: "cluster_not_found" });
   } else {
     res.json({ status: "success", cluster });
+  }
+});
+
+router.delete("/:clusterId", requireApiAuth, async (req, res) => {
+  const { clusterId } = req.params;
+  const { accountId } = req.session;
+
+  const clusterExists = await doesClusterExist(clusterId);
+  if (!clusterExists) {
+    res.status(404);
+    res.json({ status: "error", error: "cluster_not_found" });
+    return;
+  }
+
+  const inCluster = await didUserJoinCluster(clusterId, accountId);
+
+  if (!inCluster) {
+    res.status(401);
+    res.json({ status: "error", error: "not_in_cluster" });
+  } else {
+    // If we are in the group, then the group must exist, and we can delete it
+
+    await deleteCluster(clusterId);
+
+    res.json({
+      status: "success",
+    });
   }
 });
 
