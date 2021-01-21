@@ -135,7 +135,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
 
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `users` (`id`, `email`, `verifiedEmail`, `name`, `givenName`, `familyName`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO `users` (`id`, `email`, `verified_email`, `name`, `given_name`, `family_name`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         id,
         profile.tj_email,

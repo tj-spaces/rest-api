@@ -66,7 +66,11 @@ const accountConnections = new Map<string, Connection>();
  * @param server The http server to bind to
  */
 export const createIo = (server: http.Server) => {
-  const io = new SocketIOServer(server);
+  const io = new SocketIOServer(server, {
+    cors: {
+      origin: "*",
+    },
+  });
 
   io.use((socket, next) => {
     // @ts-ignore
@@ -77,12 +81,10 @@ export const createIo = (server: http.Server) => {
     const sessionId = socket.handshake.query["sessionId"];
     const session = getSessionDataById(sessionId);
 
-    if (session == null) {
+    if (session == null || session.isLoggedIn == false) {
       socket.emit("unauthenticated");
       return;
     }
-
-    const accountId = session.accountId;
 
     socket.on("disconnect", () => {
       socket.broadcast.emit("peer_left");

@@ -18,6 +18,7 @@ declare module "socket.io" {
 
     on(ev: "chat_message", cb: (messageContent: string) => void): this;
     on(ev: "disconnect", cb: () => void): this;
+    on(ev: "leave_space", cb: () => void): this;
     on(ev: "join_space", cb: (spaceId: string) => void): this;
     on(ev: "ping", cb: (key: string) => void): this;
   }

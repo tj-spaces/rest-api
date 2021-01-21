@@ -6,6 +6,7 @@ import { SpacePositionInfo } from "./SpacePositionInfo";
 import { DisplayStatus } from "./DisplayStatus";
 import { getSessionDataById } from "../session";
 import createUuid from "../lib/createUuid";
+import mapToObject from "../lib/mapToObject";
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
 export class SpaceServer {
@@ -78,7 +79,11 @@ export class SpaceServer {
     const { socket } = this.connections.get(participantId);
 
     this.participants.delete(participantId);
+    this.connections.delete(participantId);
+
     socket.removeAllListeners("chat_message");
+    socket.removeAllListeners("leave_space");
+
     socket.broadcast.emit("peer_left", participantId);
 
     socket.leave(this.getRoomName());
@@ -92,11 +97,15 @@ export class SpaceServer {
     socket.join(this.getRoomName());
     socket.emit("space_join_complete");
     socket.emit("peer_info", participant);
-    socket.emit("peers", this.participants);
+    socket.emit("peers", mapToObject(this.participants));
     socket.broadcast.emit("peer_joined", participant);
 
     socket.on("chat_message", (messageContent) => {
       this.addMessage(participantId, messageContent);
+    });
+
+    socket.on("leave_space", () => {
+      this.deregisterParticipantFromSpace(participantId);
     });
   }
 
@@ -104,12 +113,10 @@ export class SpaceServer {
     const session = getSessionDataById(socket.handshake.query["sessionId"]);
 
     if (session?.isLoggedIn) {
-      const sessionId = createUuid();
-      const participantId = session.accountId;
+      const { accountId } = session;
 
       const participant: SpaceParticipant = {
-        sessionId,
-        participantId,
+        accountId,
         displayColor: this.getDefaultDisplayColor(),
         displayName: displayName || this.getDefaultDisplayName(),
         displayStatus: this.getDefaultDisplayStatus(),
@@ -122,8 +129,8 @@ export class SpaceServer {
         position: this.getJoinPosition(),
       };
 
-      this.connections.set(participantId, new Connection(socket));
-      this.addParticipantToSpace(participantId, participant);
+      this.connections.set(accountId, new Connection(socket));
+      this.addParticipantToSpace(accountId, participant);
     } else {
       socket.emit("unauthenticated");
     }

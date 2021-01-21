@@ -96,6 +96,27 @@ router.delete("/:clusterId", requireApiAuth, async (req, res) => {
   }
 });
 
+router.post("/:clusterId/join", requireApiAuth, async (req, res) => {
+  const { accountId } = req.session;
+  const { clusterId } = req.params;
+
+  const clusterExists = await doesClusterExist(clusterId);
+  if (!clusterExists) {
+    res.status(404);
+    res.json({ status: "error", error: "cluster_not_found" });
+    return;
+  }
+
+  const inCluster = await didUserJoinCluster(clusterId, accountId);
+
+  if (inCluster) {
+    res.json({ status: "success", message: "already_in_cluster" });
+  } else {
+    await joinCluster(clusterId, accountId);
+    res.json({ status: "success" });
+  }
+});
+
 /**
  * Creates a space in this cluster.
  * Requires params:
