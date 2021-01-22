@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/body-parser": "^1.19.0",
+    "@types/twilio": "^2.11.0",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
@@ -22,6 +23,7 @@
     "peer": "^0.6.1",
     "simple-oauth2": "^4.2.0",
     "socket.io": "^3.0.5",
+    "twilio": "^3.55.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

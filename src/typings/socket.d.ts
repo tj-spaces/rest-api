@@ -15,6 +15,7 @@ declare module "socket.io" {
     emit(
       ev: "space_not_found" | "space_join_complete" | "unauthenticated"
     ): this;
+    emit(ev: "twilio_grant", grant: string): this;
 
     on(ev: "chat_message", cb: (messageContent: string) => void): this;
     on(ev: "disconnect", cb: () => void): this;

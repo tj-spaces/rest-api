@@ -7,6 +7,7 @@ import { DisplayStatus } from "./DisplayStatus";
 import { getSessionDataById } from "../session";
 import createUuid from "../lib/createUuid";
 import mapToObject from "../lib/mapToObject";
+import createTwilioGrantJwt from "../lib/createTwilioGrant";
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
 export class SpaceServer {
@@ -96,6 +97,10 @@ export class SpaceServer {
 
     socket.join(this.getRoomName());
     socket.emit("space_join_complete");
+    socket.emit(
+      "twilio_grant",
+      createTwilioGrantJwt(participantId, this.spaceId)
+    );
     socket.emit("peer_info", participant);
     socket.emit("peers", mapToObject(this.participants));
     socket.broadcast.emit("peer_joined", participant);
