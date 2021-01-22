@@ -1,13 +1,12 @@
 {
 	"compilerOptions": {
-		"outDir": "dist",
-		"typeRoots": [
-			"src/typings",
-			"node_modules/@types"
-		],
-		"downlevelIteration": true
+		"outDir": "dist"
 	},
 	"include": [
 		"src/"
+	],
+	"files": [
+		"src/typings/session.d.ts",
+		"src/typings/socket.d.ts"
 	]
 }
