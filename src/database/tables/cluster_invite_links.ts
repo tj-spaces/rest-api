@@ -1,4 +1,5 @@
 import { getDatabaseConnection } from "..";
+import createBase36String from "../../lib/createBase36String";
 import createUuid from "../../lib/createUuid";
 import { doesClusterExist } from "./clusters";
 
@@ -8,27 +9,67 @@ export interface ClusterInviteLink {
   cluster_id: string;
 }
 
+/**
+ * Generates a unique, random slug for a cluster invite link.
+ * Guaranteed to be 8 characters long, case-insensitive, and use
+ * the characters A-Z and 0-9.
+ */
+export async function generateClusterInviteLinkSlug() {
+  let slug: string;
+  do {
+    slug = createBase36String(8);
+  } while (!(await doesClusterInviteLinkExistWithSlug(slug)));
+  return slug;
+}
+
+export async function doesClusterInviteLinkExistWithSlug(slug: string) {
+  const db = await getDatabaseConnection();
+
+  return new Promise<boolean>((resolve, reject) => {
+    db.query(
+      "SELECT 1 FROM `cluster_invite_links` WHERE `slug` = ?",
+      [slug],
+      (err, result) => {
+        if (err) reject(err);
+        resolve(result.length > 0);
+      }
+    );
+  });
+}
+
+export interface CreateClusterInviteLinkResult {
+  success: boolean;
+  slug?: string;
+}
+
 export async function createClusterInviteLink(
-  slug: string,
   clusterId: string,
-  skipCheck: boolean = false
-) {
-  if (!skipCheck) {
-    if (!(await doesClusterExist(clusterId))) {
-      throw new Error("Cluster does not exist with id: " + clusterId);
-    }
+  slug?: string
+): Promise<CreateClusterInviteLinkResult> {
+  if (!(await doesClusterExist(clusterId))) {
+    throw new Error("Cluster does not exist with id: " + clusterId);
   }
 
   const db = await getDatabaseConnection();
   const id = createUuid();
 
-  return new Promise<void>((resolve, reject) => {
+  if (slug === undefined) {
+    // Generate a unique slug
+    slug = await generateClusterInviteLinkSlug();
+  } else {
+    // User-specified slug
+    if (await doesClusterInviteLinkExistWithSlug(slug)) {
+      return { success: false };
+    }
+  }
+
+  return new Promise<CreateClusterInviteLinkResult>((resolve, reject) => {
     db.query(
       "INSERT INTO `cluster_invite_links` (`id`, `slug`, `cluster_id`) VALUES (?, ?, ?)",
       [id, slug, clusterId],
       (err) => {
         if (err) reject(err);
-        resolve();
+        resolve({ success: true, slug });
       }
     );
   });

@@ -1,5 +1,8 @@
 import { gql } from "apollo-server-express";
-import { getInviteLinkWithSlug } from "../database/tables/cluster_invite_links";
+import {
+  createClusterInviteLink,
+  getInviteLinkWithSlug,
+} from "../database/tables/cluster_invite_links";
 
 export const typeDef = gql`
   extend type Query {
@@ -7,8 +10,9 @@ export const typeDef = gql`
   }
 
   extend type Mutation {
-    createInviteLink(clusterID: String!, slug: String) {
-      
+    createInviteLink(clusterID: ID!, slug: String) {
+      success: Boolean!
+      slug: String
     }
   }
 
@@ -25,6 +29,16 @@ export const resolvers = {
       return getInviteLinkWithSlug(args.slug);
     },
   },
-
-  InviteLink: {},
+  Mutation: {
+    createInviteLink: async function (
+      _source: any,
+      args: { clusterID: string; slug?: string }
+    ): Promise<{ success: boolean; slug?: string }> {
+      try {
+        return await createClusterInviteLink(args.slug, args.clusterID);
+      } catch (err) {
+        return { success: false };
+      }
+    },
+  },
 };
