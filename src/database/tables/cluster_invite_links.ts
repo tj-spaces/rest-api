@@ -60,7 +60,7 @@ export async function getInviteLinkWithSlug(slug: string) {
  */
 export async function getInviteLinksWithClusterId(clusterId: string) {
   const db = await getDatabaseConnection();
-  return new Promise<ClusterInviteLink>((resolve, reject) => {
+  return new Promise<ClusterInviteLink[]>((resolve, reject) => {
     db.query(
       "SELECT * FROM `cluster_invite_links` WHERE `cluster_id` = ?",
       [clusterId],

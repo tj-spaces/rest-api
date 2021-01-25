@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/body-parser": "^1.19.0",
     "@types/twilio": "^2.11.0",
+    "apollo-server-express": "^2.19.2",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
@@ -19,6 +20,7 @@
     "express": "^4.17.1",
     "express-handlebars": "^5.2.0",
     "googleapis": "^67.0.0",
+    "graphql": "^15.4.0",
     "mysql": "^2.18.1",
     "peer": "^0.6.1",
     "simple-oauth2": "^4.2.0",

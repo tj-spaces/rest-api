@@ -1,0 +1,11 @@
+type Mutation {
+	createCluster($name: String!, $visibility: ClusterVisibility!) {
+		clusterID: ID!
+	}
+	joinCluster($clusterID: ID!) {
+		status: String!
+	}
+	addSpaceToCluster($clusterID: ID!, $name: String!) {
+		spaceID: ID!
+	}
+}
