@@ -86,12 +86,10 @@ export async function getClusterThatHasSpaceWithId(
   });
 }
 
-export async function getSpacesInCluster(
-  clusterId: string
-): Promise<SpaceWithOnlineCount[]> {
+export async function getSpacesInCluster(clusterId: string): Promise<Space[]> {
   const db = await getDatabaseConnection();
 
-  return await new Promise<SpaceWithOnlineCount[]>((resolve, reject) => {
+  return await new Promise<Space[]>((resolve, reject) => {
     db.query(
       "SELECT * FROM `spaces` WHERE `type` = 'cluster' AND `cluster_id` = ?",
       [clusterId],
@@ -119,23 +117,21 @@ export async function doesSpaceExist(id: string) {
   });
 }
 
-export type SpaceWithOnlineCount = Space & {
-  online_count: number;
-};
-
-export async function getSpaceById(
-  id: string
-): Promise<SpaceWithOnlineCount | null> {
+export async function getSpaceById(id: string): Promise<Space | null> {
   const db = await getDatabaseConnection();
-  return new Promise<SpaceWithOnlineCount | null>((resolve, reject) => {
+  return new Promise<Space | null>((resolve, reject) => {
     db.query("SELECT * FROM `spaces` WHERE `id` = ?", [id], (err, results) => {
-      if (err) reject(err);
-      if (results.length === 0) resolve(null);
-      else
+      if (err) {
+        reject(err);
+      }
+
+      if (results.length === 0) {
+        resolve(null);
+      } else {
         resolve({
           ...results[0],
-          online_count: getConnectionCount(id),
         });
+      }
     });
   });
 }

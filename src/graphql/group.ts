@@ -1,6 +1,6 @@
 import { gql } from "apollo-server-express";
 
-export const typeDefs = gql`
+export const typeDef = gql`
   extend type Query {
     group(id: ID!): Group
   }

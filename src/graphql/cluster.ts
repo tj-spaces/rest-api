@@ -2,14 +2,14 @@ import {
   ClusterInviteLink,
   getInviteLinksWithClusterId,
 } from "../database/tables/cluster_invite_links";
-import { Cluster } from "../database/tables/clusters";
+import { Cluster, getClusterById } from "../database/tables/clusters";
 import { getUsersInCluster } from "../database/tables/cluster_members";
 import { getSpacesInCluster, BaseSpace } from "../database/tables/spaces";
 import { getUserFromId, User } from "../database/tables/users";
 import { gql } from "apollo-server-express";
 
 export const typeDef = gql`
-  extend type Query {
+  type Query {
     cluster(id: ID!): Cluster
   }
 
@@ -27,10 +27,16 @@ export const typeDef = gql`
     visibility: ClusterVisibility
     spaces: [Space!]!
     members: [User!]!
+    invite_links: [InviteLink!]!
   }
 `;
 
 export const resolvers = {
+  Query: {
+    cluster(source: any, args: { id: string }) {
+      return getClusterById(args.id);
+    },
+  },
   Cluster: {
     spaces(obj: Cluster): Promise<BaseSpace[]> {
       return getSpacesInCluster(obj.id);
@@ -39,7 +45,7 @@ export const resolvers = {
       const ids = await getUsersInCluster(obj.id);
       return await Promise.all(ids.map((id) => getUserFromId(id)));
     },
-    inviteLinks(obj: Cluster): Promise<ClusterInviteLink[]> {
+    invite_links(obj: Cluster): Promise<ClusterInviteLink[]> {
       return getInviteLinksWithClusterId(obj.id);
     },
   },
