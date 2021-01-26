@@ -1,6 +1,10 @@
 import { gql } from "apollo-server-express";
 import { Cluster, getClusterById } from "../database/tables/clusters";
-import { ClusterSpace, getSpaceById, Space } from "../database/tables/spaces";
+import {
+  ClusterSpace,
+  getSpaceById,
+  BaseSpace,
+} from "../database/tables/spaces";
 import { getConnectionCount } from "../spaces/server";
 
 export const typeDef = gql`
@@ -21,12 +25,12 @@ export const typeDef = gql`
 
 export const resolvers = {
   Query: {
-    space(id: string): Promise<Space> {
+    space(id: string): Promise<BaseSpace> {
       return getSpaceById(id);
     },
   },
   Space: {
-    activeUsers(source: Space) {
+    activeUsers(source: BaseSpace) {
       return getConnectionCount(source.id);
     },
   },

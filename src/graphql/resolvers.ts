@@ -7,7 +7,7 @@ import {
   getClustersWithUser,
   getUsersInCluster,
 } from "../database/tables/cluster_members";
-import { getSpacesInCluster, Space } from "../database/tables/spaces";
+import { getSpacesInCluster, BaseSpace } from "../database/tables/spaces";
 import { getUserFromId, User } from "../database/tables/users";
 
 export const resolvers = {
@@ -17,7 +17,7 @@ export const resolvers = {
     },
   },
   Cluster: {
-    spaces(obj: Cluster): Promise<Space[]> {
+    spaces(obj: Cluster): Promise<BaseSpace[]> {
       return getSpacesInCluster(obj.id);
     },
     async members(obj: Cluster): Promise<User[]> {

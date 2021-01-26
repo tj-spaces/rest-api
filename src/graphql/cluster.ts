@@ -4,7 +4,7 @@ import {
 } from "../database/tables/cluster_invite_links";
 import { Cluster } from "../database/tables/clusters";
 import { getUsersInCluster } from "../database/tables/cluster_members";
-import { getSpacesInCluster, Space } from "../database/tables/spaces";
+import { getSpacesInCluster, BaseSpace } from "../database/tables/spaces";
 import { getUserFromId, User } from "../database/tables/users";
 import { gql } from "apollo-server-express";
 
@@ -32,7 +32,7 @@ export const typeDef = gql`
 
 export const resolvers = {
   Cluster: {
-    spaces(obj: Cluster): Promise<Space[]> {
+    spaces(obj: Cluster): Promise<BaseSpace[]> {
       return getSpacesInCluster(obj.id);
     },
     async members(obj: Cluster): Promise<User[]> {

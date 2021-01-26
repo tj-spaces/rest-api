@@ -8,25 +8,27 @@ import { doesClusterExist } from "./clusters";
  * Maybe we'll add the ability to lock clusters in the future.
  * For now, all clusters have their own group chat and voice chat built in
  */
-export interface Space {
+export interface BaseSpace {
   id: string;
   name: string;
   color: string;
 }
 
-export interface InstantSpace extends Space {
+export interface InstantSpace extends BaseSpace {
   type: "instant";
 }
 
-export interface GroupSpace extends Space {
+export interface GroupSpace extends BaseSpace {
   type: "group";
   group_id: string;
 }
 
-export interface ClusterSpace extends Space {
+export interface ClusterSpace extends BaseSpace {
   type: "cluster";
   cluster_id: string;
 }
+
+export type Space = InstantSpace | GroupSpace | ClusterSpace;
 
 export async function createSpaceInCluster(
   clusterId: string,
@@ -69,7 +71,7 @@ export async function getClusterThatHasSpaceWithId(
     db.query(
       "SELECT `cluster_id` FROM `spaces` WHERE `type` = 'cluster' AND `id` = ?",
       [id],
-      (err, results: Space[]) => {
+      (err, results: BaseSpace[]) => {
         if (err) reject(err);
         else {
           if (results.length === 0) {
@@ -97,7 +99,7 @@ export async function getSpacesInCluster(
         if (err) reject(err);
 
         resolve(
-          results.map((space: Space) => ({
+          results.map((space: BaseSpace) => ({
             ...space,
             online_count: getConnectionCount(space.id),
           }))

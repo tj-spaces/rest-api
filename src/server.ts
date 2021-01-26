@@ -3,11 +3,10 @@ dotenv.config();
 
 import * as api from "./api/index";
 import * as auth from "./auth/index";
-import { getUserFromId } from "./database/tables/users";
 import * as bodyParser from "body-parser";
-import * as cors from "cors";
-import * as express from "express";
-import * as exphbs from "express-handlebars";
+import cors from "cors";
+import express from "express";
+import exphbs from "express-handlebars";
 import * as http from "http";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
