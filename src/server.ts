@@ -11,6 +11,9 @@ import * as exphbs from "express-handlebars";
 import * as http from "http";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
+import { graphqlHTTP } from "express-graphql";
+import { executableSchema } from "./graphql/graphql";
+import isDevelopmentMode from "./lib/isDevelopment";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -25,6 +28,11 @@ app.engine(
     layoutsDir: "views/layouts",
     partialsDir: "views/partials",
   })
+);
+
+app.use(
+  "/graphql",
+  graphqlHTTP({ schema: executableSchema, graphiql: isDevelopmentMode() })
 );
 
 app.use("/static", express.static("static/"));
