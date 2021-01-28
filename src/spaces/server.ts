@@ -10,6 +10,30 @@ import mapToObject from "../lib/mapToObject";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
+
+const createDefaultParticipant = (): SpaceParticipant => {
+  return {
+    accountId: "DEFAULT",
+    position: {
+      location: { x: 0, y: 0 },
+      rotation: 0,
+    },
+    isAdministrator: false,
+    isModerator: false,
+    canActivateCamera: true,
+    canActivateMicrophone: true,
+    canPresent: true,
+    isPresenting: false,
+    displayColor: "red",
+    displayName: "user",
+    displayStatus: "none",
+    movingForward: false,
+    movingBackward: false,
+    rotatingLeft: false,
+    rotatingRight: false,
+  };
+};
+
 export class SpaceServer {
   /**
    * Key is equal to `participant.participantId`
@@ -43,30 +67,6 @@ export class SpaceServer {
     };
   }
 
-  getDefaultCanPresent() {
-    return false;
-  }
-
-  getDefaultDisplayName() {
-    return "User";
-  }
-
-  getDefaultDisplayStatus(): DisplayStatus {
-    return "none";
-  }
-
-  getDefaultDisplayColor() {
-    return "red";
-  }
-
-  getDefaultCanActivateCamera() {
-    return true;
-  }
-
-  getDefaultCanActivateMicrophone() {
-    return true;
-  }
-
   getRoomName() {
     return "space_" + this.spaceId;
   }
@@ -90,6 +90,12 @@ export class SpaceServer {
     socket.leave(this.getRoomName());
   }
 
+  publishParticipantUpdate(participantId: string) {
+    this.io
+      .in(this.getRoomName())
+      .emit("peer_update", participantId, this.participants.get(participantId));
+  }
+
   addParticipantToSpace(participantId: string, participant: SpaceParticipant) {
     const { socket } = this.connections.get(participantId);
 
@@ -109,29 +115,55 @@ export class SpaceServer {
       this.addMessage(participantId, messageContent);
     });
 
+    socket.on("walk", (amt) => {
+      const p = this.participants.get(participantId);
+      const rotation = p.position.rotation;
+      const dx = Math.cos(rotation) * amt;
+      const dy = Math.sin(rotation) * amt;
+      p.position.location.x += dx;
+      p.position.location.y += dy;
+
+      this.publishParticipantUpdate(participantId);
+    });
+
+    socket.on("rotate", (amt) => {
+      const p = this.participants.get(participantId);
+      const rotation = p.position.rotation;
+      const newRotation = ((rotation + amt) % Math.PI) * 2;
+      p.position.rotation = newRotation;
+
+      this.publishParticipantUpdate(participantId);
+    });
+
     socket.on("leave_space", () => {
       this.deregisterParticipantFromSpace(participantId);
     });
   }
 
-  tryJoin(socket: Socket, displayName?: string) {
+  // tick() {
+  //   let participants = Array.from(this.participants.values());
+  //   participants.forEach((participant) => {
+  //     let walkAmount =
+  //       (participant.movingForward ? 1 : 0) -
+  //       (participant.movingBackward ? 1 : 0);
+  //     const rotation = participant.position.rotation;
+  //     const dx = Math.cos(rotation) * walkAmount;
+  //     const dy = Math.sin(rotation) * walkAmount;
+  //     participant.position.location.x += dx;
+  //     participant.position.location.y += dy;
+  //   });
+  //   setTimeout(() => this.tick(), 200);
+  // }
+
+  tryJoin(socket: Socket) {
     const session = getSessionDataById(socket.handshake.query["sessionId"]);
 
     if (session?.isLoggedIn) {
       const { accountId } = session;
 
       const participant: SpaceParticipant = {
+        ...createDefaultParticipant(),
         accountId,
-        displayColor: this.getDefaultDisplayColor(),
-        displayName: displayName || this.getDefaultDisplayName(),
-        displayStatus: this.getDefaultDisplayStatus(),
-        canPresent: this.getDefaultCanPresent(),
-        canActivateCamera: this.getDefaultCanActivateCamera(),
-        canActivateMicrophone: this.getDefaultCanActivateMicrophone(),
-        isAdministrator: false,
-        isModerator: false,
-        isPresenting: false,
-        position: this.getJoinPosition(),
       };
 
       this.connections.set(accountId, new Connection(socket));

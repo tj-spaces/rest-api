@@ -16,11 +16,14 @@ declare module "socket.io" {
       ev: "space_not_found" | "space_join_complete" | "unauthenticated"
     ): this;
     emit(ev: "twilio_grant", grant: string): this;
+    emit(ev: "peer_update", peerId: string, peer: SpaceParticipant): this;
 
     on(ev: "chat_message", cb: (messageContent: string) => void): this;
     on(ev: "disconnect", cb: () => void): this;
     on(ev: "leave_space", cb: () => void): this;
     on(ev: "join_space", cb: (spaceId: string) => void): this;
     on(ev: "ping", cb: (key: string) => void): this;
+    on(ev: "walk", cb: (amt: number) => void): this;
+    on(ev: "rotate", cb: (amt: number) => void): this;
   }
 }

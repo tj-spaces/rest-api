@@ -69,4 +69,9 @@ export interface SpaceParticipant {
    * Info about this user's location
    */
   position: SpacePositionInfo;
+
+  movingForward: boolean;
+  movingBackward: boolean;
+  rotatingLeft: boolean;
+  rotatingRight: boolean;
 }
