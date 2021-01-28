@@ -3,9 +3,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
-import { DisplayStatus } from "./DisplayStatus";
 import { getSessionDataById } from "../session";
-import createUuid from "../lib/createUuid";
 import mapToObject from "../lib/mapToObject";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 
@@ -15,7 +13,7 @@ const createDefaultParticipant = (): SpaceParticipant => {
   return {
     accountId: "DEFAULT",
     position: {
-      location: { x: 0, y: 0 },
+      location: { x: 0, y: 0, z: 0 },
       rotation: 0,
     },
     isAdministrator: false,
@@ -44,7 +42,7 @@ export class SpaceServer {
     senderId: string;
     content: string;
   }[] = [];
-  tickHandle: NodeJS.Timeout;
+  tickHandle: NodeJS.Timeout = undefined;
 
   constructor(public io: SocketIOServer, public spaceId: string) {}
 
@@ -58,7 +56,7 @@ export class SpaceServer {
 
   getJoinPosition(): SpacePositionInfo {
     return {
-      location: { x: 0, y: 0 },
+      location: { x: 0, y: 0, z: 0 },
       rotation: 0,
     };
   }
@@ -140,14 +138,18 @@ export class SpaceServer {
       let walkAmount = participant.moveDirection;
       const rotation = participant.position.rotation;
       const dx = Math.cos(rotation) * walkAmount;
-      const dy = Math.sin(rotation) * walkAmount;
+      const dz = Math.sin(rotation) * walkAmount;
       participant.position.location.x += dx;
-      participant.position.location.y += dy;
+      participant.position.location.z += dz;
 
       let rotationAmount = participant.rotateDirection * 0.05;
 
       participant.position.rotation =
         (rotation + rotationAmount) % (Math.PI * 2);
+
+      if (walkAmount || rotationAmount) {
+        this.publishParticipantUpdate(participant.accountId);
+      }
     });
     this.tickHandle = setTimeout(() => this.tick(), 200);
   }
