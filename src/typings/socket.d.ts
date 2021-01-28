@@ -23,7 +23,7 @@ declare module "socket.io" {
     on(ev: "leave_space", cb: () => void): this;
     on(ev: "join_space", cb: (spaceId: string) => void): this;
     on(ev: "ping", cb: (key: string) => void): this;
-    on(ev: "walk", cb: (amt: number) => void): this;
-    on(ev: "rotate", cb: (amt: number) => void): this;
+    on(ev: "set_walk_direction", cb: (direction: 0 | 1 | -1) => void): this;
+    on(ev: "set_rotate_direction", cb: (direction: 0 | 1 | -1) => void): this;
   }
 }

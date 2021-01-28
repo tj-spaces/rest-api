@@ -70,8 +70,6 @@ export interface SpaceParticipant {
    */
   position: SpacePositionInfo;
 
-  movingForward: boolean;
-  movingBackward: boolean;
-  rotatingLeft: boolean;
-  rotatingRight: boolean;
+  rotateDirection: 0 | 1 | -1;
+  moveDirection: 0 | 1 | -1;
 }

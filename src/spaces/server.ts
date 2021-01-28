@@ -27,10 +27,8 @@ const createDefaultParticipant = (): SpaceParticipant => {
     displayColor: "red",
     displayName: "user",
     displayStatus: "none",
-    movingForward: false,
-    movingBackward: false,
-    rotatingLeft: false,
-    rotatingRight: false,
+    moveDirection: 0,
+    rotateDirection: 0,
   };
 };
 
@@ -46,6 +44,7 @@ export class SpaceServer {
     senderId: string;
     content: string;
   }[] = [];
+  tickHandle: NodeJS.Timeout;
 
   constructor(public io: SocketIOServer, public spaceId: string) {}
 
@@ -59,10 +58,7 @@ export class SpaceServer {
 
   getJoinPosition(): SpacePositionInfo {
     return {
-      location: {
-        x: 0,
-        y: 0,
-      },
+      location: { x: 0, y: 0 },
       rotation: 0,
     };
   }
@@ -88,6 +84,12 @@ export class SpaceServer {
     socket.broadcast.emit("peer_left", participantId);
 
     socket.leave(this.getRoomName());
+
+    if (this.participants.size == 0) {
+      if (this.tickHandle) {
+        clearTimeout(this.tickHandle);
+      }
+    }
   }
 
   publishParticipantUpdate(participantId: string) {
@@ -115,45 +117,40 @@ export class SpaceServer {
       this.addMessage(participantId, messageContent);
     });
 
-    socket.on("walk", (amt) => {
-      const p = this.participants.get(participantId);
-      const rotation = p.position.rotation;
-      const dx = Math.cos(rotation) * amt;
-      const dy = Math.sin(rotation) * amt;
-      p.position.location.x += dx;
-      p.position.location.y += dy;
-
-      this.publishParticipantUpdate(participantId);
+    socket.on("set_walk_direction", (direction) => {
+      this.participants.get(participantId).moveDirection = direction;
     });
 
-    socket.on("rotate", (amt) => {
-      const p = this.participants.get(participantId);
-      const rotation = p.position.rotation;
-      const newRotation = ((rotation + amt) % Math.PI) * 2;
-      p.position.rotation = newRotation;
-
-      this.publishParticipantUpdate(participantId);
+    socket.on("set_rotate_direction", (direction) => {
+      this.participants.get(participantId).rotateDirection = direction;
     });
 
     socket.on("leave_space", () => {
       this.deregisterParticipantFromSpace(participantId);
     });
+
+    if (this.tickHandle == null) {
+      this.tickHandle = setTimeout(() => this.tick(), 0);
+    }
   }
 
-  // tick() {
-  //   let participants = Array.from(this.participants.values());
-  //   participants.forEach((participant) => {
-  //     let walkAmount =
-  //       (participant.movingForward ? 1 : 0) -
-  //       (participant.movingBackward ? 1 : 0);
-  //     const rotation = participant.position.rotation;
-  //     const dx = Math.cos(rotation) * walkAmount;
-  //     const dy = Math.sin(rotation) * walkAmount;
-  //     participant.position.location.x += dx;
-  //     participant.position.location.y += dy;
-  //   });
-  //   setTimeout(() => this.tick(), 200);
-  // }
+  tick() {
+    let participants = Array.from(this.participants.values());
+    participants.forEach((participant) => {
+      let walkAmount = participant.moveDirection;
+      const rotation = participant.position.rotation;
+      const dx = Math.cos(rotation) * walkAmount;
+      const dy = Math.sin(rotation) * walkAmount;
+      participant.position.location.x += dx;
+      participant.position.location.y += dy;
+
+      let rotationAmount = participant.rotateDirection * 0.05;
+
+      participant.position.rotation =
+        (rotation + rotationAmount) % (Math.PI * 2);
+    });
+    this.tickHandle = setTimeout(() => this.tick(), 200);
+  }
 
   tryJoin(socket: Socket) {
     const session = getSessionDataById(socket.handshake.query["sessionId"]);
