@@ -6,6 +6,7 @@ import { SpacePositionInfo } from "./SpacePositionInfo";
 import { getSessionDataById } from "../session";
 import mapToObject from "../lib/mapToObject";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
+import { deepMutateObject, NestedPartial } from "../lib/deepMutateObject";
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
 
@@ -86,6 +87,11 @@ export class SpaceServer {
 
     socket.removeAllListeners("chat_message");
     socket.removeAllListeners("leave_space");
+    socket.removeAllListeners("set_display_name");
+    socket.removeAllListeners("set_display_status");
+    socket.removeAllListeners("set_display_color");
+    socket.removeAllListeners("set_walk_direction");
+    socket.removeAllListeners("set_rotate_direction");
 
     socket.broadcast.emit("peer_left", participantId);
 
@@ -98,12 +104,6 @@ export class SpaceServer {
         this.tickHandle = undefined;
       }
     }
-  }
-
-  publishParticipantUpdate(participantId: string) {
-    this.io
-      .in(this.getRoomName())
-      .emit("peer_update", participantId, this.participants.get(participantId));
   }
 
   addParticipantToSpace(participantId: string, participant: SpaceParticipant) {
@@ -123,6 +123,18 @@ export class SpaceServer {
 
     socket.on("chat_message", (messageContent) => {
       this.addMessage(participantId, messageContent);
+    });
+
+    socket.on("set_display_name", (displayName) => {
+      this.updateParticipant(participantId, { displayName });
+    });
+
+    socket.on("set_display_status", (displayStatus) => {
+      this.updateParticipant(participantId, { displayStatus });
+    });
+
+    socket.on("set_display_color", (displayColor) => {
+      this.updateParticipant(participantId, { displayColor });
     });
 
     socket.on("set_walk_direction", (direction) => {
@@ -150,21 +162,33 @@ export class SpaceServer {
       const rotation = participant.position.rotation;
       const dx = Math.sin(rotation) * walkAmount * WALK_STEP;
       const dz = Math.cos(rotation) * walkAmount * WALK_STEP;
-      participant.position.location.x += dx;
-      participant.position.location.z += dz;
 
       let rotationAmount = participant.rotateDirection * ROTATE_STEP;
       let newRotation = rotation + rotationAmount;
+
       if (newRotation < 0) newRotation += Math.PI * 2;
       if (newRotation > Math.PI * 2) newRotation -= Math.PI * 2;
 
-      participant.position.rotation = newRotation;
-
-      if (walkAmount || rotationAmount) {
-        this.publishParticipantUpdate(participant.accountId);
-      }
+      this.updateParticipant(participant.accountId, {
+        position: {
+          location: {
+            x: participant.position.location.x + dx,
+            z: participant.position.location.z + dz,
+          },
+          rotation: newRotation,
+        },
+      });
     });
+
     this.tickHandle = setTimeout(() => this.tick(), TICK_MS);
+  }
+
+  updateParticipant(
+    participantId: string,
+    updates: NestedPartial<SpaceParticipant>
+  ) {
+    deepMutateObject(this.participants.get(participantId), updates);
+    this.io.in(this.getRoomName()).emit("peer_update", participantId, updates);
   }
 
   tryJoin(socket: Socket, displayName: string = "user") {

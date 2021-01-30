@@ -1,3 +1,4 @@
+import { DisplayStatus } from "../spaces/DisplayStatus";
 import { SpaceParticipant } from "../spaces/SpaceParticipant";
 
 declare module "socket.io" {
@@ -25,5 +26,11 @@ declare module "socket.io" {
     on(ev: "ping", cb: (key: string) => void): this;
     on(ev: "set_walk_direction", cb: (direction: 0 | 1 | -1) => void): this;
     on(ev: "set_rotate_direction", cb: (direction: 0 | 1 | -1) => void): this;
+    on(ev: "set_display_name", cb: (displayName: string) => void): this;
+    on(
+      ev: "set_display_status",
+      cb: (displayStatus: DisplayStatus) => void
+    ): this;
+    on(ev: "set_display_color", cb: (displayColor: string) => void): this;
   }
 }
