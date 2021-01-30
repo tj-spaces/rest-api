@@ -30,6 +30,10 @@ const createDefaultParticipant = (): SpaceParticipant => {
   };
 };
 
+const TICK_MS = 200;
+const WALK_STEP = 0.05;
+const ROTATE_STEP = Math.PI / 8;
+
 export class SpaceServer {
   /**
    * Key is equal to `participant.participantId`
@@ -140,12 +144,12 @@ export class SpaceServer {
     participants.forEach((participant) => {
       let walkAmount = participant.moveDirection;
       const rotation = participant.position.rotation;
-      const dx = Math.sin(rotation) * walkAmount;
-      const dz = Math.cos(rotation) * walkAmount;
+      const dx = Math.sin(rotation) * walkAmount * WALK_STEP;
+      const dz = Math.cos(rotation) * walkAmount * WALK_STEP;
       participant.position.location.x += dx;
       participant.position.location.z += dz;
 
-      let rotationAmount = participant.rotateDirection * (Math.PI / 8);
+      let rotationAmount = participant.rotateDirection * ROTATE_STEP;
       let newRotation = rotation + rotationAmount;
       if (newRotation < 0) newRotation += Math.PI * 2;
       if (newRotation > Math.PI * 2) newRotation -= Math.PI * 2;
