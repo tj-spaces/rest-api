@@ -34,8 +34,6 @@ app.use(
   graphqlHTTP({ schema: executableSchema, graphiql: isDevelopmentMode() })
 );
 
-app.use("/static", express.static("static/"));
-
 app.use(cors());
 
 app.use(getSessionMiddleware());

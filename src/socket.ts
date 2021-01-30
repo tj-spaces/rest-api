@@ -4,8 +4,10 @@ import { getSpaceServer } from "./spaces/server";
 import { getSessionDataById, getSessionMiddleware } from "./session";
 import { getUserFromId } from "./database/tables/users";
 import { createMessage } from "./database/tables/messages";
-import isDevelopmentMode from "./lib/isDevelopment";
 import createUuid from "./lib/createUuid";
+
+const PING_SEND_INTERVAL = 5000;
+const PING_TIMEOUT = 60000;
 
 export class Connection {
   /**
@@ -23,23 +25,42 @@ export class Connection {
    */
   pingKey: string;
 
+  /**
+   * Time since last ping was received
+   */
   latency: number = 0;
 
-  constructor(public socket: Socket) {
+  /**
+   * We have a timer to keep track of if someone's timed out
+   */
+  pingTimeoutHandle: NodeJS.Timeout;
+
+  constructor(public socket: Socket, onPingTimeout: () => void) {
     socket.on("ping", (key) => {
       if (key === this.pingKey) {
         this.lastPingReceiveTime = Date.now();
         this.latency = this.lastPingReceiveTime - this.lastPingSendTime;
 
+        if (this.pingTimeoutHandle != null) {
+          clearTimeout(this.pingTimeoutHandle);
+        }
+
         // Send a max of one ping every 500 ms
-        let timeToWaitUntilNextPing = Math.max(0, 500 - this.latency);
-        setTimeout(() => this.sendPing(), timeToWaitUntilNextPing);
+        let timeToWaitUntilNextPing = Math.max(
+          0,
+          PING_SEND_INTERVAL - this.latency
+        );
+
+        setTimeout(() => {
+          this.sendPing();
+          this.pingTimeoutHandle = setTimeout(() => {
+            onPingTimeout();
+          }, PING_TIMEOUT);
+        }, timeToWaitUntilNextPing);
       }
     });
 
-    if (!isDevelopmentMode()) {
-      this.sendPing();
-    }
+    this.sendPing();
   }
 
   sendPing() {

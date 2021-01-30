@@ -180,7 +180,12 @@ export class SpaceServer {
         displayColor: chooseColor(),
       };
 
-      this.connections.set(accountId, new Connection(socket));
+      this.connections.set(
+        accountId,
+        new Connection(socket, () => {
+          this.deregisterParticipantFromSpace(accountId);
+        })
+      );
       this.addParticipantToSpace(accountId, participant);
     } else {
       socket.emit("unauthenticated");
