@@ -84,8 +84,10 @@ export class SpaceServer {
     socket.leave(this.getRoomName());
 
     if (this.participants.size == 0) {
-      if (this.tickHandle) {
+      if (this.tickHandle != null) {
+        console.log("Stopped tick");
         clearTimeout(this.tickHandle);
+        this.tickHandle = undefined;
       }
     }
   }
@@ -128,6 +130,7 @@ export class SpaceServer {
     });
 
     if (this.tickHandle == null) {
+      console.log("Started tick");
       this.tickHandle = setTimeout(() => this.tick(), 0);
     }
   }
@@ -137,24 +140,26 @@ export class SpaceServer {
     participants.forEach((participant) => {
       let walkAmount = participant.moveDirection;
       const rotation = participant.position.rotation;
-      const dx = Math.cos(rotation) * walkAmount;
-      const dz = Math.sin(rotation) * walkAmount;
+      const dx = Math.sin(rotation) * walkAmount;
+      const dz = Math.cos(rotation) * walkAmount;
       participant.position.location.x += dx;
       participant.position.location.z += dz;
 
-      let rotationAmount = participant.rotateDirection * 0.05;
+      let rotationAmount = participant.rotateDirection * (Math.PI / 8);
+      let newRotation = rotation + rotationAmount;
+      if (newRotation < 0) newRotation += Math.PI * 2;
+      if (newRotation > Math.PI * 2) newRotation -= Math.PI * 2;
 
-      participant.position.rotation =
-        (rotation + rotationAmount) % (Math.PI * 2);
+      participant.position.rotation = newRotation;
 
-      if (walkAmount || rotationAmount) {
-        this.publishParticipantUpdate(participant.accountId);
-      }
+      // if (walkAmount || rotationAmount) {
+      this.publishParticipantUpdate(participant.accountId);
+      // }
     });
     this.tickHandle = setTimeout(() => this.tick(), 200);
   }
 
-  tryJoin(socket: Socket) {
+  tryJoin(socket: Socket, displayName: string = "user") {
     const session = getSessionDataById(socket.handshake.query["sessionId"]);
 
     if (session?.isLoggedIn) {
@@ -163,6 +168,7 @@ export class SpaceServer {
       const participant: SpaceParticipant = {
         ...createDefaultParticipant(),
         accountId,
+        displayName,
       };
 
       this.connections.set(accountId, new Connection(socket));
