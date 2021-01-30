@@ -9,6 +9,10 @@ import createTwilioGrantJwt from "../lib/createTwilioGrant";
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
 
+const colors = ["red", "blue", "green", "orange", "yellow", "gray"];
+
+const chooseColor = () => colors[Math.floor(Math.random() * colors.length)];
+
 const createDefaultParticipant = (): SpaceParticipant => {
   return {
     accountId: "DEFAULT",
@@ -31,7 +35,7 @@ const createDefaultParticipant = (): SpaceParticipant => {
 };
 
 const TICK_MS = 200;
-const WALK_STEP = 0.05;
+const WALK_STEP = 0.25;
 const ROTATE_STEP = Math.PI / 8;
 
 export class SpaceServer {
@@ -156,11 +160,11 @@ export class SpaceServer {
 
       participant.position.rotation = newRotation;
 
-      // if (walkAmount || rotationAmount) {
-      this.publishParticipantUpdate(participant.accountId);
-      // }
+      if (walkAmount || rotationAmount) {
+        this.publishParticipantUpdate(participant.accountId);
+      }
     });
-    this.tickHandle = setTimeout(() => this.tick(), 200);
+    this.tickHandle = setTimeout(() => this.tick(), TICK_MS);
   }
 
   tryJoin(socket: Socket, displayName: string = "user") {
@@ -173,6 +177,7 @@ export class SpaceServer {
         ...createDefaultParticipant(),
         accountId,
         displayName,
+        displayColor: chooseColor(),
       };
 
       this.connections.set(accountId, new Connection(socket));
