@@ -1,8 +1,5 @@
-import { DisplayStatus } from "../spaces/DisplayStatus";
-import {
-  SpaceParticipant,
-  SpaceParticipantUpdates,
-} from "../spaces/SpaceParticipant";
+import { Updater } from "queryshift";
+import { SpaceParticipant } from "../spaces/SpaceParticipant";
 
 declare module "socket.io" {
   interface Socket {
@@ -27,6 +24,6 @@ declare module "socket.io" {
     on(ev: "leave_space", cb: () => void): this;
     on(ev: "join_space", cb: (spaceId: string) => void): this;
     on(ev: "ping", cb: (key: string) => void): this;
-    on(ev: "update", cb: (updates: SpaceParticipantUpdates) => void): this;
+    on(ev: "update", cb: (updates: Updater<SpaceParticipant>) => void): this;
   }
 }

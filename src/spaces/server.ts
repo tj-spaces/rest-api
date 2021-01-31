@@ -4,9 +4,18 @@ import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 import { getSessionDataById } from "../session";
-import mapToObject from "../lib/mapToObject";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
-import { deepMutateObject, ObjectUpdater } from "../lib/deepMutateObject";
+import { mutate, verify, Updater, Permissions } from "queryshift";
+
+const allowedParticipantUpdates: Permissions<SpaceParticipant> = {
+  $set: {
+    displayColor: true,
+    displayName: true,
+    displayStatus: true,
+    movingDirection: true,
+    rotatingDirection: true,
+  },
+};
 
 const SPACE_CACHE_EXPIRE_TIME = 60;
 
@@ -129,7 +138,9 @@ export class SpaceServer {
     });
 
     socket.on("update", (updates) => {
-      this.updateParticipant(participantId, updates);
+      if (verify(allowedParticipantUpdates, updates).allowed) {
+        this.updateParticipant(participantId, updates);
+      }
     });
 
     socket.on("leave_space", () => {
@@ -157,12 +168,11 @@ export class SpaceServer {
       if (newRotation > Math.PI * 2) newRotation -= Math.PI * 2;
 
       this.updateParticipant(participant.accountId, {
-        position: {
-          location: {
-            x: (x) => x + dx,
-            z: (z) => z + dz,
+        $inc: {
+          position: {
+            location: { x: dx, z: dz },
+            rotation: newRotation,
           },
-          rotation: newRotation,
         },
       });
     });
@@ -170,11 +180,11 @@ export class SpaceServer {
     this.tickHandle = setTimeout(() => this.tick(), TICK_MS);
   }
 
-  updateParticipant(
-    participantID: string,
-    updates: ObjectUpdater<SpaceParticipant>
-  ) {
-    deepMutateObject(this.participants[participantID], updates);
+  updateParticipant(participantID: string, updates: Updater<SpaceParticipant>) {
+    this.participants[participantID] = mutate(
+      this.participants[participantID],
+      updates
+    );
     this.io.in(this.getRoomName()).emit("peer_update", participantID, updates);
   }
 
