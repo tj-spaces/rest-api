@@ -1,18 +1,20 @@
 import { DisplayStatus } from "./DisplayStatus";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 
+export interface SpaceParticipantUpdates {
+  displayName?: string;
+  displayColor?: string;
+  displayStatus?: DisplayStatus;
+  rotatingDirection?: 1 | 0 | -1;
+  movingDirection?: 1 | 0 | -1;
+}
+
 /**
  * An Participant in a space is anybody in the space that is either a guest or a user with an account.
  * This is not the same as an Account, which holds necessary information such as a user's email, username,
  * birthday, and etc.
  */
 export interface SpaceParticipant {
-  /**
-   * A single-use ID representing a single person joining a single space.
-   * This is assigned as soon as a user joins the space, even if they go to the waiting room.
-   */
-  sessionId?: string;
-
   /**
    * An ID assigned to somebody when they join the Space
    * If a user joins as a guest from the browser, this ID stays with them even if they
@@ -70,6 +72,9 @@ export interface SpaceParticipant {
    */
   position: SpacePositionInfo;
 
-  rotateDirection: 0 | 1 | -1;
-  moveDirection: 0 | 1 | -1;
+  /**
+   * The direction the participant is currently rotating
+   */
+  rotatingDirection: 0 | 1 | -1;
+  movingDirection: 0 | 1 | -1;
 }
