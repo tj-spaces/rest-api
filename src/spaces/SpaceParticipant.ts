@@ -1,14 +1,6 @@
 import { DisplayStatus } from "./DisplayStatus";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 
-export interface SpaceParticipantUpdates {
-  displayName?: string;
-  displayColor?: string;
-  displayStatus?: DisplayStatus;
-  rotatingDirection?: 1 | 0 | -1;
-  movingDirection?: 1 | 0 | -1;
-}
-
 /**
  * An Participant in a space is anybody in the space that is either a guest or a user with an account.
  * This is not the same as an Account, which holds necessary information such as a user's email, username,

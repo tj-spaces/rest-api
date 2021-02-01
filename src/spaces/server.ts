@@ -6,6 +6,7 @@ import { SpacePositionInfo } from "./SpacePositionInfo";
 import { getSessionDataById } from "../session";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import { mutate, verify, Updater, Permissions } from "queryshift";
+import { getLogger } from "../lib/ClusterLogger";
 
 const allowedParticipantUpdates: Permissions<SpaceParticipant> = {
   $set: {
@@ -17,7 +18,7 @@ const allowedParticipantUpdates: Permissions<SpaceParticipant> = {
   },
 };
 
-const SPACE_CACHE_EXPIRE_TIME = 60;
+const SPACE_CACHE_TTL = 60;
 
 const colors = ["red", "blue", "green", "orange", "yellow", "gray"];
 
@@ -48,25 +49,22 @@ const TICK_MS = 200;
 const WALK_STEP = 0.25;
 const ROTATE_STEP = Math.PI / 8;
 
+const logger = getLogger("space");
+
 export class SpaceServer {
   /**
    * Key is equal to `participant.participantId`
    */
   participants: Record<string, SpaceParticipant> = {};
   connections: Record<string, Connection> = {};
-  onlineCount: number = 0;
   space: Space;
   lastCacheLoadTime: -1;
-  recentMessages: {
-    senderId: string;
-    content: string;
-  }[] = [];
   tickHandle: NodeJS.Timeout | null = null;
 
   constructor(public io: SocketIOServer, public spaceId: string) {}
 
   async getSpace(): Promise<Space> {
-    if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_EXPIRE_TIME) {
+    if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {
       return await getSpaceById(this.spaceId);
@@ -85,7 +83,6 @@ export class SpaceServer {
   }
 
   addMessage(senderId: string, content: string) {
-    this.recentMessages.push({ senderId, content });
     this.io.in(this.getRoomName()).emit("chat_message", senderId, content);
   }
 
@@ -94,23 +91,19 @@ export class SpaceServer {
 
     delete this.participants[participantId];
     delete this.connections[participantId];
-    this.onlineCount--;
 
     socket.removeAllListeners("chat_message");
+    socket.removeAllListeners("update");
     socket.removeAllListeners("leave_space");
-    socket.removeAllListeners("set_display_name");
-    socket.removeAllListeners("set_display_status");
-    socket.removeAllListeners("set_display_color");
-    socket.removeAllListeners("set_walk_direction");
-    socket.removeAllListeners("set_rotate_direction");
 
     socket.broadcast.emit("peer_left", participantId);
 
+    logger({ event: "participantLeft", participantId });
+
     socket.leave(this.getRoomName());
 
-    if (this.onlineCount == 0) {
+    if (Object.keys(this.participants).length === 0) {
       if (this.tickHandle != null) {
-        console.log("Stopped tick");
         clearTimeout(this.tickHandle);
         this.tickHandle = null;
       }
@@ -123,6 +116,8 @@ export class SpaceServer {
       this.deregisterParticipantFromSpace(participantId);
     });
     this.participants[participantId] = participant;
+
+    logger({ event: "participantJoined", participantId });
 
     socket.join(this.getRoomName());
     socket.emit("space_join_complete");
@@ -140,6 +135,7 @@ export class SpaceServer {
     socket.on("update", (updates) => {
       if (verify(allowedParticipantUpdates, updates).allowed) {
         this.updateParticipant(participantId, updates);
+      } else {
       }
     });
 
@@ -148,7 +144,7 @@ export class SpaceServer {
     });
 
     if (this.tickHandle == null) {
-      console.log("Started tick");
+      logger({ event: "startedTick" });
       this.tickHandle = setTimeout(() => this.tick(), 0);
     }
   }
@@ -158,6 +154,7 @@ export class SpaceServer {
     participants.forEach((participant) => {
       let walkAmount = participant.movingDirection;
       const rotation = participant.position.rotation;
+
       const dx = Math.sin(rotation) * walkAmount * WALK_STEP;
       const dz = Math.cos(rotation) * walkAmount * WALK_STEP;
 
@@ -171,6 +168,10 @@ export class SpaceServer {
         $inc: {
           position: {
             location: { x: dx, z: dz },
+          },
+        },
+        $set: {
+          position: {
             rotation: newRotation,
           },
         },
@@ -203,6 +204,7 @@ export class SpaceServer {
 
       this.addParticipantToSpace(participant, socket);
     } else {
+      logger({ event: "unauthenticatedConnection" });
       socket.emit("unauthenticated");
     }
   }
@@ -214,6 +216,7 @@ export class SpaceServer {
 const spaceServers = new Map<string, SpaceServer>();
 
 export function createSpaceServer(spaceID: string, io: SocketIOServer) {
+  logger({ event: "createServer", spaceID });
   const spaceServer = new SpaceServer(io, spaceID);
   spaceServers.set(spaceID, spaceServer);
   return spaceServer;
@@ -223,7 +226,7 @@ export function getConnectionCount(spaceId: string) {
   if (!spaceServers.has(spaceId)) {
     return 0;
   } else {
-    return spaceServers.get(spaceId).onlineCount;
+    return Object.keys(spaceServers.get(spaceId).participants).length;
   }
 }
 
@@ -245,6 +248,7 @@ export async function getSpaceServer(
       return createSpaceServer(spaceID, io);
     }
   } else {
+    logger({ event: "spaceNotFound" }, "error");
     return null;
   }
 }

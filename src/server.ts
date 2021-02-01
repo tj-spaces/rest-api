@@ -13,6 +13,7 @@ import { createIo } from "./socket";
 import { graphqlHTTP } from "express-graphql";
 import { executableSchema } from "./graphql/graphql";
 import isDevelopmentMode from "./lib/isDevelopment";
+import { getLogger } from "./lib/ClusterLogger";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -33,6 +34,18 @@ app.use(
   "/graphql",
   graphqlHTTP({ schema: executableSchema, graphiql: isDevelopmentMode() })
 );
+
+const logger = getLogger("requests");
+
+app.use((req, res, next) => {
+  logger({
+    path: req.path,
+    query: req.query,
+    params: req.params,
+    auth: req.headers.authorization,
+  });
+  next();
+});
 
 app.use(cors());
 
