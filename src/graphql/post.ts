@@ -1,4 +1,4 @@
-import { gql } from "apollo-server-express";
+const gql = <T>(a: T) => a;
 
 export const typeDefs = gql`
   type Post {

@@ -1,11 +1,10 @@
-import { gql } from "apollo-server-express";
 import {
   ClusterInviteLink,
   createClusterInviteLink,
   getInviteLinkWithSlug,
 } from "../database/tables/cluster_invite_links";
 
-export const typeDef = gql`
+export const typeDef = `
   extend type Query {
     inviteLink(slug: String!): InviteLink
   }

@@ -6,9 +6,8 @@ import { Cluster, getClusterById } from "../database/tables/clusters";
 import { getUsersInCluster } from "../database/tables/cluster_members";
 import { getSpacesInCluster, BaseSpace } from "../database/tables/spaces";
 import { getUserFromId, User } from "../database/tables/users";
-import { gql } from "apollo-server-express";
 
-export const typeDef = gql`
+export const typeDef = `
   type Query {
     cluster(id: ID!): Cluster
   }

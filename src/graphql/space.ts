@@ -1,4 +1,3 @@
-import { gql } from "apollo-server-express";
 import { Cluster, getClusterById } from "../database/tables/clusters";
 import {
   ClusterSpace,
@@ -8,7 +7,7 @@ import {
 } from "../database/tables/spaces";
 import { getConnectionCount } from "../spaces/server";
 
-export const typeDef = gql`
+export const typeDef = `
   extend type Query {
     space(id: ID!): Space
   }

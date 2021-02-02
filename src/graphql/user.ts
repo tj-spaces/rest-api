@@ -1,9 +1,8 @@
-import { gql } from "apollo-server-express";
 import { Cluster } from "../database/tables/clusters";
 import { getClustersWithUser } from "../database/tables/cluster_members";
 import { getUserFromId, User } from "../database/tables/users";
 
-export const typeDef = gql`
+export const typeDef = `
   extend type Query {
     user(id: ID!): User
   }

@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from "apollo-server-express";
+import { makeExecutableSchema } from "graphql-tools";
 import * as cluster from "./cluster";
 import * as group from "./group";
 import * as inviteLink from "./inviteLink";
