@@ -8,3 +8,4 @@ credentials/
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 dist.zip
+ping-node.zip
