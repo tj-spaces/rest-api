@@ -2,7 +2,7 @@ import {
   ClusterInviteLink,
   getInviteLinksWithClusterId,
 } from "../database/tables/cluster_invite_links";
-import { Cluster, getClusterById } from "../database/tables/clusters";
+import { Cluster, ClusterVisibility, createCluster, getClusterById } from "../database/tables/clusters";
 import { getUsersInCluster } from "../database/tables/cluster_members";
 import { getSpacesInCluster, BaseSpace } from "../database/tables/spaces";
 import { getUserFromId, User } from "../database/tables/users";
@@ -10,6 +10,10 @@ import { getUserFromId, User } from "../database/tables/users";
 export const typeDef = `
   type Query {
     cluster(id: ID!): Cluster
+  }
+
+  type Mutation {
+    createCluster(name: String!, visibility: ClusterVisibility!): Cluster
   }
 
   enum ClusterVisibility {
@@ -21,8 +25,6 @@ export const typeDef = `
     id: ID!
     creator: User!
     name: String!
-    created_at: String!
-    updated_at: String!
     visibility: ClusterVisibility
     spaces: [Space!]!
     members: [User!]!
@@ -35,6 +37,12 @@ export const resolvers = {
     cluster(source: any, args: { id: string }) {
       return getClusterById(args.id);
     },
+  },
+  Mutation: {
+    createCluster(source: any, args: { name: string, visibility: ClusterVisibility }, context) {
+      let creatorId = context.request.session.accountId;
+      createCluster(creatorId, args.name, args.visibility);
+    }
   },
   Cluster: {
     spaces(obj: Cluster): Promise<BaseSpace[]> {
