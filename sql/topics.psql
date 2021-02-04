@@ -1,8 +1,0 @@
-DROP TABLE IF EXISTS "topics";
-
-CREATE TABLE "topics" (
-	"id" BIGINT,
-	"slug" VARCHAR(127),
-
-	PRIMARY KEY ("id")
-)
