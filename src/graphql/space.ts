@@ -3,8 +3,8 @@ import {
   ClusterSpace,
   getSpaceById,
   BaseSpace,
-  Space,
-} from "../database/tables/spaces";
+  SpaceSession,
+} from "../database/tables/space_sessions";
 import { getConnectionCount } from "../spaces/server";
 
 export const typeDef = `
@@ -30,15 +30,15 @@ export const typeDef = `
 
 export const resolvers = {
   Query: {
-    space(source: any, args: { id: string }): Promise<Space> {
+    space(source: any, args: { id: string }): Promise<SpaceSession> {
       return getSpaceById(args.id);
     },
   },
   Space: {
-    active_user_count(source: Space) {
+    active_user_count(source: SpaceSession) {
       return getConnectionCount(source.id);
     },
-    __resolveType(source: Space) {
+    __resolveType(source: SpaceSession) {
       if (source.type === "cluster") {
         return "ClusterSpace";
       } else {

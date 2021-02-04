@@ -1,4 +1,4 @@
-import { getDatabaseConnection } from "../index";
+import { db } from "..";
 import { GoogleProfile } from "../../auth/google/profile";
 import { IonProfile } from "../../auth/ion/profile";
 import createUuid from "../../lib/createUuid";
@@ -15,15 +15,16 @@ export interface User {
 }
 
 export async function doesUserExistWithEmail(email: string) {
-  const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {
     db.query(
-      "SELECT 1 FROM `users` WHERE `email` = ?",
+      `SELECT 1 FROM "users" WHERE "email" = $1`,
       [email],
       (err, results) => {
-        if (err) reject(err);
-
-        resolve(results.length > 0);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.rowCount > 0);
+        }
       }
     );
   });
@@ -46,19 +47,22 @@ export async function doAllUsersExistWithIds(
 }
 
 export async function doesUserExistWithId(id: string) {
-  const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {
-    db.query("SELECT 1 FROM `users` WHERE `id` = ?", [id], (err, results) => {
-      if (err) reject(err);
-
-      resolve(results.length > 0);
-    });
+    db.query(
+      `SELECT 1 FROM "users" WHERE "id" = $1 LIMIT 1`,
+      [id],
+      (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.rowCount > 0);
+        }
+      }
+    );
   });
 }
 
 export async function getUserFromEmail(email: string): Promise<User | null> {
-  const db = await getDatabaseConnection();
-
   if (email in userFromEmailCache) {
     let timeSinceCacheUpdate =
       Date.now() - userFromEmailCache[email].updateTime;
@@ -69,19 +73,17 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
 
   return new Promise((resolve, reject) => {
     db.query(
-      "SELECT * FROM `users` WHERE `email` = ?",
+      `SELECT * FROM "users" WHERE "email" = $1`,
       [email],
       (error, results) => {
         if (error) {
           reject(error);
+        } else if (results.rowCount > 0) {
+          let user = results[0];
+          userFromEmailCache[email] = { updateTime: Date.now(), user };
+          resolve(user);
         } else {
-          if (results.length > 0) {
-            let user = results[0];
-            userFromEmailCache[email] = { updateTime: Date.now(), user };
-            resolve(user);
-          } else {
-            resolve(null);
-          }
+          resolve(null);
         }
       }
     );
@@ -99,8 +101,6 @@ const userFromEmailCache: {
 const MAX_CACHE_AGE = 3600;
 
 export async function getUserFromId(id: string): Promise<User | null> {
-  const db = await getDatabaseConnection();
-
   if (id in userFromIdCache) {
     let timeSinceCacheUpdate = Date.now() - userFromIdCache[id].updateTime;
     if (timeSinceCacheUpdate < MAX_CACHE_AGE) {
@@ -109,11 +109,13 @@ export async function getUserFromId(id: string): Promise<User | null> {
   }
 
   return new Promise((resolve, reject) => {
-    db.query("SELECT * FROM `users` WHERE `id` = ?", [id], (error, results) => {
-      if (error) {
-        reject(error);
-      } else {
-        if (results.length > 0) {
+    db.query(
+      `SELECT * FROM "users" WHERE "id" = $1`,
+      [id],
+      (error, results) => {
+        if (error) {
+          reject(error);
+        } else if (results.rowCount > 0) {
           let user = results[0];
           userFromIdCache[id] = { updateTime: Date.now(), user };
           resolve(user);
@@ -121,7 +123,7 @@ export async function getUserFromId(id: string): Promise<User | null> {
           resolve(null);
         }
       }
-    });
+    );
   });
 }
 
@@ -129,13 +131,11 @@ export async function getUserFromId(id: string): Promise<User | null> {
  * Returns the ID of the newly-created user
  */
 export async function registerFromIonProfile(profile: IonProfile) {
-  const db = await getDatabaseConnection();
-
   let id = createUuid();
 
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `users` (`id`, `email`, `verified_email`, `name`, `given_name`, `family_name`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         profile.tj_email,
@@ -158,13 +158,11 @@ export async function registerFromIonProfile(profile: IonProfile) {
 }
 
 export async function registerFromGoogleProfile(profile: GoogleProfile) {
-  const db = await getDatabaseConnection();
-
   let id = createUuid();
 
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `users` (`id`, `email`, `verified_email`, `name`, `given_name`, `family_name`, `picture`, `locale`) values (?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         profile.email,

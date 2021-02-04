@@ -2,9 +2,17 @@ import {
   ClusterInviteLink,
   getInviteLinksWithClusterId,
 } from "../database/tables/cluster_invite_links";
-import { Cluster, ClusterVisibility, createCluster, getClusterById } from "../database/tables/clusters";
+import {
+  Cluster,
+  ClusterVisibility,
+  createCluster,
+  getClusterById,
+} from "../database/tables/clusters";
 import { getUsersInCluster } from "../database/tables/cluster_members";
-import { getSpacesInCluster, BaseSpace } from "../database/tables/spaces";
+import {
+  getActiveSpaceSessionsInCluster,
+  BaseSpace,
+} from "../database/tables/space_sessions";
 import { getUserFromId, User } from "../database/tables/users";
 
 export const typeDef = `
@@ -39,14 +47,18 @@ export const resolvers = {
     },
   },
   Mutation: {
-    createCluster(source: any, args: { name: string, visibility: ClusterVisibility }, context) {
+    createCluster(
+      source: any,
+      args: { name: string; visibility: ClusterVisibility },
+      context
+    ) {
       let creatorId = context.request.session.accountId;
       createCluster(creatorId, args.name, args.visibility);
-    }
+    },
   },
   Cluster: {
     spaces(obj: Cluster): Promise<BaseSpace[]> {
-      return getSpacesInCluster(obj.id);
+      return getActiveSpaceSessionsInCluster(obj.id);
     },
     async members(obj: Cluster): Promise<User[]> {
       const ids = await getUsersInCluster(obj.id);

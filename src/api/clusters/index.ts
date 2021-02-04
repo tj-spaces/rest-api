@@ -1,8 +1,8 @@
 import { Router } from "express";
 import {
-  createSpaceInCluster,
-  getSpacesInCluster,
-} from "../../database/tables/spaces";
+  startSpaceSessionInCluster,
+  getActiveSpaceSessionsInCluster,
+} from "../../database/tables/space_sessions";
 import {
   createCluster,
   deleteCluster,
@@ -150,7 +150,7 @@ router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
 
     res.json({
       status: "success",
-      space_id: await createSpaceInCluster(clusterId, name, "blue"),
+      space_id: await startSpaceSessionInCluster(clusterId, name, "blue"),
     });
   }
 });
@@ -180,7 +180,7 @@ router.get("/:clusterId/spaces", requireApiAuth, async (req, res) => {
     // If we are in the group, then the group must exist
     res.json({
       status: "success",
-      spaces: await getSpacesInCluster(clusterId),
+      spaces: await getActiveSpaceSessionsInCluster(clusterId),
     });
   }
 });

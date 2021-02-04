@@ -1,6 +1,10 @@
 import { Connection } from "../socket";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import { doesSpaceExist, getSpaceById, Space } from "../database/tables/spaces";
+import {
+  doesSpaceExist,
+  getSpaceById,
+  SpaceSession,
+} from "../database/tables/space_sessions";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 import { getSessionDataById } from "../session";
@@ -57,13 +61,13 @@ export class SpaceServer {
    */
   participants: Record<string, SpaceParticipant> = {};
   connections: Record<string, Connection> = {};
-  space: Space;
+  space: SpaceSession;
   lastCacheLoadTime: -1;
   tickHandle: NodeJS.Timeout | null = null;
 
   constructor(public io: SocketIOServer, public spaceId: string) {}
 
-  async getSpace(): Promise<Space> {
+  async getSpace(): Promise<SpaceSession> {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {

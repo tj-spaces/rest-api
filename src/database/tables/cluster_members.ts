@@ -1,4 +1,4 @@
-import { getDatabaseConnection } from "..";
+import { db } from "..";
 import { Cluster, doesClusterExist } from "./clusters";
 import { doesUserExistWithId } from "./users";
 
@@ -8,23 +8,22 @@ export interface ClusterMember {
 }
 
 export async function joinCluster(
-  clusterId: string,
-  userId: string,
+  clusterID: string,
+  userID: string,
   skipCheck: boolean = false
 ) {
   if (!skipCheck) {
-    if (!(await doesClusterExist(clusterId))) {
-      throw new Error("Cluster does not exist with id: " + clusterId);
-    } else if (!(await doesUserExistWithId(userId))) {
-      throw new Error("User does not exist with id: " + userId);
+    if (!(await doesClusterExist(clusterID))) {
+      throw new Error("Cluster does not exist with id: " + clusterID);
+    } else if (!(await doesUserExistWithId(userID))) {
+      throw new Error("User does not exist with id: " + userID);
     }
   }
 
-  const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "INSERT INTO `cluster_members` (`cluster_id`, `user_id`) VALUES (?, ?)",
-      [clusterId, userId],
+      `INSERT INTO "cluster_members" ("cluster_id", "user_id") VALUES ($1, $2)`,
+      [clusterID, userID],
       (err) => {
         if (err) reject(err);
         resolve();
@@ -33,16 +32,14 @@ export async function joinCluster(
   });
 }
 
-export async function didUserJoinCluster(clusterId: string, userId: string) {
-  const db = await getDatabaseConnection();
-
+export async function didUserJoinCluster(clusterID: string, userID: string) {
   return new Promise<boolean>((resolve, reject) => {
     db.query(
-      "SELECT 1 FROM `cluster_members` WHERE `cluster_id` = ? AND `user_id` = ?",
-      [clusterId, userId],
+      `SELECT 1 FROM "cluster_members" WHERE "cluster_id" = $1 AND "user_id" = $2 LIMIT 1`,
+      [clusterID, userID],
       (err, results) => {
         if (err) reject(err);
-        resolve(results.length > 0);
+        resolve(results.rowCount > 0);
       }
     );
   });
@@ -51,22 +48,21 @@ export async function didUserJoinCluster(clusterId: string, userId: string) {
 /**
  * Get a list of which clusters a user has joined.
  * Returns an array of strings, which are ClusterIds.
- * @param userId The user
+ * @param userID The user
  */
-export async function getClustersWithUser(userId: string) {
-  const db = await getDatabaseConnection();
+export async function getClustersWithUser(userID: string) {
   return new Promise<Cluster[]>((resolve, reject) => {
     db.query(
-      "SELECT `clusters`.*\
-       FROM `cluster_members`\
-       INNER JOIN `clusters` ON `clusters`.`id` = `cluster_members`.`cluster_id`\
-       WHERE `cluster_members`.`user_id` = ?",
-      [userId],
+      `SELECT "clusters".*
+       FROM "cluster_members"
+       INNER JOIN "clusters" ON "clusters"."id" = "cluster_members"."cluster_id"
+       WHERE "cluster_members"."user_id" = $1`,
+      [userID],
       (err, results) => {
-        if (err) reject(err);
-        else {
-          // results = Cluster[]
-          resolve(results);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.rows);
         }
       }
     );
@@ -78,29 +74,33 @@ export async function getClustersWithUser(userId: string) {
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getUsersInCluster(clusterId: string) {
-  const db = await getDatabaseConnection();
+export async function getUsersInCluster(clusterID: string) {
   return new Promise<string[]>((resolve, reject) => {
     db.query(
-      "SELECT user_id FROM `cluster_members` WHERE `cluster_id` = ?",
-      [clusterId],
+      `SELECT user_id FROM "cluster_members" WHERE "cluster_id" = $1`,
+      [clusterID],
       (err, result) => {
-        if (err) reject(err);
-        resolve(result.map((row: ClusterMember) => row.user_id));
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result.rows.map((row: ClusterMember) => row.user_id));
+        }
       }
     );
   });
 }
 
-export async function deleteUserFromCluster(clusterId: string, userId: string) {
-  const db = await getDatabaseConnection();
+export async function deleteUserFromCluster(clusterID: string, userID: string) {
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "DELETE FROM `cluster_members` WHERE `cluster_id` = ? AND `user_id` = ?",
-      [clusterId, userId],
+      `DELETE FROM "cluster_members" WHERE "cluster_id" = $1 AND "user_id" = $2`,
+      [clusterID, userID],
       (err) => {
-        if (err) reject(err);
-        resolve();
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
       }
     );
   });

@@ -1,10 +1,10 @@
-import { Space } from "../database/tables/spaces";
+import { SpaceSession } from "../database/tables/space_sessions";
 
 export interface SpaceSession {
   /**
    * The underlying space
    */
-  space: Space;
+  space: SpaceSession;
 
   /**
    * A unique ID for this SpaceSession

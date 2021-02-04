@@ -1,89 +1,98 @@
-import { getDatabaseConnection } from "..";
+import { db } from "..";
 import createUuid from "../../lib/createUuid";
 
-export type ClusterVisibility = "public" | "unlisted";
+export type ClusterVisibility = "discoverable" | "unlisted" | "secret";
 
 export interface Cluster {
   id: string;
   creator_id: string;
   name: string;
   created_at: string;
-  updated_at: string;
   visibility: ClusterVisibility;
 }
 
 export async function createCluster(
-  creatorId: string,
+  creatorID: string,
   name: string,
   visibility: ClusterVisibility
 ) {
-  const db = await getDatabaseConnection();
   const id = createUuid();
   return new Promise<string>((resolve, reject) => {
     db.query(
-      "INSERT INTO `clusters` (`id`, `creator_id`, `name`, `visibility`) VALUES (?, ?, ?, ?)",
-      [id, creatorId, name, visibility],
+      `INSERT INTO "clusters" ("id", "creator_id", "name", "visibility") VALUES ($1, $2, $3, $4)`,
+      [id, creatorID, name, visibility],
       (err) => {
-        if (err) reject(err);
-        resolve(id);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(id);
+        }
       }
     );
   });
 }
 
 export async function doesClusterExist(id: string) {
-  const db = await getDatabaseConnection();
   return new Promise<boolean>((resolve, reject) => {
     db.query(
-      "SELECT 1 FROM `clusters` WHERE `id` = ?",
+      `SELECT 1 FROM "clusters" WHERE "id" = $1 LIMIT 1`,
       [id],
       (err, results) => {
-        if (err) reject(err);
-
-        resolve(results.length > 0);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.rowCount > 0);
+        }
       }
     );
   });
 }
 
 export async function getClusterById(id: string) {
-  const db = await getDatabaseConnection();
   return new Promise<Cluster | null>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `clusters` WHERE `id` = ?",
+      `SELECT * FROM "clusters" WHERE "id" = $1 LIMIT 1`,
       [id],
       (err, results) => {
-        if (err) reject(err);
-        if (results.length === 0) resolve(null);
-        else resolve(results[0]);
+        if (err) {
+          reject(err);
+        } else if (results.rowCount === 0) {
+          resolve(null);
+        } else {
+          resolve(results.rows[0]);
+        }
       }
     );
   });
 }
 
-export async function getClustersCreatedByUser(creatorId: string) {
-  const db = await getDatabaseConnection();
+export async function getClustersCreatedByUser(creatorID: string) {
   return new Promise<Cluster[]>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `clusters` WHERE `creator_id` = ?",
-      [creatorId],
+      `SELECT * FROM "clusters" WHERE "creator_id" = $1`,
+      [creatorID],
       (err, results) => {
-        if (err) reject(err);
-        resolve(results);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.rows);
+        }
       }
     );
   });
 }
 
-export async function setClusterName(id: string, newName: string) {
-  const db = await getDatabaseConnection();
+export async function setClusterName(id: string, name: string) {
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "UPDATE `clusters` SET `name` = ?, `updated_on` = CURRENT_TIMESTAMP WHERE `id` = ?",
-      [newName, id],
+      `UPDATE "clusters" SET "name" = $1 WHERE "id" = $1`,
+      [name, id],
       (err) => {
-        if (err) reject(err);
-        resolve();
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
       }
     );
   });
@@ -93,14 +102,16 @@ export async function setClusterName(id: string, newName: string) {
  * Returns all clusters that have a visibility of 'public'.
  */
 export async function getPublicClusters() {
-  const db = await getDatabaseConnection();
   return new Promise<Cluster[]>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `clusters` WHERE `visibility` = 'public'",
+      `SELECT * FROM "clusters" WHERE "visibility" = 'discoverable'`,
       [],
       (err, result) => {
-        if (err) reject(err);
-        resolve(result);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result.rows);
+        }
       }
     );
   });
@@ -108,27 +119,31 @@ export async function getPublicClusters() {
 
 export async function setClusterVisibility(
   id: string,
-  newVisibility: ClusterVisibility
+  visibility: ClusterVisibility
 ) {
-  const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "UPDATE `clusters` SET `visibility` = ?, `updated_on` = CURRENT_TIMESTAMP WHERE `id` = ?",
-      [newVisibility, id],
+      `UPDATE "clusters" SET "visibility" = $1, "updated_on" = CURRENT_TIMESTAMP WHERE "id" = $2`,
+      [visibility, id],
       (err) => {
-        if (err) reject(err);
-        resolve();
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
       }
     );
   });
 }
 
 export async function deleteCluster(id: string) {
-  const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
-    db.query("DELETE FROM `clusters` WHERE `id` = ?", [id], (err) => {
-      if (err) reject(err);
-      resolve();
+    db.query(`DELETE FROM "clusters" WHERE "id" = $1`, [id], (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
     });
   });
 }

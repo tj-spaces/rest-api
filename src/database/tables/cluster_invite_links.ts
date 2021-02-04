@@ -1,4 +1,4 @@
-import { getDatabaseConnection } from "..";
+import { db } from "..";
 import createBase36String from "../../lib/createBase36String";
 import createUuid from "../../lib/createUuid";
 import { doesClusterExist } from "./clusters";
@@ -23,15 +23,16 @@ export async function generateClusterInviteLinkSlug() {
 }
 
 export async function doesClusterInviteLinkExistWithSlug(slug: string) {
-  const db = await getDatabaseConnection();
-
   return new Promise<boolean>((resolve, reject) => {
     db.query(
-      "SELECT 1 FROM `cluster_invite_links` WHERE `slug` = ?",
+      `SELECT 1 FROM "cluster_invite_links" WHERE "slug" = $1`,
       [slug],
       (err, result) => {
-        if (err) reject(err);
-        resolve(result.length > 0);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result.rowCount > 0);
+        }
       }
     );
   });
@@ -50,7 +51,6 @@ export async function createClusterInviteLink(
     throw new Error("Cluster does not exist with id: " + clusterId);
   }
 
-  const db = await getDatabaseConnection();
   const id = createUuid();
 
   if (slug === undefined) {
@@ -65,11 +65,14 @@ export async function createClusterInviteLink(
 
   return new Promise<CreateClusterInviteLinkResult>((resolve, reject) => {
     db.query(
-      "INSERT INTO `cluster_invite_links` (`id`, `slug`, `cluster_id`) VALUES (?, ?, ?)",
+      `INSERT INTO "cluster_invite_links" ("id", "slug", "cluster_id") VALUES ($1, $2, $3)`,
       [id, slug, clusterId],
       (err) => {
-        if (err) reject(err);
-        resolve({ success: true, slug });
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ success: true, slug });
+        }
       }
     );
   });
@@ -80,15 +83,18 @@ export async function createClusterInviteLink(
  * @param slug The shortlink that this invite link provides
  */
 export async function getInviteLinkWithSlug(slug: string) {
-  const db = await getDatabaseConnection();
   return new Promise<ClusterInviteLink | null>((resolve, reject) => {
     db.query(
-      "SELECT * FROM `cluster_invite_links` WHERE `slug` = ?",
+      `SELECT * FROM "cluster_invite_links" WHERE "slug" = $1`,
       [slug],
       (err, results) => {
-        if (err) reject(err);
-        if (results.length === 0) resolve(null);
-        else resolve(results[0]);
+        if (err) {
+          reject(err);
+        } else if (results.rowCount === 0) {
+          resolve(null);
+        } else {
+          resolve(results.rows[0]);
+        }
       }
     );
   });
@@ -99,29 +105,33 @@ export async function getInviteLinkWithSlug(slug: string) {
  * Returns an array of strings, which are UserIDs.
  * @param userId The user
  */
-export async function getInviteLinksWithClusterId(clusterId: string) {
-  const db = await getDatabaseConnection();
+export async function getInviteLinksWithClusterId(clusterID: string) {
   return new Promise<ClusterInviteLink[]>((resolve, reject) => {
-    db.query(
-      "SELECT * FROM `cluster_invite_links` WHERE `cluster_id` = ?",
-      [clusterId],
+    db.query<ClusterInviteLink>(
+      `SELECT * FROM "cluster_invite_links" WHERE "cluster_id" = $1`,
+      [clusterID],
       (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.rows);
+        }
       }
     );
   });
 }
 
 export async function deleteInviteLinkWithId(id: string) {
-  const db = await getDatabaseConnection();
   return new Promise<void>((resolve, reject) => {
     db.query(
-      "DELETE FROM `cluster_invite_links` WHERE `id` = ?",
+      `DELETE FROM "cluster_invite_links" WHERE "id" = $1`,
       [id],
       (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
       }
     );
   });

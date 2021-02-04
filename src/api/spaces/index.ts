@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { didUserJoinCluster } from "../../database/tables/cluster_members";
-import { getSpaceById } from "../../database/tables/spaces";
+import { getSpaceById } from "../../database/tables/space_sessions";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
 /* ROUTES TO MAKE:
