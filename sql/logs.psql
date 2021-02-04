@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS "logs" (
+	"id" BIGINT,
+	"creation_time" TIMESTAMP,
+
+	"namespace" VARCHAR(255),
+	"subspace" VARCHAR(255) DEFAULT '',
+	"data" JSON,
+
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE "idx_log_creation_time" ON "logs" ("creation_time");

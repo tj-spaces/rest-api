@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS "sponsors";
+
+CREATE TABLE "sponsors" (
+	"id" BIGINT,
+	"name" VARCHAR(255),
+	"biography" VARCHAR(1023),
+	"url" VARCHAR(1023),
+	"pending_verification" BOOLEAN DEFAULT TRUE,
+	"administrator_id" BIGINT
+);

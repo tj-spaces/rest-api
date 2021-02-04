@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS "cluster_topic_relations";
+
+CREATE TABLE "cluster_topic_relations" (
+	"cluster_id" BIGINT,
+	"topic_id" BIGINT,
+	
+	PRIMARY KEY ("cluster_id", "topic_id")
+);

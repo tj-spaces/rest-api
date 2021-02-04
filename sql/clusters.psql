@@ -1,8 +1,8 @@
 
 DROP TABLE IF EXISTS "clusters";
 CREATE TABLE "clusters" (
-	"id" VARCHAR(36),
-	"creator_id" VARCHAR(36), -- References "users"
+	"id" BIGINT,
+	"creator_id" BIGINT, -- References "users"
 	"name" VARCHAR(256),
 	"created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

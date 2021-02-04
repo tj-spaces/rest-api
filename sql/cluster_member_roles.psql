@@ -1,0 +1,19 @@
+
+DROP TABLE IF EXISTS "cluster_member_roles";
+CREATE TABLE "cluster_member_roles" (
+	"role_id" BIGINT,
+	"cluster_id" BIGINT,
+	"user_id" BIGINT,
+
+	CONSTRAINT "fk_cluster_member_role__cluster"
+		FOREIGN KEY ("cluster_id")
+			REFERENCES "clusters"("id")
+				ON DELETE CASCADE,
+				
+	CONSTRAINT "fk_cluster_member_role__user"
+		FOREIGN KEY ("user_id")
+			REFERENCES "users"("id")
+				ON DELETE CASCADE,
+
+	PRIMARY KEY ("role_id", "cluster_id", "user_id")
+);
