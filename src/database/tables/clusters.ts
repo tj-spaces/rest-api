@@ -1,5 +1,5 @@
 import { db } from "..";
-import createUuid from "../../lib/createUuid";
+import { nextId } from "../../lib/snowflakeId";
 
 export type ClusterVisibility = "discoverable" | "unlisted" | "secret";
 
@@ -16,7 +16,7 @@ export async function createCluster(
   name: string,
   visibility: ClusterVisibility
 ) {
-  const id = createUuid();
+  const id = nextId();
   return new Promise<string>((resolve, reject) => {
     db.query(
       `INSERT INTO "clusters" ("id", "creator_id", "name", "visibility") VALUES ($1, $2, $3, $4)`,
@@ -25,7 +25,7 @@ export async function createCluster(
         if (err) {
           reject(err);
         } else {
-          resolve(id);
+          resolve(id.toString());
         }
       }
     );

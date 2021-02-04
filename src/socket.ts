@@ -3,7 +3,6 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
 import { getSessionDataById, getSessionMiddleware } from "./session";
 import { getUserFromId } from "./database/tables/users";
-import { createMessage } from "./database/tables/messages";
 import createUuid from "./lib/createUuid";
 
 const PING_SEND_INTERVAL = 5000;
@@ -71,14 +70,6 @@ export class Connection {
 }
 
 export function emitToChannel() {}
-
-export function sendMessage(
-  channelId: string,
-  senderId: string,
-  message: string
-) {
-  createMessage(channelId, senderId, message);
-}
 
 const accountConnections = new Map<string, Connection>();
 

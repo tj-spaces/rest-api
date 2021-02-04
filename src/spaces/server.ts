@@ -1,8 +1,8 @@
 import { Connection } from "../socket";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import {
-  doesSpaceExist,
-  getSpaceById,
+  doesSpaceSessionExist,
+  getSpaceSessionById,
   SpaceSession,
 } from "../database/tables/space_sessions";
 import { SpaceParticipant } from "./SpaceParticipant";
@@ -71,7 +71,7 @@ export class SpaceServer {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {
-      return await getSpaceById(this.spaceId);
+      return await getSpaceSessionById(this.spaceId);
     }
   }
 
@@ -244,7 +244,7 @@ export async function getSpaceServer(
   spaceID: string,
   io: SocketIOServer
 ): Promise<SpaceServer | null> {
-  const spaceExists = await doesSpaceExist(spaceID);
+  const spaceExists = await doesSpaceSessionExist(spaceID);
   if (spaceExists) {
     if (spaceServers.has(spaceID)) {
       return spaceServers.get(spaceID);

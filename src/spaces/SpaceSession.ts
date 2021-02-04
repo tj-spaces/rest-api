@@ -1,6 +1,6 @@
 import { SpaceSession } from "../database/tables/space_sessions";
 
-export interface SpaceSession {
+export interface SpaceSessionInstance {
   /**
    * The underlying space
    */

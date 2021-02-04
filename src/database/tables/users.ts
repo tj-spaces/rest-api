@@ -2,6 +2,7 @@ import { db } from "..";
 import { GoogleProfile } from "../../auth/google/profile";
 import { IonProfile } from "../../auth/ion/profile";
 import createUuid from "../../lib/createUuid";
+import { nextId } from "../../lib/snowflakeId";
 
 export interface User {
   id: string; // A string of digits
@@ -131,7 +132,7 @@ export async function getUserFromId(id: string): Promise<User | null> {
  * Returns the ID of the newly-created user
  */
 export async function registerFromIonProfile(profile: IonProfile) {
-  let id = createUuid();
+  let id = nextId();
 
   return new Promise<string>((resolve, reject) => {
     db.query(
@@ -150,7 +151,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
         if (error) {
           reject(error);
         } else {
-          resolve(id);
+          resolve(id.toString());
         }
       }
     );
@@ -158,7 +159,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
 }
 
 export async function registerFromGoogleProfile(profile: GoogleProfile) {
-  let id = createUuid();
+  let id = nextId();
 
   return new Promise<string>((resolve, reject) => {
     db.query(
@@ -177,7 +178,7 @@ export async function registerFromGoogleProfile(profile: GoogleProfile) {
         if (error) {
           reject(error);
         } else {
-          resolve(id);
+          resolve(id.toString());
         }
       }
     );

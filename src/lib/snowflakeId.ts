@@ -7,23 +7,24 @@
 import { getTimeSinceSpacesEpoch } from "./spacesEpoch";
 
 export class SnowflakeProcess {
-  private lastTimestamp = -1;
+  private lastTimestamp = BigInt(-1);
   private generatedThisMillis = 0;
   private generatedThisMillisMask = (1 << 12) - 1;
-  private static timestampLeftShift = 42;
-  private static workerIdLeftShift = 17;
-  private static processIdLeftShift = 12;
+  private static timestampLeftShift = BigInt(22);
+  private static nodeIDLeftShift = BigInt(10);
 
-  constructor(private workerId: number, private processId: number) {}
+  constructor(private nodeID: number) {}
 
-  createUuid() {
-    let timestamp = getTimeSinceSpacesEpoch();
+  generateSnowflake() {
+    let timestamp = BigInt(getTimeSinceSpacesEpoch()) >> BigInt(1);
+
+    console.log(timestamp, getTimeSinceSpacesEpoch());
 
     if (this.lastTimestamp == timestamp) {
       this.generatedThisMillis =
         (this.generatedThisMillis + 1) & this.generatedThisMillisMask;
       if (this.generatedThisMillis == 0) {
-        this.waitUntil(this.lastTimestamp + 1);
+        this.waitUntil(++this.lastTimestamp);
       }
     } else if (timestamp > this.lastTimestamp) {
       this.generatedThisMillis = 0;
@@ -32,20 +33,19 @@ export class SnowflakeProcess {
     this.lastTimestamp = timestamp;
 
     return (
-      (timestamp << SnowflakeProcess.timestampLeftShift) |
-      (this.workerId << SnowflakeProcess.workerIdLeftShift) |
-      (this.processId << SnowflakeProcess.processIdLeftShift) |
-      this.generatedThisMillis
+      (BigInt(timestamp) << SnowflakeProcess.timestampLeftShift) |
+      (BigInt(this.nodeID) << SnowflakeProcess.nodeIDLeftShift) |
+      BigInt(this.generatedThisMillis)
     );
   }
 
-  private waitUntil(targetTime: number) {
-    while (getTimeSinceSpacesEpoch() < targetTime) {}
+  private waitUntil(targetTime: BigInt) {
+    while (BigInt(getTimeSinceSpacesEpoch()) < targetTime) {}
   }
 }
 
-const __process = new SnowflakeProcess(0, 0);
+const __process = new SnowflakeProcess(0);
 
 export function nextId() {
-  return __process.createUuid();
+  return __process.generateSnowflake();
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  startSpaceSessionInCluster,
+  startSpaceSession,
   getActiveSpaceSessionsInCluster,
 } from "../../database/tables/space_sessions";
 import {
@@ -150,7 +150,7 @@ router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
 
     res.json({
       status: "success",
-      space_id: await startSpaceSessionInCluster(clusterId, name, "blue"),
+      space_id: await startSpaceSession(clusterId, name, "blue"),
     });
   }
 });

@@ -9,7 +9,7 @@ export const typeDef = `
     inviteLink(slug: String!): InviteLink
   }
 
-  type Mutation {
+  extend type Mutation {
     createInviteLink(clusterID: ID!, slug: String): InviteLink
   }
 

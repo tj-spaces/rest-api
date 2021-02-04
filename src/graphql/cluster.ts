@@ -11,7 +11,7 @@ import {
 import { getUsersInCluster } from "../database/tables/cluster_members";
 import {
   getActiveSpaceSessionsInCluster,
-  BaseSpace,
+  SpaceSession,
 } from "../database/tables/space_sessions";
 import { getUserFromId, User } from "../database/tables/users";
 
@@ -57,7 +57,7 @@ export const resolvers = {
     },
   },
   Cluster: {
-    spaces(obj: Cluster): Promise<BaseSpace[]> {
+    spaces(obj: Cluster): Promise<SpaceSession[]> {
       return getActiveSpaceSessionsInCluster(obj.id);
     },
     async members(obj: Cluster): Promise<User[]> {

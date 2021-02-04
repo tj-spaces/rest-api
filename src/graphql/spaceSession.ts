@@ -1,9 +1,8 @@
 import { Cluster, getClusterById } from "../database/tables/clusters";
 import {
-  ClusterSpace,
-  getSpaceById,
-  BaseSpace,
+  getSpaceSessionById,
   SpaceSession,
+  startSpaceSession,
 } from "../database/tables/space_sessions";
 import { getConnectionCount } from "../spaces/server";
 
@@ -12,45 +11,37 @@ export const typeDef = `
     space(id: ID!): Space
   }
 
-  interface Space {
-    id: ID!
-    color: String!
-    name: String!
-    active_user_count: Int!
+  extend type Mutation {
+    startSession(name: String): String
   }
 
-  type ClusterSpace implements Space {
+  interface Space {
     id: ID!
-    color: String!
     name: String!
     active_user_count: Int!
-    cluster: Cluster!
+    cluster: Cluster
   }
 `;
 
 export const resolvers = {
   Query: {
     space(source: any, args: { id: string }): Promise<SpaceSession> {
-      return getSpaceById(args.id);
+      return getSpaceSessionById(args.id);
+    },
+  },
+  Mutation: {
+    startSession(source: any, args: { name: string }): Promise<string> {
+      return startSpaceSession("1234", args.name);
     },
   },
   Space: {
     active_user_count(source: SpaceSession) {
       return getConnectionCount(source.id);
     },
-    __resolveType(source: SpaceSession) {
-      if (source.type === "cluster") {
-        return "ClusterSpace";
-      } else {
-        throw new Error("Invalid source.type: " + source.type);
+    cluster(source: SpaceSession): Promise<Cluster> {
+      if (!("cluster_id" in source)) {
+        throw new Error("This Space has no cluster");
       }
-    },
-  },
-  ClusterSpace: {
-    active_user_count(source: ClusterSpace) {
-      return getConnectionCount(source.id);
-    },
-    cluster(source: ClusterSpace): Promise<Cluster> {
       return getClusterById(source.cluster_id);
     },
   },
