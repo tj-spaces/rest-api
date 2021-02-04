@@ -1,6 +1,6 @@
 import { db } from "..";
 import { Cluster, doesClusterExist } from "./clusters";
-import { doesUserExistWithId } from "./users";
+import { doesUserExistWithID } from "./users";
 
 export interface ClusterMember {
   cluster_id: string;
@@ -15,7 +15,7 @@ export async function joinCluster(
   if (!skipCheck) {
     if (!(await doesClusterExist(clusterID))) {
       throw new Error("Cluster does not exist with id: " + clusterID);
-    } else if (!(await doesUserExistWithId(userID))) {
+    } else if (!(await doesUserExistWithID(userID))) {
       throw new Error("User does not exist with id: " + userID);
     }
   }
@@ -47,7 +47,7 @@ export async function didUserJoinCluster(clusterID: string, userID: string) {
 
 /**
  * Get a list of which clusters a user has joined.
- * Returns an array of strings, which are ClusterIds.
+ * Returns an array of strings, which are ClusterIDs.
  * @param userID The user
  */
 export async function getClustersWithUser(userID: string) {
@@ -72,7 +72,7 @@ export async function getClustersWithUser(userID: string) {
 /**
  * Get a list of the members of a cluster.
  * Returns an array of strings, which are UserIDs.
- * @param userId The user
+ * @param userID The user
  */
 export async function getUsersInCluster(clusterID: string) {
   return new Promise<string[]>((resolve, reject) => {

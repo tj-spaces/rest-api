@@ -2,7 +2,7 @@ import { db } from "..";
 import { GoogleProfile } from "../../auth/google/profile";
 import { IonProfile } from "../../auth/ion/profile";
 import createUuid from "../../lib/createUuid";
-import { nextId } from "../../lib/snowflakeId";
+import { nextID } from "../../lib/snowflakeID";
 
 export interface User {
   id: string; // A string of digits
@@ -33,21 +33,21 @@ export async function doesUserExistWithEmail(email: string) {
 
 /**
  * Function to ensure that all users exist
- * @param userIds The set of user ids to check
+ * @param userIDs The set of user ids to check
  */
-export async function doAllUsersExistWithIds(
-  userIds: Set<string>
+export async function doAllUsersExistWithIDs(
+  userIDs: Set<string>
 ): Promise<boolean> {
   const results = await Promise.all(
-    Array.from(userIds).map((userId) => {
-      return doesUserExistWithId(userId);
+    Array.from(userIDs).map((userID) => {
+      return doesUserExistWithID(userID);
     })
   );
 
   return results.every((exists) => exists);
 }
 
-export async function doesUserExistWithId(id: string) {
+export async function doesUserExistWithID(id: string) {
   return new Promise<boolean>((resolve, reject) => {
     db.query(
       `SELECT 1 FROM "users" WHERE "id" = $1 LIMIT 1`,
@@ -91,7 +91,7 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
   });
 }
 
-const userFromIdCache: {
+const userFromIDCache: {
   [id: string]: { updateTime: number; user: User };
 } = {};
 
@@ -101,11 +101,11 @@ const userFromEmailCache: {
 
 const MAX_CACHE_AGE = 3600;
 
-export async function getUserFromId(id: string): Promise<User | null> {
-  if (id in userFromIdCache) {
-    let timeSinceCacheUpdate = Date.now() - userFromIdCache[id].updateTime;
+export async function getUserFromID(id: string): Promise<User | null> {
+  if (id in userFromIDCache) {
+    let timeSinceCacheUpdate = Date.now() - userFromIDCache[id].updateTime;
     if (timeSinceCacheUpdate < MAX_CACHE_AGE) {
-      return new Promise((resolve) => resolve(userFromIdCache[id].user));
+      return new Promise((resolve) => resolve(userFromIDCache[id].user));
     }
   }
 
@@ -118,7 +118,7 @@ export async function getUserFromId(id: string): Promise<User | null> {
           reject(error);
         } else if (results.rowCount > 0) {
           let user = results[0];
-          userFromIdCache[id] = { updateTime: Date.now(), user };
+          userFromIDCache[id] = { updateTime: Date.now(), user };
           resolve(user);
         } else {
           resolve(null);
@@ -132,7 +132,7 @@ export async function getUserFromId(id: string): Promise<User | null> {
  * Returns the ID of the newly-created user
  */
 export async function registerFromIonProfile(profile: IonProfile) {
-  let id = nextId();
+  let id = nextID();
 
   return new Promise<string>((resolve, reject) => {
     db.query(
@@ -159,7 +159,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
 }
 
 export async function registerFromGoogleProfile(profile: GoogleProfile) {
-  let id = nextId();
+  let id = nextID();
 
   return new Promise<string>((resolve, reject) => {
     db.query(

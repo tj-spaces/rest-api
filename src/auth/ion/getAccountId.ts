@@ -4,7 +4,7 @@ import {
 } from "../../database/tables/users";
 import { getIonProfile } from "./profile";
 
-export default async function getAccountIdFromIonCode(code: string) {
+export default async function getAccountIDFromIonCode(code: string) {
   const profile = await getIonProfile(code);
   const user = await getUserFromEmail(profile.tj_email);
 

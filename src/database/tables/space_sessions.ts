@@ -1,5 +1,5 @@
 import { db } from "..";
-import { nextId } from "../../lib/snowflakeId";
+import { nextID } from "../../lib/snowflakeID";
 import { getConnectionCount } from "../../spaces/server";
 import { doesClusterExist } from "./clusters";
 
@@ -29,7 +29,7 @@ export async function startSpaceSession(
     }
   }
 
-  const id = nextId();
+  const id = nextID();
   return new Promise<string>((resolve, reject) => {
     db.query(
       `INSERT INTO "space_sessions" ("id", "name", "cluster_id", "host_id") VALUES ($1, $2, $3, $4)`,
@@ -50,7 +50,7 @@ export async function startSpaceSession(
  * @param id The space
  * @return The ID of the cluster that has the space
  */
-export async function getClusterThatHasSpaceWithId(
+export async function getClusterThatHasSpaceWithID(
   id: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -110,7 +110,7 @@ export async function doesSpaceSessionExist(id: string) {
   });
 }
 
-export async function getSpaceSessionById(
+export async function getSpaceSessionByID(
   id: string
 ): Promise<SpaceSession | null> {
   return new Promise<SpaceSession | null>((resolve, reject) => {

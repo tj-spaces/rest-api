@@ -1,6 +1,6 @@
-import { Cluster, getClusterById } from "../database/tables/clusters";
+import { Cluster, getClusterByID } from "../database/tables/clusters";
 import {
-  getSpaceSessionById,
+  getSpaceSessionByID,
   SpaceSession,
   startSpaceSession,
 } from "../database/tables/space_sessions";
@@ -26,7 +26,7 @@ export const typeDef = `
 export const resolvers = {
   Query: {
     space(source: any, args: { id: string }): Promise<SpaceSession> {
-      return getSpaceSessionById(args.id);
+      return getSpaceSessionByID(args.id);
     },
   },
   Mutation: {
@@ -42,7 +42,7 @@ export const resolvers = {
       if (!("cluster_id" in source)) {
         throw new Error("This Space has no cluster");
       }
-      return getClusterById(source.cluster_id);
+      return getClusterByID(source.cluster_id);
     },
   },
 };

@@ -1,19 +1,19 @@
 import {
   ClusterInviteLink,
-  getInviteLinksWithClusterId,
+  getInviteLinksWithClusterID,
 } from "../database/tables/cluster_invite_links";
 import {
   Cluster,
   ClusterVisibility,
   createCluster,
-  getClusterById,
+  getClusterByID,
 } from "../database/tables/clusters";
 import { getUsersInCluster } from "../database/tables/cluster_members";
 import {
   getActiveSpaceSessionsInCluster,
   SpaceSession,
 } from "../database/tables/space_sessions";
-import { getUserFromId, User } from "../database/tables/users";
+import { getUserFromID, User } from "../database/tables/users";
 
 export const typeDef = `
   type Query {
@@ -43,7 +43,7 @@ export const typeDef = `
 export const resolvers = {
   Query: {
     cluster(source: any, args: { id: string }) {
-      return getClusterById(args.id);
+      return getClusterByID(args.id);
     },
   },
   Mutation: {
@@ -52,8 +52,8 @@ export const resolvers = {
       args: { name: string; visibility: ClusterVisibility },
       context
     ) {
-      let creatorId = context.request.session.accountId;
-      createCluster(creatorId, args.name, args.visibility);
+      let creatorID = context.request.session.accountID;
+      createCluster(creatorID, args.name, args.visibility);
     },
   },
   Cluster: {
@@ -62,10 +62,10 @@ export const resolvers = {
     },
     async members(obj: Cluster): Promise<User[]> {
       const ids = await getUsersInCluster(obj.id);
-      return await Promise.all(ids.map((id) => getUserFromId(id)));
+      return await Promise.all(ids.map((id) => getUserFromID(id)));
     },
     invite_links(obj: Cluster): Promise<ClusterInviteLink[]> {
-      return getInviteLinksWithClusterId(obj.id);
+      return getInviteLinksWithClusterID(obj.id);
     },
   },
 };

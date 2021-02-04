@@ -1,8 +1,8 @@
 import * as http from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
-import { getSessionDataById, getSessionMiddleware } from "./session";
-import { getUserFromId } from "./database/tables/users";
+import { getSessionDataByID, getSessionMiddleware } from "./session";
+import { getUserFromID } from "./database/tables/users";
 import createUuid from "./lib/createUuid";
 
 const PING_SEND_INTERVAL = 5000;
@@ -90,8 +90,8 @@ export const createIo = (server: http.Server) => {
   });
 
   io.on("connection", (socket: Socket) => {
-    const sessionId = socket.handshake.query["sessionId"];
-    const session = getSessionDataById(sessionId);
+    const sessionID = socket.handshake.query["sessionID"];
+    const session = getSessionDataByID(sessionID);
 
     if (session == null || session.isLoggedIn == false) {
       socket.emit("unauthenticated");
@@ -102,12 +102,12 @@ export const createIo = (server: http.Server) => {
       socket.broadcast.emit("peer_left");
     });
 
-    socket.on("join_space", async (spaceId: string) => {
-      const spaceServer = await getSpaceServer(spaceId, io);
+    socket.on("join_space", async (spaceID: string) => {
+      const spaceServer = await getSpaceServer(spaceID, io);
       if (spaceServer == null) {
         socket.emit("space_not_found");
       } else {
-        let user = await getUserFromId(session.accountId);
+        let user = await getUserFromID(session.accountID);
         spaceServer.tryJoin(socket, user.name);
       }
     });

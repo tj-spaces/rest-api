@@ -1,6 +1,6 @@
 import { Cluster } from "../database/tables/clusters";
 import { getClustersWithUser } from "../database/tables/cluster_members";
-import { getUserFromId, User } from "../database/tables/users";
+import { getUserFromID, User } from "../database/tables/users";
 
 export const typeDef = `
   extend type Query {
@@ -23,7 +23,7 @@ export const typeDef = `
 export const resolvers = {
   Query: {
     user(source: any, args: { id: string }): Promise<User> {
-      return getUserFromId(args.id);
+      return getUserFromID(args.id);
     },
   },
   User: {

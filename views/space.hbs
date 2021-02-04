@@ -39,8 +39,8 @@
 
 {{!--
 SpaceInhabitant {
-sessionId: string;
-participantId: string;
+sessionID: string;
+participantID: string;
 isGuest: boolean;
 displayName: string;
 displayColor: string;
@@ -76,10 +76,10 @@ rotation;
 	}
 
 	const elements = {
-		chat: document.getElementById("chat"),
-		connectionStatus: document.getElementById("connection-status"),
-		connectionLatency: document.getElementById("connection-latency"),
-		space: document.getElementById("space"),
+		chat: document.getElementByID("chat"),
+		connectionStatus: document.getElementByID("connection-status"),
+		connectionLatency: document.getElementByID("connection-latency"),
+		space: document.getElementByID("space"),
 	};
 
 	const CONNECTION_HEALTH_LEVELS = {
@@ -102,14 +102,14 @@ rotation;
 		return string.slice(0, 1).toUpperCase() + string.slice(1);
 	}
 
-	document.getElementById("chat-input").addEventListener("keyup", (ev) => {
+	document.getElementByID("chat-input").addEventListener("keyup", (ev) => {
 		if (ev.keyCode === 13) {
 			sendChatMessage();
 		}
 	});
 
 	function sendChatMessage() {
-		let input = document.getElementById("chat-input");
+		let input = document.getElementByID("chat-input");
 		let value = input.value;
 
 		if (typeof value == "string" && value.length > 0) {
@@ -128,7 +128,7 @@ rotation;
 
 	const $ = document.querySelectorAll;
 
-	const SPACE_ID = "{{spaceId}}";
+	const SPACE_ID = "{{spaceID}}";
 	const socket = io("/");
 	const peers = new Map();
 
@@ -144,7 +144,7 @@ rotation;
 	});
 
 	socket.on("peer_info", (participant) => {
-		peers.set(participant.participantId, participant);
+		peers.set(participant.participantID, participant);
 	});
 
 	socket.on("peers", (peers) => {
@@ -158,8 +158,8 @@ rotation;
 			renderChatMessage("Currently here:");
 		}
 
-		for (let [participantId, peer] of peerEntries) {
-			peers.set(participantId, peer);
+		for (let [participantID, peer] of peerEntries) {
+			peers.set(participantID, peer);
 			renderChatMessage(peer.displayName, "#ff7878")
 		}
 
@@ -167,7 +167,7 @@ rotation;
 	});
 
 	socket.on("peer_joined", (peer) => {
-		peers.set(peer.participantId, peer);
+		peers.set(peer.participantID, peer);
 		renderChatMessage(peer.displayName + " joined", "yellow");
 	});
 
@@ -175,8 +175,8 @@ rotation;
 		renderChatMessage("Peer left", "yellow");
 	});
 
-	socket.on("chat_message", (messageContent, senderId) => {
-		renderChatMessage(peers.get(senderId).displayName + ": " + messageContent, "#8eff61");
+	socket.on("chat_message", (messageContent, senderID) => {
+		renderChatMessage(peers.get(senderID).displayName + ": " + messageContent, "#8eff61");
 	});
 </script>
 

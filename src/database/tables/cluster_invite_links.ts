@@ -1,6 +1,6 @@
 import { db } from "..";
 import createBase36String from "../../lib/createBase36String";
-import createUuid from "../../lib/createUuid";
+import { nextID } from "../../lib/snowflakeID";
 import { doesClusterExist } from "./clusters";
 
 export interface ClusterInviteLink {
@@ -44,14 +44,14 @@ export interface CreateClusterInviteLinkResult {
 }
 
 export async function createClusterInviteLink(
-  clusterId: string,
+  clusterID: string,
   slug?: string
 ): Promise<CreateClusterInviteLinkResult> {
-  if (!(await doesClusterExist(clusterId))) {
-    throw new Error("Cluster does not exist with id: " + clusterId);
+  if (!(await doesClusterExist(clusterID))) {
+    throw new Error("Cluster does not exist with id: " + clusterID);
   }
 
-  const id = createUuid();
+  const id = nextID();
 
   if (slug === undefined) {
     // Generate a unique slug
@@ -66,7 +66,7 @@ export async function createClusterInviteLink(
   return new Promise<CreateClusterInviteLinkResult>((resolve, reject) => {
     db.query(
       `INSERT INTO "cluster_invite_links" ("id", "slug", "cluster_id") VALUES ($1, $2, $3)`,
-      [id, slug, clusterId],
+      [id, slug, clusterID],
       (err) => {
         if (err) {
           reject(err);
@@ -103,9 +103,9 @@ export async function getInviteLinkWithSlug(slug: string) {
 /**
  * Get a list of the members of a cluster.
  * Returns an array of strings, which are UserIDs.
- * @param userId The user
+ * @param userID The user
  */
-export async function getInviteLinksWithClusterId(clusterID: string) {
+export async function getInviteLinksWithClusterID(clusterID: string) {
   return new Promise<ClusterInviteLink[]>((resolve, reject) => {
     db.query<ClusterInviteLink>(
       `SELECT * FROM "cluster_invite_links" WHERE "cluster_id" = $1`,
@@ -121,7 +121,7 @@ export async function getInviteLinksWithClusterId(clusterID: string) {
   });
 }
 
-export async function deleteInviteLinkWithId(id: string) {
+export async function deleteInviteLinkWithID(id: string) {
   return new Promise<void>((resolve, reject) => {
     db.query(
       `DELETE FROM "cluster_invite_links" WHERE "id" = $1`,

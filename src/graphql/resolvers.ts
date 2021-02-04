@@ -1,7 +1,7 @@
-import { Cluster, getClusterById } from "../database/tables/clusters";
+import { Cluster, getClusterByID } from "../database/tables/clusters";
 import {
   ClusterInviteLink,
-  getInviteLinksWithClusterId,
+  getInviteLinksWithClusterID,
 } from "../database/tables/cluster_invite_links";
 import {
   getClustersWithUser,
@@ -11,12 +11,12 @@ import {
   getActiveSpaceSessionsInCluster,
   SpaceSession,
 } from "../database/tables/space_sessions";
-import { getUserFromId, User } from "../database/tables/users";
+import { getUserFromID, User } from "../database/tables/users";
 
 export const resolvers = {
   Query: {
     cluster(obj: any, args: { id: string }): Promise<Cluster> {
-      return getClusterById(args.id);
+      return getClusterByID(args.id);
     },
   },
   Cluster: {
@@ -25,10 +25,10 @@ export const resolvers = {
     },
     async members(obj: Cluster): Promise<User[]> {
       const ids = await getUsersInCluster(obj.id);
-      return await Promise.all(ids.map((id) => getUserFromId(id)));
+      return await Promise.all(ids.map((id) => getUserFromID(id)));
     },
     inviteLinks(obj: Cluster): Promise<ClusterInviteLink[]> {
-      return getInviteLinksWithClusterId(obj.id);
+      return getInviteLinksWithClusterID(obj.id);
     },
   },
   User: {

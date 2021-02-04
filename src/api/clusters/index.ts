@@ -7,7 +7,7 @@ import {
   createCluster,
   deleteCluster,
   doesClusterExist,
-  getClusterById,
+  getClusterByID,
 } from "../../database/tables/clusters";
 import {
   didUserJoinCluster,
@@ -19,8 +19,8 @@ import requireApiAuth from "../../middleware/requireApiAuth";
  * Main router for Clusters API.
  * Contains routes:
  *  - POST /: Create a cluster. Returns { cluster_id }
- *  - GET /:clusterId: Get metadata about a Cluster.
- *  - GET /:clusterId/spaces: Get a list of spaces in a Cluster.
+ *  - GET /:clusterID: Get metadata about a Cluster.
+ *  - GET /:clusterID/spaces: Get a list of spaces in a Cluster.
  */
 export const router = Router();
 
@@ -32,7 +32,7 @@ export const router = Router();
  */
 router.post("/", requireApiAuth, async (req, res) => {
   const { visibility, name } = req.body;
-  const { accountId } = req.session;
+  const { accountID } = req.session;
 
   if (typeof name !== "string" || name.length === 0 || name.length > 255) {
     res.status(400);
@@ -46,20 +46,20 @@ router.post("/", requireApiAuth, async (req, res) => {
     return;
   }
 
-  const clusterId = await createCluster(accountId, name, visibility);
+  const clusterID = await createCluster(accountID, name, visibility);
 
-  await joinCluster(clusterId, accountId);
+  await joinCluster(clusterID, accountID);
 
   res.json({
     status: "success",
-    cluster_id: clusterId,
+    cluster_id: clusterID,
   });
 });
 
-router.get("/:clusterId", async (req, res) => {
-  const { clusterId } = req.params;
+router.get("/:clusterID", async (req, res) => {
+  const { clusterID } = req.params;
 
-  const cluster = await getClusterById(clusterId);
+  const cluster = await getClusterByID(clusterID);
 
   if (cluster == null) {
     res.status(404);
@@ -69,18 +69,18 @@ router.get("/:clusterId", async (req, res) => {
   }
 });
 
-router.delete("/:clusterId", requireApiAuth, async (req, res) => {
-  const { clusterId } = req.params;
-  const { accountId } = req.session;
+router.delete("/:clusterID", requireApiAuth, async (req, res) => {
+  const { clusterID } = req.params;
+  const { accountID } = req.session;
 
-  const clusterExists = await doesClusterExist(clusterId);
+  const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {
     res.status(404);
     res.json({ status: "error", error: "cluster_not_found" });
     return;
   }
 
-  const inCluster = await didUserJoinCluster(clusterId, accountId);
+  const inCluster = await didUserJoinCluster(clusterID, accountID);
 
   if (!inCluster) {
     res.status(401);
@@ -88,7 +88,7 @@ router.delete("/:clusterId", requireApiAuth, async (req, res) => {
   } else {
     // If we are in the group, then the group must exist, and we can delete it
 
-    await deleteCluster(clusterId);
+    await deleteCluster(clusterID);
 
     res.json({
       status: "success",
@@ -96,23 +96,23 @@ router.delete("/:clusterId", requireApiAuth, async (req, res) => {
   }
 });
 
-router.post("/:clusterId/join", requireApiAuth, async (req, res) => {
-  const { accountId } = req.session;
-  const { clusterId } = req.params;
+router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
+  const { accountID } = req.session;
+  const { clusterID } = req.params;
 
-  const clusterExists = await doesClusterExist(clusterId);
+  const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {
     res.status(404);
     res.json({ status: "error", error: "cluster_not_found" });
     return;
   }
 
-  const inCluster = await didUserJoinCluster(clusterId, accountId);
+  const inCluster = await didUserJoinCluster(clusterID, accountID);
 
   if (inCluster) {
     res.json({ status: "success", message: "already_in_cluster" });
   } else {
-    await joinCluster(clusterId, accountId);
+    await joinCluster(clusterID, accountID);
     res.json({ status: "success" });
   }
 });
@@ -122,9 +122,9 @@ router.post("/:clusterId/join", requireApiAuth, async (req, res) => {
  * Requires params:
  *  - `name` The name of the space
  */
-router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
-  const { accountId } = req.session;
-  const { clusterId } = req.params;
+router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
+  const { accountID } = req.session;
+  const { clusterID } = req.params;
   const { name } = req.body;
 
   if (typeof name !== "string" || name.length == 0 || name.length > 255) {
@@ -133,14 +133,14 @@ router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
     return;
   }
 
-  const clusterExists = await doesClusterExist(clusterId);
+  const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {
     res.status(404);
     res.json({ status: "error", error: "cluster_not_found" });
     return;
   }
 
-  const inCluster = await didUserJoinCluster(clusterId, accountId);
+  const inCluster = await didUserJoinCluster(clusterID, accountID);
 
   if (!inCluster) {
     res.status(401);
@@ -150,7 +150,7 @@ router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
 
     res.json({
       status: "success",
-      space_id: await startSpaceSession(clusterId, name, "blue"),
+      space_id: await startSpaceSession(clusterID, name, "blue"),
     });
   }
 });
@@ -160,18 +160,18 @@ router.post("/:clusterId/spaces", requireApiAuth, async (req, res) => {
  * Requires params:
  *  - `cluster_id` The cluster to find spaces for
  */
-router.get("/:clusterId/spaces", requireApiAuth, async (req, res) => {
-  const { accountId } = req.session;
-  const { clusterId } = req.params;
+router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
+  const { accountID } = req.session;
+  const { clusterID } = req.params;
 
-  const clusterExists = await doesClusterExist(clusterId);
+  const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {
     res.status(404);
     res.json({ status: "error", error: "cluster_not_found" });
     return;
   }
 
-  const inCluster = await didUserJoinCluster(clusterId, accountId);
+  const inCluster = await didUserJoinCluster(clusterID, accountID);
 
   if (!inCluster) {
     res.status(401);
@@ -180,7 +180,7 @@ router.get("/:clusterId/spaces", requireApiAuth, async (req, res) => {
     // If we are in the group, then the group must exist
     res.json({
       status: "success",
-      spaces: await getActiveSpaceSessionsInCluster(clusterId),
+      spaces: await getActiveSpaceSessionsInCluster(clusterID),
     });
   }
 });

@@ -9,14 +9,14 @@ export interface Session {
 
 const MEMORY_STORED_SESSIONS = new Map<string, Session>();
 
-export function getSessionDataById(sessionId: string): SessionData | null {
-  if (MEMORY_STORED_SESSIONS.has(sessionId)) {
-    const session = MEMORY_STORED_SESSIONS.get(sessionId);
+export function getSessionDataByID(sessionID: string): SessionData | null {
+  if (MEMORY_STORED_SESSIONS.has(sessionID)) {
+    const session = MEMORY_STORED_SESSIONS.get(sessionID);
     if (Date.now() > session.expiresAt) {
-      MEMORY_STORED_SESSIONS.delete(sessionId);
+      MEMORY_STORED_SESSIONS.delete(sessionID);
       return null;
     } else {
-      return MEMORY_STORED_SESSIONS.get(sessionId).data;
+      return MEMORY_STORED_SESSIONS.get(sessionID).data;
     }
   } else {
     return null;
@@ -29,13 +29,13 @@ export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24;
  * Registers a session in the memory cache
  * @return Session id
  */
-export function createSession(accountId: string): string {
+export function createSession(accountID: string): string {
   const id = createUuid();
 
   MEMORY_STORED_SESSIONS.set(id, {
     expiresAt: Date.now() + SESSION_LIFETIME_MS,
     data: {
-      accountId,
+      accountID,
       isLoggedIn: true,
     },
   });
@@ -52,7 +52,7 @@ let sessionMiddleware: RequestHandler = (req, res, next) => {
   if (typeof auth === "string" && auth.startsWith("Bearer ")) {
     const token = auth.slice(7);
     // console.log("Found token =", token);
-    req.session = getSessionDataById(token);
+    req.session = getSessionDataByID(token);
     // console.log("Session data was", req.session);
     next();
   } else {

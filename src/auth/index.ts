@@ -37,7 +37,7 @@ router.post("/create_session", async (req, res) => {
 });
 
 router.get("/logout", (req, res) => {
-  delete req.session.accountId;
+  delete req.session.accountID;
   req.session.isLoggedIn = false;
 
   res.redirect("/");

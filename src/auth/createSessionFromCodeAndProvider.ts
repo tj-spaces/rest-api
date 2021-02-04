@@ -1,6 +1,6 @@
 import { createSession } from "../session";
-import getAccountIdFromGoogleCode from "./google/getAccountId";
-import getAccountIdFromIonCode from "./ion/getAccountId";
+import getAccountIDFromGoogleCode from "./google/getAccountID";
+import getAccountIDFromIonCode from "./ion/getAccountID";
 
 /**
  * Given an authorization code and the OAuth provider, load the profile of the user
@@ -10,14 +10,14 @@ export default async function createSessionFromCodeAndProvider(
   code: string,
   provider: "google" | "ion"
 ) {
-  let accountId: string;
+  let accountID: string;
   if (provider === "google") {
-    accountId = await getAccountIdFromGoogleCode(code);
+    accountID = await getAccountIDFromGoogleCode(code);
   } else if (provider === "ion") {
-    accountId = await getAccountIdFromIonCode(code);
+    accountID = await getAccountIDFromIonCode(code);
   } else {
     throw new Error("Provider type is invalid");
   }
 
-  return createSession(accountId);
+  return createSession(accountID);
 }

@@ -9,7 +9,7 @@ export interface SpaceSessionInstance {
   /**
    * A unique ID for this SpaceSession
    */
-  sessionId: string;
+  sessionID: string;
 
   /**
    * Describes how the space should be presented to the attendee

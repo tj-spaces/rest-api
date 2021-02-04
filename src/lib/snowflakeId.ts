@@ -18,8 +18,6 @@ export class SnowflakeProcess {
   generateSnowflake() {
     let timestamp = BigInt(getTimeSinceSpacesEpoch()) >> BigInt(1);
 
-    console.log(timestamp, getTimeSinceSpacesEpoch());
-
     if (this.lastTimestamp == timestamp) {
       this.generatedThisMillis =
         (this.generatedThisMillis + 1) & this.generatedThisMillisMask;
@@ -46,6 +44,6 @@ export class SnowflakeProcess {
 
 const __process = new SnowflakeProcess(0);
 
-export function nextId() {
+export function nextID() {
   return __process.generateSnowflake();
 }

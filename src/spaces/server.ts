@@ -2,12 +2,12 @@ import { Connection } from "../socket";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import {
   doesSpaceSessionExist,
-  getSpaceSessionById,
+  getSpaceSessionByID,
   SpaceSession,
 } from "../database/tables/space_sessions";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
-import { getSessionDataById } from "../session";
+import { getSessionDataByID } from "../session";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import { mutate, verify, Updater, Permissions } from "queryshift";
 import { getLogger } from "../lib/ClusterLogger";
@@ -30,7 +30,7 @@ const chooseColor = () => colors[Math.floor(Math.random() * colors.length)];
 
 const createDefaultParticipant = (): SpaceParticipant => {
   return {
-    accountId: "DEFAULT",
+    accountID: "DEFAULT",
     position: {
       location: { x: 0, y: 0, z: 0 },
       rotation: 0,
@@ -57,7 +57,7 @@ const logger = getLogger("space");
 
 export class SpaceServer {
   /**
-   * Key is equal to `participant.participantId`
+   * Key is equal to `participant.participantID`
    */
   participants: Record<string, SpaceParticipant> = {};
   connections: Record<string, Connection> = {};
@@ -65,13 +65,13 @@ export class SpaceServer {
   lastCacheLoadTime: -1;
   tickHandle: NodeJS.Timeout | null = null;
 
-  constructor(public io: SocketIOServer, public spaceId: string) {}
+  constructor(public io: SocketIOServer, public spaceID: string) {}
 
   async getSpace(): Promise<SpaceSession> {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {
-      return await getSpaceSessionById(this.spaceId);
+      return await getSpaceSessionByID(this.spaceID);
     }
   }
 
@@ -83,26 +83,26 @@ export class SpaceServer {
   }
 
   getRoomName() {
-    return "space_" + this.spaceId;
+    return "space_" + this.spaceID;
   }
 
-  addMessage(senderId: string, content: string) {
-    this.io.in(this.getRoomName()).emit("chat_message", senderId, content);
+  addMessage(senderID: string, content: string) {
+    this.io.in(this.getRoomName()).emit("chat_message", senderID, content);
   }
 
-  deregisterParticipantFromSpace(participantId: string) {
-    const { socket } = this.connections[participantId];
+  deregisterParticipantFromSpace(participantID: string) {
+    const { socket } = this.connections[participantID];
 
-    delete this.participants[participantId];
-    delete this.connections[participantId];
+    delete this.participants[participantID];
+    delete this.connections[participantID];
 
     socket.removeAllListeners("chat_message");
     socket.removeAllListeners("update");
     socket.removeAllListeners("leave_space");
 
-    socket.broadcast.emit("peer_left", participantId);
+    socket.broadcast.emit("peer_left", participantID);
 
-    logger({ event: "participantLeft", participantId });
+    logger({ event: "participantLeft", participantID });
 
     socket.leave(this.getRoomName());
 
@@ -115,36 +115,36 @@ export class SpaceServer {
   }
 
   addParticipantToSpace(participant: SpaceParticipant, socket: Socket) {
-    let participantId = participant.accountId;
-    this.connections[participantId] = new Connection(socket, () => {
-      this.deregisterParticipantFromSpace(participantId);
+    let participantID = participant.accountID;
+    this.connections[participantID] = new Connection(socket, () => {
+      this.deregisterParticipantFromSpace(participantID);
     });
-    this.participants[participantId] = participant;
+    this.participants[participantID] = participant;
 
-    logger({ event: "participantJoined", participantId });
+    logger({ event: "participantJoined", participantID });
 
     socket.join(this.getRoomName());
     socket.emit("space_join_complete");
     socket.emit(
       "twilio_grant",
-      createTwilioGrantJwt(participantId, this.spaceId)
+      createTwilioGrantJwt(participantID, this.spaceID)
     );
     socket.emit("peers", this.participants);
     socket.broadcast.emit("peer_joined", participant);
 
     socket.on("chat_message", (messageContent) => {
-      this.addMessage(participantId, messageContent);
+      this.addMessage(participantID, messageContent);
     });
 
     socket.on("update", (updates) => {
       if (verify(allowedParticipantUpdates, updates).allowed) {
-        this.updateParticipant(participantId, updates);
+        this.updateParticipant(participantID, updates);
       } else {
       }
     });
 
     socket.on("leave_space", () => {
-      this.deregisterParticipantFromSpace(participantId);
+      this.deregisterParticipantFromSpace(participantID);
     });
 
     if (this.tickHandle == null) {
@@ -168,7 +168,7 @@ export class SpaceServer {
       if (newRotation < 0) newRotation += Math.PI * 2;
       if (newRotation > Math.PI * 2) newRotation -= Math.PI * 2;
 
-      this.updateParticipant(participant.accountId, {
+      this.updateParticipant(participant.accountID, {
         $inc: {
           position: {
             location: { x: dx, z: dz },
@@ -194,14 +194,14 @@ export class SpaceServer {
   }
 
   tryJoin(socket: Socket, displayName: string = "user") {
-    const session = getSessionDataById(socket.handshake.query["sessionId"]);
+    const session = getSessionDataByID(socket.handshake.query["sessionID"]);
 
     if (session?.isLoggedIn) {
-      const { accountId } = session;
+      const { accountID } = session;
 
       const participant: SpaceParticipant = {
         ...createDefaultParticipant(),
-        accountId,
+        accountID,
         displayName,
         displayColor: chooseColor(),
       };
@@ -226,11 +226,11 @@ export function createSpaceServer(spaceID: string, io: SocketIOServer) {
   return spaceServer;
 }
 
-export function getConnectionCount(spaceId: string) {
-  if (!spaceServers.has(spaceId)) {
+export function getConnectionCount(spaceID: string) {
+  if (!spaceServers.has(spaceID)) {
     return 0;
   } else {
-    return Object.keys(spaceServers.get(spaceId).participants).length;
+    return Object.keys(spaceServers.get(spaceID).participants).length;
   }
 }
 

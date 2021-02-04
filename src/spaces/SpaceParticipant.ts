@@ -12,7 +12,7 @@ export interface SpaceParticipant {
    * If a user joins as a guest from the browser, this ID stays with them even if they
    * join different spaces. If a user joins as a registered user, this is just their account id.
    */
-  accountId: string;
+  accountID: string;
 
   /**
    * Nickname to display for the user

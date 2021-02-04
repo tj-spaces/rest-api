@@ -1,5 +1,5 @@
 import { db } from "..";
-import { nextId } from "../../lib/snowflakeId";
+import { nextID } from "../../lib/snowflakeID";
 
 export type ClusterVisibility = "discoverable" | "unlisted" | "secret";
 
@@ -16,7 +16,7 @@ export async function createCluster(
   name: string,
   visibility: ClusterVisibility
 ) {
-  const id = nextId();
+  const id = nextID();
   return new Promise<string>((resolve, reject) => {
     db.query(
       `INSERT INTO "clusters" ("id", "creator_id", "name", "visibility") VALUES ($1, $2, $3, $4)`,
@@ -48,7 +48,7 @@ export async function doesClusterExist(id: string) {
   });
 }
 
-export async function getClusterById(id: string) {
+export async function getClusterByID(id: string) {
   return new Promise<Cluster | null>((resolve, reject) => {
     db.query(
       `SELECT * FROM "clusters" WHERE "id" = $1 LIMIT 1`,
