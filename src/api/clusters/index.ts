@@ -40,7 +40,11 @@ router.post("/", requireApiAuth, async (req, res) => {
     return;
   }
 
-  if (visibility !== "public" && visibility !== "unlisted") {
+  if (
+    visibility !== "discoverable" &&
+    visibility !== "unlisted" &&
+    visibility !== "secret"
+  ) {
     res.status(400);
     res.json({ status: "error", error: "invalid_cluster_visibility" });
     return;
@@ -150,7 +154,7 @@ router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
 
     res.json({
       status: "success",
-      space_id: await startSpaceSession(clusterID, name, "blue"),
+      space_id: await startSpaceSession(accountID, name, clusterID),
     });
   }
 });

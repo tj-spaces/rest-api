@@ -80,7 +80,7 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
         if (error) {
           reject(error);
         } else if (results.rowCount > 0) {
-          let user = results[0];
+          let user = results.rows[0];
           userFromEmailCache[email] = { updateTime: Date.now(), user };
           resolve(user);
         } else {
@@ -136,7 +136,7 @@ export async function registerFromIonProfile(profile: IonProfile) {
 
   return new Promise<string>((resolve, reject) => {
     db.query(
-      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         id,
         profile.tj_email,
@@ -163,7 +163,7 @@ export async function registerFromGoogleProfile(profile: GoogleProfile) {
 
   return new Promise<string>((resolve, reject) => {
     db.query(
-      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         id,
         profile.email,
