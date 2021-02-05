@@ -117,7 +117,7 @@ export async function getUserFromID(id: string): Promise<User | null> {
         if (error) {
           reject(error);
         } else if (results.rowCount > 0) {
-          let user = results[0];
+          let user = results.rows[0];
           userFromIDCache[id] = { updateTime: Date.now(), user };
           resolve(user);
         } else {
