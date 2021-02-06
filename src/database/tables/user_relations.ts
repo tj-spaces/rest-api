@@ -194,9 +194,9 @@ FROM
 LEFT JOIN
 	user_relations
 ON
-	user_relations.from_user = users.id OR user_relations.to_user = users.id
+	(user_relations.from_user = $2 OR user_relations.to_user = $2)
 WHERE
-	users.name ILIKE $1 AND user_relations.from_user IS NULL;
+	users.name ILIKE $1 AND (user_relations.from_user IS NULL OR user_relations.to_user IS NULL) AND users.id != $2;
 `,
     ["%" + search + "%", from_user]
   );
