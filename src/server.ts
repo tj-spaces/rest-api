@@ -30,19 +30,22 @@ app.engine(
   })
 );
 
-app.use(
-  "/graphql",
-  graphqlHTTP({ schema: executableSchema, graphiql: isDevelopmentMode() })
-);
-
 const logger = getLogger("requests");
 
 app.use((req, res, next) => {
-  logger({
-    path: req.path,
-    query: req.query,
-    params: req.params,
-    auth: req.headers.authorization,
+  let startTime = new Date().getTime();
+  res.on("finish", () => {
+    let endTime = new Date().getTime();
+    let duration = endTime - startTime;
+    logger({
+      path: req.path,
+      query: req.query,
+      params: req.params,
+      auth: req.headers.authorization,
+      startTime,
+      endTime,
+      duration,
+    });
   });
   next();
 });
@@ -56,6 +59,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/auth", auth.router);
 app.use("/api", api.router);
+
+app.use(
+  "/graphql",
+  graphqlHTTP({ schema: executableSchema, graphiql: isDevelopmentMode() })
+);
 
 const port = process.env.PORT ?? 5000;
 
