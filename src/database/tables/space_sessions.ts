@@ -21,7 +21,7 @@ export interface SpaceSession {
 
 export async function startSpaceSession(
   hostID: string,
-  name: string,
+  topic: string,
   clusterID?: string
 ): Promise<string> {
   if (clusterID != null) {
@@ -34,8 +34,8 @@ export async function startSpaceSession(
   const id = nextID();
 
   await db.query(
-    `INSERT INTO "space_sessions" ("id", "name", "cluster_id", "host_id") VALUES ($1, $2, $3, $4)`,
-    [id, name, clusterID, hostID]
+    `INSERT INTO "space_sessions" ("id", "topic", "cluster_id", "host_id") VALUES ($1, $2, $3, $4)`,
+    [id, topic, clusterID, hostID]
   );
 
   return id.toString();

@@ -1,5 +1,5 @@
 import {
-  getFriends,
+  getFriendsAfter,
   getIncomingFriendRequests,
   getOutgoingFriendRequests,
   sendFriendRequest,
@@ -39,11 +39,11 @@ extend type Mutation {
 
 export const resolvers = {
   Query: {
-    get_friends(parent: any, args: {}, request: Express.Request) {
-      let accountID = request.session.accountID;
-      if (accountID == null) throw new Error("unauthorized");
-      return getFriends({ from_user: accountID });
-    },
+    // get_friends(parent: any, args: {}, request: Express.Request) {
+    //   let accountID = request.session.accountID;
+    //   if (accountID == null) throw new Error("unauthorized");
+    //   return getFriendsAfter({ from_user: accountID });
+    // },
     get_incoming_friend_requests(
       parent: any,
       args: {},

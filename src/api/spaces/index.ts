@@ -1,18 +1,41 @@
 import { Router } from "express";
 import { didUserJoinCluster } from "../../database/tables/cluster_members";
-import { getSpaceSessionByID } from "../../database/tables/space_sessions";
+import {
+  getSpaceSessionByID,
+  startSpaceSession,
+} from "../../database/tables/space_sessions";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
 /* ROUTES TO MAKE:
 
  - GET /api/spaces/:spaceID
-
- Note: You cannot directly create a space. It is either created automatically in a group,
- or it can be added to a Cluster with POST /api/clusters/:clusterID/create_space.
-
+ - POST /api/spaces
 */
 
 export const router = Router();
+
+/**
+ * REQUIRED FIELDS
+ * - space session topic
+ * - space session visibility
+ */
+router.post("/", requireApiAuth, async (req, res) => {
+  const { accountID } = req.session;
+  const { topic, visibility } = req.body;
+  if (typeof topic !== "string" || topic.length > 255 || topic.length === 0) {
+    res.status(400);
+    res.json({ status: "error", error: "invalid_topic" });
+  }
+
+  if (visibility !== "") {
+    res.status(400);
+    res.json({ status: "error", error: "invalid_visibility" });
+  }
+
+  let spaceID = await startSpaceSession(accountID, topic);
+
+  res.json({ status: "success", spaceID });
+});
 
 router.get("/:spaceID", requireApiAuth, async (req, res) => {
   const { spaceID } = req.params;
