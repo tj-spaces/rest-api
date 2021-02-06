@@ -3,6 +3,7 @@ import * as clusters from "./clusters/index";
 import * as dclusters from "./discoverable-clusters/index";
 import * as spaces from "./spaces/index";
 import * as users from "./users/index";
+import * as friends from "./friends/index";
 
 export const router = Router();
 
@@ -10,6 +11,7 @@ router.use("/clusters", clusters.router);
 router.use("/discoverable-clusters", dclusters.router);
 router.use("/spaces", spaces.router);
 router.use("/users", users.router);
+router.use("/friends", friends.router);
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   res.status(500);

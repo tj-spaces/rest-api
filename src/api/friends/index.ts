@@ -7,6 +7,7 @@ import {
   deleteFriendRequest,
   getUserRelationType,
   updateUserRelation,
+  getSuggestedFriends,
 } from "../../database/tables/user_relations";
 import requireApiAuth from "../../middleware/requireApiAuth";
 
@@ -36,20 +37,20 @@ router.get("/outgoing_requests", async (req, res) => {
 
 /**
  * Sends a friend request.
- * Params: otherUserID
+ * Params: user_id
  */
 router.post("/send_request", async (req, res) => {
   const { accountID } = req.session;
-  const { otherUserID } = req.body;
+  const { user_id } = req.body;
 
-  if (typeof otherUserID !== "string") {
+  if (typeof user_id !== "string") {
     res.status(400);
     res.json({ status: "error", error: "invalid_other_user_id" });
     return;
   }
 
   let relationTypeFromOther = await getUserRelationType({
-    from_user: otherUserID,
+    from_user: user_id,
     to_user: accountID,
   });
 
@@ -65,7 +66,7 @@ router.post("/send_request", async (req, res) => {
     res.status(401);
     res.json({ status: "error", error: "they_requested_friends" });
   } else {
-    await sendFriendRequest(accountID, otherUserID);
+    await sendFriendRequest(accountID, user_id);
     res.status(200);
     res.json({ status: "success" });
   }
@@ -73,25 +74,25 @@ router.post("/send_request", async (req, res) => {
 
 /**
  * Accepts a friend request.
- * Params: otherUserID
+ * Params: user_id
  */
 router.post("/accept_request", async (req, res) => {
   const { accountID } = req.session;
-  const { otherUserID } = req.body;
+  const { user_id } = req.body;
 
-  if (typeof otherUserID !== "string") {
+  if (typeof user_id !== "string") {
     res.status(400);
     res.json({ status: "error", error: "invalid_other_user_id" });
     return;
   }
 
   let relationType = await getUserRelationType({
-    from_user: otherUserID,
+    from_user: user_id,
     to_user: accountID,
   });
 
   if (relationType === "requested_friends") {
-    makeFriendRelation({ user_a: accountID, user_b: otherUserID });
+    makeFriendRelation({ user_a: accountID, user_b: user_id });
     res.json({ status: "success" });
   } else {
     res.status(401);
@@ -101,25 +102,25 @@ router.post("/accept_request", async (req, res) => {
 
 /**
  * Denies a friend request.
- * Params: otherUserID
+ * Params: user_id
  */
 router.post("/deny_request", async (req, res) => {
   const { accountID } = req.session;
-  const { otherUserID } = req.body;
+  const { user_id } = req.body;
 
-  if (typeof otherUserID !== "string") {
+  if (typeof user_id !== "string") {
     res.status(400);
     res.json({ status: "error", error: "invalid_other_user_id" });
     return;
   }
 
   let relationType = await getUserRelationType({
-    from_user: otherUserID,
+    from_user: user_id,
     to_user: accountID,
   });
 
   if (relationType === "requested_friends") {
-    deleteFriendRequest({ to_user: accountID, from_user: otherUserID });
+    deleteFriendRequest({ to_user: accountID, from_user: user_id });
     res.json({ status: "success" });
   } else {
     res.json({ status: "error", error: "request_not_found" });
@@ -128,9 +129,9 @@ router.post("/deny_request", async (req, res) => {
 
 router.post("/cancel_request", async (req, res) => {
   const { accountID } = req.session;
-  const { otherUserID } = req.body;
+  const { user_id } = req.body;
 
-  if (typeof otherUserID !== "string") {
+  if (typeof user_id !== "string") {
     res.status(400);
     res.json({ status: "error", error: "invalid_other_user_id" });
     return;
@@ -138,11 +139,11 @@ router.post("/cancel_request", async (req, res) => {
 
   let relationType = await getUserRelationType({
     from_user: accountID,
-    to_user: otherUserID,
+    to_user: user_id,
   });
 
   if (relationType === "requested_friends") {
-    deleteFriendRequest({ from_user: accountID, to_user: otherUserID });
+    deleteFriendRequest({ from_user: accountID, to_user: user_id });
     res.json({ status: "success" });
   } else {
     res.json({ status: "error", error: "request_not_found" });
@@ -154,9 +155,9 @@ router.post("/cancel_request", async (req, res) => {
  */
 router.post("/block", async (req, res) => {
   const { accountID } = req.session;
-  const { otherUserID } = req.body;
+  const { user_id } = req.body;
 
-  if (typeof otherUserID !== "string") {
+  if (typeof user_id !== "string") {
     res.status(400);
     res.json({ status: "error", error: "invalid_other_user_id" });
     return;
@@ -164,7 +165,7 @@ router.post("/block", async (req, res) => {
 
   let relationType = await getUserRelationType({
     from_user: accountID,
-    to_user: otherUserID,
+    to_user: user_id,
   });
 
   if (relationType === "blocked") {
@@ -173,9 +174,33 @@ router.post("/block", async (req, res) => {
   } else {
     await updateUserRelation({
       from_user: accountID,
-      to_user: otherUserID,
+      to_user: user_id,
       relation_type: "blocked",
     });
     res.json({ status: "success" });
   }
+});
+
+/**
+ * GET /suggested
+ * Provides a list of suggested friends, given a search term for their name
+ */
+router.get("/suggested", async (req, res) => {
+  const { accountID } = req.session;
+  const { search = "" } = req.query;
+  if (typeof search !== "string" || search.length > 255) {
+    res.status(400);
+    res.json({ status: "error", error: "invalid_search" });
+    return;
+  }
+
+  let suggested = await getSuggestedFriends(search, accountID);
+
+  console.log("Suggested friends search for", search, "returned", suggested);
+
+  res.json({
+    status: "success",
+    data: suggested,
+    paging: {},
+  });
 });

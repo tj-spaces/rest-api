@@ -84,15 +84,15 @@ export const getFriendsAfter = prepareStatement<
   { from_user: string; after_id: string; limit: number }
 >(
   `SELECT
-    users.id, users.name, users.picture
-  FROM
-    user_relations
-  INNER JOIN
-    users
-    ON users.id = to_user
-  WHERE
-    from_user = $1 AND to_user > $2 AND relation_type = 'friends'
-  LIMIT $3;`,
+		users.id, users.name, users.picture
+	FROM
+		user_relations
+	INNER JOIN
+		users
+		ON users.id = to_user
+	WHERE
+		from_user = $1 AND to_user > $2 AND relation_type = 'friends'
+	LIMIT $3;`,
   { from_user: 1, after_id: 2, limit: 3 }
 );
 
@@ -101,16 +101,15 @@ export const getFriendsBefore = prepareStatement<
   { from_user: string; before_id: string; limit: number }
 >(
   `SELECT
-    (user.id, user.name, user.picture)
-  FROM
-    user_relations
-  INNER JOIN
-    users
-    AS user
-    ON users.id = to_user
-  WHERE
-    from_user = $1 AND to_user < $2 AND relation_type = 'friends'
-  LIMIT $3;`,
+		user.id, user.name, user.picture
+	FROM
+		user_relations
+	INNER JOIN
+		users user
+		ON users.id = to_user
+	WHERE
+		from_user = $1 AND to_user < $2 AND relation_type = 'friends'
+	LIMIT $3;`,
   { from_user: 1, before_id: 2, limit: 3 }
 );
 
@@ -180,4 +179,27 @@ export async function makeFriendRelation({
     from_user: user_b,
     relation_type: "friends",
   });
+}
+
+export async function getSuggestedFriends(
+  search: string,
+  from_user: string
+): Promise<OutgoingRelationResult[]> {
+  let result = await db.query<OutgoingRelationResult>(
+    `
+SELECT
+	users.id, users.name, users.picture
+FROM
+	users
+LEFT JOIN
+	user_relations
+ON
+	user_relations.from_user = users.id OR user_relations.to_user = users.id
+WHERE
+	users.name ILIKE $1 AND user_relations.from_user IS NULL;
+`,
+    ["%" + search + "%", from_user]
+  );
+
+  return result.rows;
 }
