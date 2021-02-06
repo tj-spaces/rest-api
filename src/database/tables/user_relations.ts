@@ -84,12 +84,11 @@ export const getFriendsAfter = prepareStatement<
   { from_user: string; after_id: string; limit: number }
 >(
   `SELECT
-    (user.id, user.name, user.picture)
+    users.id, users.name, users.picture
   FROM
     user_relations
   INNER JOIN
     users
-    AS user
     ON users.id = to_user
   WHERE
     from_user = $1 AND to_user > $2 AND relation_type = 'friends'

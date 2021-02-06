@@ -18,19 +18,23 @@ router.get("/@me/clusters", requireApiAuth, async (req, res) => {
   res.json({ status: "success", clusters });
 });
 
+/**
+ * Sends a list of your friends, limit 25 at a time
+ * If there's more than 25, it sends an "after" cursor
+ */
 router.get("/@me/friends", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
-  const { after_id = "0" } = req.query;
-  if (typeof after_id !== "string") {
+  const { after = "0" } = req.query;
+  if (typeof after !== "string") {
     res.status(400);
     res.json({ status: "error", error: "invalid after_id" });
     return;
   }
   let result = await getFriendsAfter({
     from_user: accountID,
-    after_id: after_id,
+    after_id: after,
     limit: 25,
   });
   let last = result.rows[result.rowCount - 1]?.id ?? null;
-  res.json({ status: "success", data: result.rows, after: last });
+  res.json({ status: "success", data: result.rows, paging: { after: last } });
 });

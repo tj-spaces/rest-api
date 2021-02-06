@@ -3,7 +3,6 @@ import {
   makeFriendRelation,
   getIncomingFriendRequests,
   getOutgoingFriendRequests,
-  queryUserRelationType,
   sendFriendRequest,
   deleteFriendRequest,
   getUserRelationType,
