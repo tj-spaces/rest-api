@@ -5,11 +5,8 @@ import { nextID } from "../../lib/snowflakeID";
 import { getConnectionCount } from "../../spaces/server";
 import { doesClusterExist } from "./clusters";
 
-/**
- * This just stores the id of the cluster, the name, and the theme color.
- * Maybe we'll add the ability to lock clusters in the future.
- * For now, all clusters have their own group chat and voice chat built in
- */
+export type SpaceSessionVisibility = "discoverable" | "unlisted" | "secret";
+
 export interface SpaceSession {
   id: string;
   name: string;
@@ -17,6 +14,7 @@ export interface SpaceSession {
   stop_time: string;
   cluster_id?: string;
   host_id: string;
+  visibility: SpaceSessionVisibility;
 }
 
 export async function startSpaceSession(

@@ -127,14 +127,13 @@ export async function sendFriendRequest(fromUserID: string, toUserID: string) {
   });
 }
 
-export async function denyFriendRequest(from_user: string, to_user: string) {
-  if (
-    (await getUserRelationType({ from_user, to_user })).rows[0]
-      .relation_type !== "requested_friends"
-  ) {
-    throw new Error("No request exists");
-  }
-}
+export const deleteFriendRequest = prepareStatement<
+  void,
+  { to_user: string; from_user: string }
+>(
+  `DELETE FROM user_relations WHERE to_user = $1 AND from_user = $2 AND relation_type = 'requested_friends';`,
+  { to_user: 1, from_user: 2 }
+);
 
 export async function doesUserBlock(fromUserID: string, toUserID: string) {
   return (
@@ -143,19 +142,23 @@ export async function doesUserBlock(fromUserID: string, toUserID: string) {
   );
 }
 
-export async function acceptFriendRequest(
-  fromUserID: string,
-  toUserID: string
-) {
+export async function makeFriendRelation({
+  user_a,
+  user_b,
+}: {
+  user_a: string;
+  user_b: string;
+}) {
+  // Ensure that both connections are "friends"
   await updateUserRelation({
-    from_user: fromUserID,
-    to_user: toUserID,
+    from_user: user_a,
+    to_user: user_b,
     relation_type: "friends",
   });
 
   await updateUserRelation({
-    to_user: fromUserID,
-    from_user: toUserID,
+    to_user: user_a,
+    from_user: user_b,
     relation_type: "friends",
   });
 }
