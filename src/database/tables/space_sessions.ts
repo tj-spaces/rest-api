@@ -1,4 +1,6 @@
+import { Cluster } from "cluster";
 import { db } from "..";
+import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 import { getConnectionCount } from "../../spaces/server";
 import { doesClusterExist } from "./clusters";
@@ -30,19 +32,13 @@ export async function startSpaceSession(
   }
 
   const id = nextID();
-  return new Promise<string>((resolve, reject) => {
-    db.query(
-      `INSERT INTO "space_sessions" ("id", "name", "cluster_id", "host_id") VALUES ($1, $2, $3, $4)`,
-      [id, name, clusterID, hostID],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(id.toString());
-        }
-      }
-    );
-  });
+
+  await db.query(
+    `INSERT INTO "space_sessions" ("id", "name", "cluster_id", "host_id") VALUES ($1, $2, $3, $4)`,
+    [id, name, clusterID, hostID]
+  );
+
+  return id.toString();
 }
 
 /**
@@ -52,108 +48,56 @@ export async function startSpaceSession(
  */
 export async function getClusterThatHasSpaceWithID(
   id: string
-): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    db.query<SpaceSession>(
-      `SELECT "cluster_id" FROM "space_sessions" WHERE "id" = $1`,
-      [id],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          if (results.rowCount === 0) {
-            resolve(null);
-          } else {
-            resolve(results.rows[0].cluster_id);
-          }
-        }
-      }
-    );
-  });
+): Promise<Cluster> {
+  let result = await db.query<Cluster>(
+    `SELECT "clusters".* FROM "space_sessions" INNER JOIN "clusters" ON "clusters"."id" = "space_sessions"."cluster_id" WHERE "id" = $1 LIMIT 1`,
+    [id]
+  );
+
+  return result.rowCount > 0 ? result[0] : null;
 }
 
 export async function getActiveSpaceSessionsInCluster(
   clusterID: string
 ): Promise<SpaceSession[]> {
-  return await new Promise<SpaceSession[]>((resolve, reject) => {
-    db.query<SpaceSession>(
-      `SELECT * FROM "space_sessions" WHERE "cluster_id" = $1 AND "stop_time" = NULL`,
-      [clusterID],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          const withOnlineCount = results.rows.map((space) => ({
-            ...space,
-            online_count: getConnectionCount(space.id),
-          }));
-          resolve(withOnlineCount);
-        }
-      }
-    );
-  });
+  let results = await db.query<SpaceSession>(
+    `SELECT * FROM "space_sessions" WHERE "cluster_id" = $1 AND "stop_time" = NULL`,
+    [clusterID]
+  );
+
+  return results.rows.map((space) => ({
+    ...space,
+    online_count: getConnectionCount(space.id),
+  }));
 }
 
 export async function doesSpaceSessionExist(id: string) {
-  return new Promise<boolean>((resolve, reject) => {
-    db.query(
-      `SELECT 1 FROM "space_sessions" WHERE "id" = $1 LIMIT 1`,
-      [id],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.rowCount > 0);
-        }
-      }
-    );
-  });
+  let result = await db.query(
+    `SELECT 1 FROM "space_sessions" WHERE "id" = $1 LIMIT 1`,
+    [id]
+  );
+
+  return result.rowCount > 0;
 }
 
-export async function getSpaceSessionByID(
-  id: string
-): Promise<SpaceSession | null> {
-  return new Promise<SpaceSession | null>((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "space_sessions" WHERE "id" = $1 LIMIT 1`,
-      [id],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else if (results.rowCount === 0) {
-          resolve(null);
-        } else {
-          resolve(results.rows[0]);
-        }
-      }
-    );
-  });
+export async function getSpaceSessionByID(id: string): Promise<SpaceSession> {
+  let result = await db.query(
+    `SELECT * FROM "space_sessions" WHERE "id" = $1 LIMIT 1`,
+    [id]
+  );
+
+  return result.rowCount > 0 ? result[0] : null;
 }
 
-export async function setSpaceSessionName(id: string, name: string) {
-  return new Promise<void>((resolve, reject) => {
-    db.query(
-      `UPDATE "space_sessions" SET "name" = $1 WHERE "id" = $2`,
-      [name, id],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
-}
+export const setSpaceSessionName = prepareStatement<
+  void,
+  { name: string; id: string }
+>(`UPDATE "space_sessions" SET "name" = $1 WHERE "id" = $2`, {
+  name: 1,
+  id: 2,
+});
 
-/*export*/ async function deleteSpaceSession(id: string) {
-  return new Promise<void>((resolve, reject) => {
-    db.query(`DELETE FROM "space_sessions" WHERE "id" = $1`, [id], (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
+const deleteSpaceSession = prepareStatement<void, { id: string }>(
+  `DELETE FROM "space_sessions" WHERE "id" = $1`,
+  { id: 1 }
+);

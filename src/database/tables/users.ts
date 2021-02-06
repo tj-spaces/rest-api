@@ -16,19 +16,11 @@ export interface User {
 }
 
 export async function doesUserExistWithEmail(email: string) {
-  return new Promise<boolean>((resolve, reject) => {
-    db.query(
-      `SELECT 1 FROM "users" WHERE "email" = $1`,
-      [email],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.rowCount > 0);
-        }
-      }
-    );
-  });
+  let result = await db.query(`SELECT 1 FROM "users" WHERE "email" = $1`, [
+    email,
+  ]);
+
+  return result.rowCount > 0;
 }
 
 /**
@@ -39,28 +31,18 @@ export async function doAllUsersExistWithIDs(
   userIDs: Set<string>
 ): Promise<boolean> {
   const results = await Promise.all(
-    Array.from(userIDs).map((userID) => {
-      return doesUserExistWithID(userID);
-    })
+    Array.from(userIDs).map((userID) => doesUserExistWithID(userID))
   );
 
   return results.every((exists) => exists);
 }
 
 export async function doesUserExistWithID(id: string) {
-  return new Promise<boolean>((resolve, reject) => {
-    db.query(
-      `SELECT 1 FROM "users" WHERE "id" = $1 LIMIT 1`,
-      [id],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.rowCount > 0);
-        }
-      }
-    );
-  });
+  let result = await db.query(`SELECT 1 FROM "users" WHERE "id" = $1 LIMIT 1`, [
+    id,
+  ]);
+
+  return result.rowCount > 0;
 }
 
 export async function getUserFromEmail(email: string): Promise<User | null> {
@@ -72,23 +54,12 @@ export async function getUserFromEmail(email: string): Promise<User | null> {
     }
   }
 
-  return new Promise((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "users" WHERE "email" = $1`,
-      [email],
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else if (results.rowCount > 0) {
-          let user = results.rows[0];
-          userFromEmailCache[email] = { updateTime: Date.now(), user };
-          resolve(user);
-        } else {
-          resolve(null);
-        }
-      }
-    );
-  });
+  let results = await db.query(
+    `SELECT * FROM "users" WHERE "email" = $1 LIMIT 1`,
+    [email]
+  );
+
+  return results.rowCount > 0 ? results.rows[0] : null;
 }
 
 const userFromIDCache: {
@@ -109,23 +80,9 @@ export async function getUserFromID(id: string): Promise<User | null> {
     }
   }
 
-  return new Promise((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "users" WHERE "id" = $1`,
-      [id],
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else if (results.rowCount > 0) {
-          let user = results.rows[0];
-          userFromIDCache[id] = { updateTime: Date.now(), user };
-          resolve(user);
-        } else {
-          resolve(null);
-        }
-      }
-    );
-  });
+  let results = await db.query(`SELECT * FROM "users" WHERE "id" = $1`, [id]);
+
+  return results.rowCount > 0 ? results.rows[0] : null;
 }
 
 /**
@@ -134,53 +91,39 @@ export async function getUserFromID(id: string): Promise<User | null> {
 export async function registerFromIonProfile(profile: IonProfile) {
   let id = nextID();
 
-  return new Promise<string>((resolve, reject) => {
-    db.query(
-      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [
-        id,
-        profile.tj_email,
-        true,
-        profile.display_name,
-        profile.first_name,
-        profile.last_name,
-        null, // profile.picture, (( This property doesn't work correctly on Ion ))
-        "en", // Assume "en" because Ion is used at TJ
-      ],
-      (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(id.toString());
-        }
-      }
-    );
-  });
+  await db.query(
+    `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      id,
+      profile.tj_email,
+      true,
+      profile.display_name,
+      profile.first_name,
+      profile.last_name,
+      null, // profile.picture, (( This property doesn't work correctly on Ion ))
+      "en", // Assume "en" because Ion is used at TJ
+    ]
+  );
+
+  return id.toString();
 }
 
 export async function registerFromGoogleProfile(profile: GoogleProfile) {
   let id = nextID();
 
-  return new Promise<string>((resolve, reject) => {
-    db.query(
-      `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [
-        id,
-        profile.email,
-        profile.verified_email,
-        profile.name,
-        profile.given_name,
-        profile.family_name,
-        profile.picture,
-        profile.locale,
-      ],
-      (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(id.toString());
-        }
-      }
-    );
-  });
+  await db.query(
+    `INSERT INTO "users" ("id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale") values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      id,
+      profile.email,
+      profile.verified_email,
+      profile.name,
+      profile.given_name,
+      profile.family_name,
+      profile.picture,
+      profile.locale,
+    ]
+  );
+
+  return id.toString();
 }

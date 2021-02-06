@@ -23,19 +23,12 @@ export async function generateClusterInviteLinkSlug() {
 }
 
 export async function doesClusterInviteLinkExistWithSlug(slug: string) {
-  return new Promise<boolean>((resolve, reject) => {
-    db.query(
-      `SELECT 1 FROM "cluster_invite_links" WHERE "slug" = $1`,
-      [slug],
-      (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result.rowCount > 0);
-        }
-      }
-    );
-  });
+  let result = await db.query(
+    `SELECT 1 FROM "cluster_invite_links" WHERE "slug" = $1`,
+    [slug]
+  );
+
+  return result.rowCount > 0;
 }
 
 export interface CreateClusterInviteLinkResult {
@@ -63,19 +56,12 @@ export async function createClusterInviteLink(
     }
   }
 
-  return new Promise<CreateClusterInviteLinkResult>((resolve, reject) => {
-    db.query(
-      `INSERT INTO "cluster_invite_links" ("id", "slug", "cluster_id") VALUES ($1, $2, $3)`,
-      [id, slug, clusterID],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ success: true, slug });
-        }
-      }
-    );
-  });
+  await db.query(
+    `INSERT INTO "cluster_invite_links" ("id", "slug", "cluster_id") VALUES ($1, $2, $3)`,
+    [id, slug, clusterID]
+  );
+
+  return { success: true, slug };
 }
 
 /**
@@ -83,21 +69,12 @@ export async function createClusterInviteLink(
  * @param slug The shortlink that this invite link provides
  */
 export async function getInviteLinkWithSlug(slug: string) {
-  return new Promise<ClusterInviteLink | null>((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "cluster_invite_links" WHERE "slug" = $1`,
-      [slug],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else if (results.rowCount === 0) {
-          resolve(null);
-        } else {
-          resolve(results.rows[0]);
-        }
-      }
-    );
-  });
+  let result = await db.query(
+    `SELECT * FROM "cluster_invite_links" WHERE "slug" = $1 LIMIT 1`,
+    [slug]
+  );
+
+  return result.rowCount > 0 ? result.rows[0] : null;
 }
 
 /**
@@ -106,33 +83,14 @@ export async function getInviteLinkWithSlug(slug: string) {
  * @param userID The user
  */
 export async function getInviteLinksWithClusterID(clusterID: string) {
-  return new Promise<ClusterInviteLink[]>((resolve, reject) => {
-    db.query<ClusterInviteLink>(
+  return (
+    await db.query<ClusterInviteLink>(
       `SELECT * FROM "cluster_invite_links" WHERE "cluster_id" = $1`,
-      [clusterID],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.rows);
-        }
-      }
-    );
-  });
+      [clusterID]
+    )
+  ).rows;
 }
 
 export async function deleteInviteLinkWithID(id: string) {
-  return new Promise<void>((resolve, reject) => {
-    db.query(
-      `DELETE FROM "cluster_invite_links" WHERE "id" = $1`,
-      [id],
-      (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
+  await db.query(`DELETE FROM "cluster_invite_links" WHERE "id" = $1`, [id]);
 }

@@ -1,4 +1,6 @@
 import { db } from "..";
+import prepareStatement from "../../lib/prepareStatement";
+import { nextID } from "../../lib/snowflakeID";
 
 interface Channel {
   id: string;
@@ -8,59 +10,27 @@ interface Channel {
   subsection_name: string | null;
 }
 
-export function getChannelByID(id: string): Promise<Channel> {
-  return new Promise<Channel>((resolve, reject) => {
-    db.query(
-      `SELECT cast("id" as VARCHAR), "name", "cluster_id", "is_cluster_channel", "subsection_name" FROM "channels" WHERE "id" = $1`,
-      [id],
-      (err, res) => {
-        if (err) {
-          reject(err);
-        } else if (res.rowCount === 0) {
-          resolve(null);
-        } else {
-          resolve(res.rows[0]);
-        }
-      }
-    );
-  });
+export async function getChannelByID(id: string): Promise<Channel> {
+  let result = await db.query<Channel>(
+    `SELECT cast("id" as VARCHAR), "name", "cluster_id", "is_cluster_channel", "subsection_name" FROM "channels" WHERE "id" = $1 LIMIT 1`,
+    [id]
+  );
+
+  return result.rowCount > 0 ? result.rows[0] : null;
 }
 
-export function createChannel(
-  id: string,
-  name: string,
-  cluster_id: string
-): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    db.query(
-      `INSERT INTO "channels" ("id", "name", "cluster_id", "is_cluster_channel") VALUES ($1, $2, $3, true)`,
-      [id, name, cluster_id],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
+export async function createChannel(name: string, clusterID: string) {
+  const id = nextID().toString();
+  await db.query(
+    `INSERT INTO "channels" ("id", "name", "cluster_id", "is_cluster_channel") VALUES ($1, $2, $3, true)`,
+    [id, name, clusterID]
+  );
 }
 
-export function setChannelSubsection(
-  id: string,
-  subsection_name: string
-): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    db.query(
-      `UPDATE "channels" SET "subsection_name" = $1 WHERE "id" = $2`,
-      [subsection_name, id],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
-}
+export const setChannelSubsection = prepareStatement<
+  void,
+  { subsection_name: string; id: string }
+>(`UPDATE "channels" SET "subsection_name" = $1 WHERE "id" = $2`, {
+  subsection_name: 1,
+  id: 2,
+});

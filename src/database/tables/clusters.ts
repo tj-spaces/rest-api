@@ -17,133 +17,68 @@ export async function createCluster(
   visibility: ClusterVisibility
 ) {
   const id = nextID();
-  return new Promise<string>((resolve, reject) => {
-    db.query(
-      `INSERT INTO "clusters" ("id", "creator_id", "name", "visibility") VALUES ($1, $2, $3, $4)`,
-      [id, creatorID, name, visibility],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(id.toString());
-        }
-      }
-    );
-  });
+  await db.query(
+    `INSERT INTO "clusters" ("id", "creator_id", "name", "visibility") VALUES ($1, $2, $3, $4)`,
+    [id, creatorID, name, visibility]
+  );
+  return id.toString();
 }
 
 export async function doesClusterExist(id: string) {
-  return new Promise<boolean>((resolve, reject) => {
-    db.query(
-      `SELECT 1 FROM "clusters" WHERE "id" = $1 LIMIT 1`,
-      [id],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.rowCount > 0);
-        }
-      }
-    );
-  });
+  let results = await db.query(
+    `SELECT 1 FROM "clusters" WHERE "id" = $1 LIMIT 1`,
+    [id]
+  );
+  return results.rowCount > 0;
 }
 
 export async function getClusterByID(id: string) {
-  return new Promise<Cluster | null>((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "clusters" WHERE "id" = $1 LIMIT 1`,
-      [id],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else if (results.rowCount === 0) {
-          resolve(null);
-        } else {
-          resolve(results.rows[0]);
-        }
-      }
-    );
-  });
+  let results = await db.query(
+    `SELECT * FROM "clusters" WHERE "id" = $1 LIMIT 1`,
+    [id]
+  );
+
+  return results.rowCount > 0 ? results.rows[0] : null;
 }
 
 export async function getClustersCreatedByUser(creatorID: string) {
-  return new Promise<Cluster[]>((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "clusters" WHERE "creator_id" = $1`,
-      [creatorID],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.rows);
-        }
-      }
-    );
-  });
+  let results = await db.query(
+    `SELECT * FROM "clusters" WHERE "creator_id" = $1`,
+    [creatorID]
+  );
+
+  return results.rows;
 }
 
 export async function setClusterName(id: string, name: string) {
-  return new Promise<void>((resolve, reject) => {
-    db.query(
-      `UPDATE "clusters" SET "name" = $1 WHERE "id" = $1`,
-      [name, id],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
+  await db.query(`UPDATE "clusters" SET "name" = $1 WHERE "id" = $1`, [
+    name,
+    id,
+  ]);
 }
 
 /**
  * Returns all clusters that have a visibility of 'public'.
  */
 export async function getPublicClusters() {
-  return new Promise<Cluster[]>((resolve, reject) => {
-    db.query(
-      `SELECT * FROM "clusters" WHERE "visibility" = 'discoverable'`,
-      [],
-      (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result.rows);
-        }
-      }
-    );
-  });
+  let results = await db.query(
+    `SELECT * FROM "clusters" WHERE "visibility" = 'discoverable'`,
+    []
+  );
+
+  return results.rows;
 }
 
 export async function setClusterVisibility(
   id: string,
   visibility: ClusterVisibility
 ) {
-  return new Promise<void>((resolve, reject) => {
-    db.query(
-      `UPDATE "clusters" SET "visibility" = $1, "updated_on" = CURRENT_TIMESTAMP WHERE "id" = $2`,
-      [visibility, id],
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
+  await db.query(
+    `UPDATE "clusters" SET "visibility" = $1, "updated_on" = CURRENT_TIMESTAMP WHERE "id" = $2`,
+    [visibility, id]
+  );
 }
 
 export async function deleteCluster(id: string) {
-  return new Promise<void>((resolve, reject) => {
-    db.query(`DELETE FROM "clusters" WHERE "id" = $1`, [id], (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await db.query(`DELETE FROM "clusters" WHERE "id" = $1`, [id]);
 }
