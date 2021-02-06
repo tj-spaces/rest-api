@@ -41,13 +41,25 @@ export const updateUserRelation = prepareStatement<
   { from_user: 1, to_user: 2, relation_type: 3 }
 );
 
-export const getUserRelationType = prepareStatement<
+export const queryUserRelationType = prepareStatement<
   { relation_type: UserRelationType; created_at: string; updated_at: string },
   { from_user: string; to_user: string }
 >(
-  `SELECT (relation_type, created_at, updated_at) FROM user_relations WHERE from_user = $1 AND to_user = $2`,
+  `SELECT (relation_type, created_at, updated_at) FROM user_relations WHERE from_user = $1 AND to_user = $2 LIMIT 1`,
   { from_user: 1, to_user: 2 }
 );
+
+export const getUserRelationType = async (args: {
+  from_user: string;
+  to_user: string;
+}): Promise<UserRelationType | null> => {
+  let result = await queryUserRelationType(args);
+  if (result.rowCount === 0) {
+    return null;
+  } else {
+    return result.rows[0].relation_type;
+  }
+};
 
 export interface OutgoingRelationResult {
   to_user: string;
@@ -135,9 +147,17 @@ export const deleteFriendRequest = prepareStatement<
   { to_user: 1, from_user: 2 }
 );
 
+export const block = prepareStatement<
+  void,
+  { to_user: string; from_user: string }
+>(
+  `UPDATE user_relations SET relation_type = 'blocked' WHERE to_user = $1 AND from_user = $2`,
+  { to_user: 1, from_user: 2 }
+);
+
 export async function doesUserBlock(fromUserID: string, toUserID: string) {
   return (
-    (await getUserRelationType({ from_user: fromUserID, to_user: toUserID }))
+    (await queryUserRelationType({ from_user: fromUserID, to_user: toUserID }))
       .rows[0].relation_type === "blocked"
   );
 }
