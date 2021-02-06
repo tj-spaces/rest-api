@@ -51,20 +51,14 @@ let sessionMiddleware: RequestHandler = (req, res, next) => {
   // console.log("Checking request with Authorization = " + auth);
   if (typeof auth === "string" && auth.startsWith("Bearer ")) {
     const token = auth.slice(7);
-    // console.log("Found token =", token);
     req.session = getSessionDataByID(token);
-    // console.log("Session data was", req.session);
     next();
   } else {
+    req.session = { isLoggedIn: false, accountID: null };
     next();
   }
 };
 
 export function getSessionMiddleware(): RequestHandler {
   return sessionMiddleware;
-  // sessionMiddleware = session({
-  //   secret: process.env.SESSION_SECRET,
-  //   resave: false,
-  //   saveUninitialized: false,
-  // });
 }
