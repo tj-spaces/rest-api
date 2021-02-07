@@ -56,7 +56,9 @@ router.post("/", requireApiAuth, async (req, res) => {
 
   res.json({
     status: "success",
-    cluster_id: clusterID,
+    data: {
+      cluster_id: clusterID,
+    },
   });
 });
 
@@ -69,7 +71,7 @@ router.get("/:clusterID", async (req, res) => {
     res.status(404);
     res.json({ status: "error", error: "cluster_not_found" });
   } else {
-    res.json({ status: "success", cluster });
+    res.json({ status: "success", data: cluster });
   }
 });
 
@@ -197,7 +199,7 @@ router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
     // If we are in the group, then the group must exist
     res.json({
       status: "success",
-      spaces: await getActiveSpaceSessionsInCluster(clusterID),
+      data: await getActiveSpaceSessionsInCluster(clusterID),
     });
   }
 });

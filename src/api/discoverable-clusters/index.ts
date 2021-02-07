@@ -7,6 +7,6 @@ router.get("/", async (req, res) => {
   const clusters = await getPublicClusters();
   res.json({
     status: "success",
-    clusters,
+    data: clusters,
   });
 });

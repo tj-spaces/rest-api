@@ -9,13 +9,13 @@ export const router = Router();
 router.get("/@me", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const user = await getUserFromID(accountID);
-  res.json({ status: "success", user });
+  res.json({ status: "success", data: user });
 });
 
 router.get("/@me/clusters", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const clusters = await getClustersWithUser(accountID);
-  res.json({ status: "success", clusters });
+  res.json({ status: "success", data: clusters });
 });
 
 /**
