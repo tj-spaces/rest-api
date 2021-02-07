@@ -3,8 +3,10 @@ import { db } from "../database";
 import { didUserJoinCluster } from "../database/tables/cluster_members";
 import {
   getSpaceSessionByID,
+  SpaceSession,
   startSpaceSession,
 } from "../database/tables/space_sessions";
+import { getUserFromID } from "../database/tables/users";
 import requireApiAuth from "../middleware/requireApiAuth";
 
 /* ROUTES TO MAKE:
@@ -48,8 +50,12 @@ router.post("/", requireApiAuth, async (req, res) => {
  * Gets suggested spaces
  */
 router.get("/suggested", requireApiAuth, async (req, res) => {
-  let result = await db.query(`SELECT * FROM space_sessions;`);
-  res.json({ status: "success", data: result.rows });
+  let result = await db.query<SpaceSession>(`SELECT * FROM space_sessions;`);
+  let spaceSessions = result.rows;
+  for (let spaceSession of spaceSessions) {
+    spaceSession.host = await getUserFromID(spaceSession.host_id);
+  }
+  res.json({ status: "success", data: spaceSessions });
 });
 
 /**
