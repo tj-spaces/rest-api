@@ -1,5 +1,6 @@
 import { Cluster } from "cluster";
 import { db } from "..";
+import getFirst from "../../lib/getFirst";
 import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 import { getConnectionCount } from "../../spaces/server";
@@ -56,7 +57,7 @@ export async function getClusterThatHasSpaceWithID(
     [id]
   );
 
-  return result.rowCount > 0 ? result[0] : null;
+  return getFirst(result.rows);
 }
 
 export async function getActiveSpaceSessionsInCluster(

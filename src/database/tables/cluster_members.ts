@@ -61,12 +61,12 @@ export async function getClustersWithUser(userID: string): Promise<Cluster[]> {
  * @param userID The user
  */
 export async function getUsersInCluster(clusterID: string) {
-  let results = await db.query(
+  let results = await db.query<ClusterMember>(
     `SELECT user_id FROM "cluster_members" WHERE "cluster_id" = $1`,
     [clusterID]
   );
 
-  return results.rows.map((row: ClusterMember) => row.user_id);
+  return results.rows.map((row) => row.user_id);
 }
 
 export async function deleteUserFromCluster(clusterID: string, userID: string) {

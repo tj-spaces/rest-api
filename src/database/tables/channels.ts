@@ -1,4 +1,5 @@
 import { db } from "..";
+import getFirst from "../../lib/getFirst";
 import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 
@@ -16,7 +17,7 @@ export async function getChannelByID(id: string): Promise<Channel> {
     [id]
   );
 
-  return result.rowCount > 0 ? result.rows[0] : null;
+  return getFirst(result.rows);
 }
 
 export async function createChannel(name: string, clusterID: string) {
@@ -25,6 +26,7 @@ export async function createChannel(name: string, clusterID: string) {
     `INSERT INTO "channels" ("id", "name", "cluster_id", "is_cluster_channel") VALUES ($1, $2, $3, true)`,
     [id, name, clusterID]
   );
+  return id;
 }
 
 export const setChannelSubsection = prepareStatement<

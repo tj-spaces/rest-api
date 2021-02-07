@@ -1,4 +1,5 @@
 import { db } from "..";
+import getFirst from "../../lib/getFirst";
 import { nextID } from "../../lib/snowflakeID";
 
 export type ClusterVisibility = "discoverable" | "unlisted" | "secret";
@@ -29,6 +30,7 @@ export async function doesClusterExist(id: string) {
     `SELECT 1 FROM "clusters" WHERE "id" = $1 LIMIT 1`,
     [id]
   );
+
   return results.rowCount > 0;
 }
 
@@ -38,7 +40,7 @@ export async function getClusterByID(id: string) {
     [id]
   );
 
-  return results.rowCount > 0 ? results.rows[0] : null;
+  return getFirst(results.rows);
 }
 
 export async function getClustersCreatedByUser(creatorID: string) {

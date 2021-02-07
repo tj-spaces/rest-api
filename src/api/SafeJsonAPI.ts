@@ -1,6 +1,5 @@
 import { RequestHandler } from "express";
-import { User } from "../database/tables/users";
-import InvalidArgumentError from "./errors";
+import { InvalidArgumentError } from "./errors";
 
 export type SafeAPISchema =
   | {

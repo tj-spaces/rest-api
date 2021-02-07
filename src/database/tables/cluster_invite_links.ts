@@ -1,5 +1,6 @@
 import { db } from "..";
 import createBase36String from "../../lib/createBase36String";
+import getFirst from "../../lib/getFirst";
 import { nextID } from "../../lib/snowflakeID";
 import { doesClusterExist } from "./clusters";
 
@@ -74,7 +75,7 @@ export async function getInviteLinkWithSlug(slug: string) {
     [slug]
   );
 
-  return result.rowCount > 0 ? result.rows[0] : null;
+  return getFirst(result.rows);
 }
 
 /**
@@ -83,12 +84,12 @@ export async function getInviteLinkWithSlug(slug: string) {
  * @param userID The user
  */
 export async function getInviteLinksWithClusterID(clusterID: string) {
-  return (
-    await db.query<ClusterInviteLink>(
-      `SELECT * FROM "cluster_invite_links" WHERE "cluster_id" = $1`,
-      [clusterID]
-    )
-  ).rows;
+  let result = await db.query<ClusterInviteLink>(
+    `SELECT * FROM "cluster_invite_links" WHERE "cluster_id" = $1`,
+    [clusterID]
+  );
+
+  return result.rows;
 }
 
 export async function deleteInviteLinkWithID(id: string) {
