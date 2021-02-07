@@ -168,13 +168,13 @@ export async function makeFriendRelation({
   user_b: string;
 }) {
   // Ensure that both connections are "friends"
-  await updateUserRelation({
+  await createOrUpdateUserRelation({
     from_user: user_a,
     to_user: user_b,
     relation_type: "friends",
   });
 
-  await updateUserRelation({
+  await createOrUpdateUserRelation({
     to_user: user_a,
     from_user: user_b,
     relation_type: "friends",
