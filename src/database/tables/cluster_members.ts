@@ -43,8 +43,8 @@ export async function didUserJoinCluster(
  * Returns an array of strings, which are ClusterIDs.
  * @param userID The user
  */
-export async function getClustersWithUser(userID: string) {
-  let results = await db.query(
+export async function getClustersWithUser(userID: string): Promise<Cluster[]> {
+  let results = await db.query<Cluster>(
     `SELECT "clusters".*
        FROM "cluster_members"
        INNER JOIN "clusters" ON "clusters"."id" = "cluster_members"."cluster_id"

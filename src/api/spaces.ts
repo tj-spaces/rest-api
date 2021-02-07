@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { db } from "../database";
-import { didUserJoinCluster } from "../database/tables/cluster_members";
 import {
   getSpaceSessionByID,
   SpaceSession,
@@ -8,7 +7,13 @@ import {
 } from "../database/tables/space_sessions";
 import { getUserFromID } from "../database/tables/users";
 import requireApiAuth from "../middleware/requireApiAuth";
-import { assertString, assertStringID } from "./validationUtil";
+import { ResourceNotFoundError } from "./errors";
+import {
+  assertSpaceVisibility,
+  assertString,
+  assertStringID,
+  assertUserJoinedCluster,
+} from "./validationUtil";
 
 /* ROUTES TO MAKE:
 
@@ -28,16 +33,7 @@ router.post("/", requireApiAuth, async (req, res) => {
   const { topic, visibility } = req.body;
 
   assertString(topic, 1, 255);
-
-  if (
-    visibility !== "discoverable" &&
-    visibility !== "unlisted" &&
-    visibility !== "secret"
-  ) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_visibility" });
-    return;
-  }
+  assertSpaceVisibility(visibility);
 
   let space_id = await startSpaceSession(accountID, topic, visibility);
 
@@ -53,6 +49,7 @@ router.get("/suggested", requireApiAuth, async (req, res) => {
   for (let spaceSession of spaceSessions) {
     spaceSession.host = await getUserFromID(spaceSession.host_id);
   }
+
   res.json({ status: "success", data: spaceSessions });
 });
 
@@ -67,19 +64,17 @@ router.get("/:spaceID", requireApiAuth, async (req, res) => {
   const space_session = await getSpaceSessionByID(spaceID, true);
 
   if (space_session == null) {
-    res.status(404);
-    res.json({ status: "error", error: "space_not_found" });
-  } else if (
+    throw new ResourceNotFoundError();
+  }
+
+  if (
     space_session.cluster_id != null &&
     space_session.visibility !== "discoverable"
   ) {
     let { accountID } = req.session;
-    if (didUserJoinCluster(space_session.cluster_id, accountID)) {
-      res.json({ status: "success", data: space_session });
-    } else {
-      res.json({ status: "error", error: "not_in_cluster" });
-    }
-  } else {
-    res.json({ status: "success", data: space_session });
+
+    assertUserJoinedCluster(space_session.cluster_id, accountID);
   }
+
+  res.json({ status: "success", data: space_session });
 });

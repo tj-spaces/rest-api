@@ -11,12 +11,11 @@ import {
   getSuggestedFriends,
 } from "../database/tables/user_relations";
 import requireApiAuth from "../middleware/requireApiAuth";
-import InvalidArgumentError from "./InvalidArgumentError";
 import {
+  assertRelationIs,
+  assertRelationIsNot,
   assertString,
   assertStringID,
-  validateString,
-  validateStringID,
 } from "./validationUtil";
 
 export const router = Router();
@@ -93,19 +92,10 @@ router.post("/accept_request", async (req, res) => {
   const { user_id } = req.body;
 
   assertStringID(user_id);
+  assertRelationIs(user_id, accountID, "requested_friends");
 
-  let relationType = await getUserRelationType({
-    from_user: user_id,
-    to_user: accountID,
-  });
-
-  if (relationType === "requested_friends") {
-    makeFriendRelation({ user_a: accountID, user_b: user_id });
-    res.json({ status: "success" });
-  } else {
-    res.status(404);
-    res.json({ status: "error", error: "request_not_found" });
-  }
+  await makeFriendRelation({ user_a: accountID, user_b: user_id });
+  res.json({ status: "success" });
 });
 
 /**
@@ -117,18 +107,10 @@ router.post("/deny_request", async (req, res) => {
   const { user_id } = req.body;
 
   assertStringID(user_id);
+  assertRelationIs(user_id, accountID, "requested_friends");
 
-  let relationType = await getUserRelationType({
-    from_user: user_id,
-    to_user: accountID,
-  });
-
-  if (relationType === "requested_friends") {
-    deleteFriendRequest({ to_user: accountID, from_user: user_id });
-    res.json({ status: "success" });
-  } else {
-    res.json({ status: "error", error: "request_not_found" });
-  }
+  await deleteFriendRequest({ to_user: accountID, from_user: user_id });
+  res.json({ status: "success" });
 });
 
 router.post("/cancel_request", async (req, res) => {
@@ -136,18 +118,10 @@ router.post("/cancel_request", async (req, res) => {
   const { user_id } = req.body;
 
   assertStringID(user_id);
+  assertRelationIs(accountID, user_id, "requested_friends");
 
-  let relationType = await getUserRelationType({
-    from_user: accountID,
-    to_user: user_id,
-  });
-
-  if (relationType === "requested_friends") {
-    deleteFriendRequest({ from_user: accountID, to_user: user_id });
-    res.json({ status: "success" });
-  } else {
-    res.json({ status: "error", error: "request_not_found" });
-  }
+  deleteFriendRequest({ from_user: accountID, to_user: user_id });
+  res.json({ status: "success" });
 });
 
 /**
@@ -158,28 +132,21 @@ router.post("/block", async (req, res) => {
   const { user_id } = req.body;
 
   assertStringID(user_id);
+  assertRelationIsNot(accountID, user_id, "blocked");
 
-  let relationType = await getUserRelationType({
+  await updateUserRelation({
     from_user: accountID,
     to_user: user_id,
+    relation_type: "blocked",
   });
 
-  if (relationType === "blocked") {
-    res.status(400);
-    res.json({ status: "error", error: "already_blocked" });
-  } else {
-    await updateUserRelation({
-      from_user: accountID,
-      to_user: user_id,
-      relation_type: "blocked",
-    });
-    res.json({ status: "success" });
-  }
+  res.json({ status: "success" });
 });
 
 /**
  * GET /suggested
  * Provides a list of suggested friends, given a search term for their name
+ * TODO Add paging
  */
 router.get("/suggested", async (req, res) => {
   const { accountID } = req.session;

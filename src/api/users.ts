@@ -3,7 +3,7 @@ import { getClustersWithUser } from "../database/tables/cluster_members";
 import { getUserFromID } from "../database/tables/users";
 import { getFriendsAfter } from "../database/tables/user_relations";
 import requireApiAuth from "../middleware/requireApiAuth";
-import { validateStringID } from "./validationUtil";
+import { assertStringID, validateStringID } from "./validationUtil";
 
 export const router = Router();
 
@@ -26,11 +26,9 @@ router.get("/@me/clusters", requireApiAuth, async (req, res) => {
 router.get("/@me/friends", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const { after = "0" } = req.query;
-  if (!validateStringID(after)) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid after_id" });
-    return;
-  }
+
+  assertStringID(after);
+
   let result = await getFriendsAfter({
     from_user: accountID,
     after_id: after,

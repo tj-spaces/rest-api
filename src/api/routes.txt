@@ -1,0 +1,96 @@
+/users
+
+GET /users/@me
+Returns: User
+
+GET /users/@me/clusters
+Returns: Cluster[]
+
+GET /users/@me/friends
+Returns: PublicUserInfo[]
+Paging: { after }
+
+
+
+
+/spaces
+
+POST /spaces/
+Query parameters:
+	topic: String, 1-255 chars
+	visibility: SpaceSessionVisibility
+Returns: { space_id: ID }
+
+GET /spaces/suggested
+Returns: SpaceSession[]
+
+GET /spaces/:space_id
+URL parameters:
+	space_id: ID
+Returns: SpaceSession
+Errors:
+	not_in_cluster: You need to be in that cluster to join this space
+	space_not_found
+
+
+
+
+/friends
+
+GET /friends/incoming_requests
+Returns: PublicUserInfo[]
+
+GET /friends/outgoing_requests
+Returns: PublicUserInfo[]
+
+POST /friends/send_request
+Query parameters:
+	user_id: ID
+Errors:
+	blocked: You are blocked by this user
+	already_friends: You are already friends with this user
+	they_requested_friends: They already sent you a friend request
+Returns: None
+
+POST /friends/accept_request
+Query parameters:
+	user_id: ID
+Errors:
+	request_not_found: No request was found for this user
+Returns: None
+
+POST /friends/deny_request
+Query parameters:
+	user_id: ID
+Errors:
+	request_not_found: No request was found for this user
+Returns: None
+
+POST /friends/cancel_request
+Query parameters:
+	user_id: ID
+Errors:
+	request_not_found: No request was found for this user
+Returns: None
+
+POST /friends/block
+Query parameters:
+	user_id: ID
+Errors:
+	already_blocked: You have already blocked this user
+Returns: None
+
+GET /friends/suggested
+Returns: PublicUserInfo[]
+Paging: {}
+
+
+
+
+/clusters
+
+POST /
+Query parameters:
+	visibility: ClusterVisibility
+	name: String, 1-255 chars
+	

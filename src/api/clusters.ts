@@ -15,8 +15,20 @@ import {
   joinCluster,
 } from "../database/tables/cluster_members";
 import requireApiAuth from "../middleware/requireApiAuth";
-import { assertString, assertStringID, validateString } from "./validationUtil";
-import InvalidArgumentError from "./InvalidArgumentError";
+import {
+  assertClusterExists,
+  assertClusterVisibility,
+  assertSpaceVisibility,
+  assertString,
+  assertStringID,
+  assertUserJoinedCluster,
+} from "./validationUtil";
+import {
+  InvalidArgumentError,
+  NoopError,
+  ResourceNotFoundError,
+  UnauthorizedError,
+} from "./errors";
 
 /**
  * Main router for Clusters API.
@@ -38,14 +50,7 @@ router.post("/", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
 
   assertString(name, 1, 255);
-
-  if (
-    visibility !== "discoverable" &&
-    visibility !== "unlisted" &&
-    visibility !== "secret"
-  ) {
-    throw new InvalidArgumentError();
-  }
+  assertClusterVisibility(visibility);
 
   const clusterID = await createCluster(accountID, name, visibility);
 
@@ -63,6 +68,7 @@ router.post("/", requireApiAuth, async (req, res) => {
  */
 router.get("/discoverable", async (req, res) => {
   const clusters = await getPublicClusters();
+
   res.json({
     status: "success",
     data: clusters,
@@ -78,8 +84,7 @@ router.get("/:clusterID", async (req, res) => {
   const cluster = await getClusterByID(clusterID);
 
   if (cluster == null) {
-    res.status(404);
-    res.json({ status: "error", error: "cluster_not_found" });
+    throw new ResourceNotFoundError();
   } else {
     res.json({ status: "success", data: cluster });
   }
@@ -90,28 +95,16 @@ router.delete("/:clusterID", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
 
   assertStringID(clusterID);
+  assertClusterExists(clusterID);
+  assertUserJoinedCluster(clusterID, accountID);
 
-  const clusterExists = await doesClusterExist(clusterID);
-  if (!clusterExists) {
-    res.status(404);
-    res.json({ status: "error", error: "cluster_not_found" });
-    return;
-  }
+  // If we are in the group, then the group must exist, and we can delete it
 
-  const inCluster = await didUserJoinCluster(clusterID, accountID);
+  await deleteCluster(clusterID);
 
-  if (!inCluster) {
-    res.status(401);
-    res.json({ status: "error", error: "not_in_cluster" });
-  } else {
-    // If we are in the group, then the group must exist, and we can delete it
-
-    await deleteCluster(clusterID);
-
-    res.json({
-      status: "success",
-    });
-  }
+  res.json({
+    status: "success",
+  });
 });
 
 router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
@@ -119,18 +112,12 @@ router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
   const { clusterID } = req.params;
 
   assertStringID(clusterID);
-
-  const clusterExists = await doesClusterExist(clusterID);
-  if (!clusterExists) {
-    res.status(404);
-    res.json({ status: "error", error: "cluster_not_found" });
-    return;
-  }
+  assertClusterExists(clusterID);
 
   const inCluster = await didUserJoinCluster(clusterID, accountID);
 
   if (inCluster) {
-    res.json({ status: "success", message: "already_in_cluster" });
+    throw new NoopError();
   } else {
     await joinCluster(clusterID, accountID);
     res.json({ status: "success" });
@@ -148,39 +135,20 @@ router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   const { clusterID } = req.params;
   const { topic, visibility } = req.body;
 
-  assertStringID(clusterID);
   assertString(topic, 1, 255);
+  assertSpaceVisibility(visibility);
+  assertStringID(clusterID);
+  assertClusterExists(clusterID);
+  assertUserJoinedCluster(clusterID, accountID);
 
-  if (
-    visibility !== "unlisted" &&
-    visibility !== "discoverable" &&
-    visibility !== "secret"
-  ) {
-    throw new InvalidArgumentError();
-  }
+  // If we are in the group, then the group must exist, and we can add spaces to it
 
-  const clusterExists = await doesClusterExist(clusterID);
-  if (!clusterExists) {
-    res.status(404);
-    res.json({ status: "error", error: "cluster_not_found" });
-    return;
-  }
-
-  const inCluster = await didUserJoinCluster(clusterID, accountID);
-
-  if (!inCluster) {
-    res.status(401);
-    res.json({ status: "error", error: "not_in_cluster" });
-  } else {
-    // If we are in the group, then the group must exist, and we can add spaces to it
-
-    res.json({
-      status: "success",
-      data: {
-        space_id: await startSpaceSession(accountID, topic, visibility),
-      },
-    });
-  }
+  res.json({
+    status: "success",
+    data: {
+      space_id: await startSpaceSession(accountID, topic, visibility),
+    },
+  });
 });
 
 /**
@@ -193,24 +161,12 @@ router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   const { clusterID } = req.params;
 
   assertStringID(clusterID);
+  assertClusterExists(clusterID);
+  assertUserJoinedCluster(clusterID, accountID);
 
-  const clusterExists = await doesClusterExist(clusterID);
-  if (!clusterExists) {
-    res.status(404);
-    res.json({ status: "error", error: "cluster_not_found" });
-    return;
-  }
-
-  const inCluster = await didUserJoinCluster(clusterID, accountID);
-
-  if (!inCluster) {
-    res.status(401);
-    res.json({ status: "error", error: "not_in_cluster" });
-  } else {
-    // If we are in the group, then the group must exist
-    res.json({
-      status: "success",
-      data: await getActiveSpaceSessionsInCluster(clusterID),
-    });
-  }
+  // If we are in the group, then the group must exist
+  res.json({
+    status: "success",
+    data: await getActiveSpaceSessionsInCluster(clusterID),
+  });
 });

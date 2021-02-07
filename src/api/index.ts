@@ -3,7 +3,7 @@ import * as clusters from "./clusters";
 import * as spaces from "./spaces";
 import * as users from "./users";
 import * as friends from "./friends";
-import InvalidArgumentError from "./InvalidArgumentError";
+import { InvalidArgumentError } from "./errors";
 
 export const router = Router();
 
