@@ -8,6 +8,7 @@ import {
   deleteCluster,
   doesClusterExist,
   getClusterByID,
+  getPublicClusters,
 } from "../database/tables/clusters";
 import {
   didUserJoinCluster,
@@ -59,6 +60,19 @@ router.post("/", requireApiAuth, async (req, res) => {
     data: {
       cluster_id: clusterID,
     },
+  });
+});
+
+/**
+ * Gets discoverable clusters
+ * TODO: Add paging
+ */
+router.get("/discoverable", async (req, res) => {
+  const clusters = await getPublicClusters();
+  res.json({
+    status: "success",
+    data: clusters,
+    paging: {}
   });
 });
 

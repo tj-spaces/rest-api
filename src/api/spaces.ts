@@ -44,6 +44,17 @@ router.post("/", requireApiAuth, async (req, res) => {
   res.json({ status: "success", data: { space_id } });
 });
 
+/**
+ * Gets suggested spaces
+ */
+router.get("/suggested", requireApiAuth, async (req, res) => {
+  let result = await db.query(`SELECT * FROM space_sessions;`);
+  res.json({ status: "success", data: result.rows });
+});
+
+/**
+ * Gets a space with a specific ID
+ */
 router.get("/:spaceID", requireApiAuth, async (req, res) => {
   const { spaceID } = req.params;
   const space_session = await getSpaceSessionByID(spaceID);
@@ -64,9 +75,4 @@ router.get("/:spaceID", requireApiAuth, async (req, res) => {
   } else {
     res.json({ status: "success", data: space_session });
   }
-});
-
-router.get("/suggested", requireApiAuth, async (req, res) => {
-  let result = await db.query(`SELECT * FROM space_sessions;`);
-  res.json({ status: "success", data: result.rows });
 });
