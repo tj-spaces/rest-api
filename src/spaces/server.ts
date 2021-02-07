@@ -11,6 +11,8 @@ import { getSessionDataByID } from "../session";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import { mutate, verify, Updater, Permissions } from "queryshift";
 import { getLogger } from "../lib/ClusterLogger";
+import { Question } from "./QuestionAndAnswer";
+import createUuid from "../lib/createUuid";
 
 const allowedParticipantUpdates: Permissions<SpaceParticipant> = {
   $set: {
@@ -64,6 +66,7 @@ export class SpaceServer {
   space: SpaceSession;
   lastCacheLoadTime: -1;
   tickHandle: NodeJS.Timeout | null = null;
+  questions: Record<string, Question> = {};
 
   constructor(public io: SocketIOServer, public spaceID: string) {}
 
@@ -99,6 +102,9 @@ export class SpaceServer {
     socket.removeAllListeners("chat_message");
     socket.removeAllListeners("update");
     socket.removeAllListeners("leave_space");
+    socket.removeAllListeners("question");
+    socket.removeAllListeners("answer_question");
+    socket.removeAllListeners("accept_question_answer");
 
     socket.broadcast.emit("peer_left", participantID);
 
@@ -139,13 +145,48 @@ export class SpaceServer {
     socket.on("update", (updates) => {
       if (verify(allowedParticipantUpdates, updates).allowed) {
         this.updateParticipant(participantID, updates);
-      } else {
       }
     });
 
     socket.on("leave_space", () => {
       this.deregisterParticipantFromSpace(participantID);
     });
+
+    socket.on("question", (text) => {
+      const id = createUuid();
+      this.questions[id] = {
+        id,
+        senderID: participantID,
+        text,
+        answers: [],
+        markedAsAnswered: false,
+      };
+
+      this.io.in(this.getRoomName()).emit("question", id, participantID, text);
+    });
+
+    socket.on("answer_question", (questionID, text) => {
+      this.questions[questionID].answers.push({
+        senderID: participantID,
+        text,
+      });
+
+      this.io
+        .in(this.getRoomName())
+        .emit("question_answer_added", questionID, participantID, text);
+    });
+
+    socket.on("accept_question_answer", (questionID) => {
+      let question = this.questions[questionID];
+      if (question.id === participantID) {
+        question.markedAsAnswered = true;
+        this.io
+          .in(this.getRoomName())
+          .emit("question_answer_accepted", questionID);
+      }
+    });
+
+    socket.emit("question_list", Object.values(this.questions));
 
     if (this.tickHandle == null) {
       logger({ event: "startedTick" });
@@ -169,16 +210,8 @@ export class SpaceServer {
       if (newRotation > Math.PI * 2) newRotation -= Math.PI * 2;
 
       this.updateParticipant(participant.accountID, {
-        $inc: {
-          position: {
-            location: { x: dx, z: dz },
-          },
-        },
-        $set: {
-          position: {
-            rotation: newRotation,
-          },
-        },
+        $inc: { position: { location: { x: dx, z: dz } } },
+        $set: { position: { rotation: newRotation } },
       });
     });
 
