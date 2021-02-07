@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   startSpaceSession,
   getActiveSpaceSessionsInCluster,
-} from "../database/tables/space_sessions
+} from "../database/tables/space_sessions";
 import {
   createCluster,
   deleteCluster,
@@ -72,7 +72,7 @@ router.get("/discoverable", async (req, res) => {
   res.json({
     status: "success",
     data: clusters,
-    paging: {}
+    paging: {},
   });
 });
 

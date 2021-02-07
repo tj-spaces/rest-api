@@ -4,6 +4,8 @@ import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 import { getConnectionCount } from "../../spaces/server";
 import { doesClusterExist } from "./clusters";
+import { getPublicUserFromID } from "./users";
+import { PublicUserInfo } from "./user_relations";
 
 export type SpaceSessionVisibility = "discoverable" | "unlisted" | "secret";
 
@@ -14,6 +16,7 @@ export interface SpaceSession {
   stop_time: string;
   cluster_id?: string;
   host_id: string;
+  host?: PublicUserInfo;
   visibility: SpaceSessionVisibility;
 }
 
@@ -79,13 +82,27 @@ export async function doesSpaceSessionExist(id: string) {
   return result.rowCount > 0;
 }
 
-export async function getSpaceSessionByID(id: string): Promise<SpaceSession> {
-  let result = await db.query(
+export async function getSpaceSessionByID(
+  id: string,
+  fetchHostData: boolean
+): Promise<SpaceSession> {
+  let result = await db.query<SpaceSession>(
     `SELECT * FROM "space_sessions" WHERE "id" = $1 LIMIT 1`,
     [id]
   );
 
-  return result.rowCount > 0 ? result[0] : null;
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  let spaceSession = result.rows[0];
+
+  if (fetchHostData) {
+    let user = await getPublicUserFromID(spaceSession.host_id);
+    spaceSession.host = user;
+  }
+
+  return spaceSession;
 }
 
 export const setSpaceSessionName = prepareStatement<

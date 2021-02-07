@@ -3,6 +3,7 @@ import { GoogleProfile } from "../../auth/google/profile";
 import { IonProfile } from "../../auth/ion/profile";
 import createUuid from "../../lib/createUuid";
 import { nextID } from "../../lib/snowflakeID";
+import { PublicUserInfo } from "./user_relations";
 
 export interface User {
   id: string; // A string of digits
@@ -81,6 +82,22 @@ export async function getUserFromID(id: string): Promise<User | null> {
   }
 
   let results = await db.query(`SELECT * FROM "users" WHERE "id" = $1`, [id]);
+
+  return results.rowCount > 0 ? results.rows[0] : null;
+}
+
+export async function getPublicUserFromID(id: string): Promise<PublicUserInfo> {
+  if (id in userFromIDCache) {
+    let timeSinceCacheUpdate = Date.now() - userFromIDCache[id].updateTime;
+    if (timeSinceCacheUpdate < MAX_CACHE_AGE) {
+      return new Promise((resolve) => resolve(userFromIDCache[id].user));
+    }
+  }
+
+  let results = await db.query<PublicUserInfo>(
+    `SELECT id, name, picture FROM "users" WHERE "id" = $1`,
+    [id]
+  );
 
   return results.rowCount > 0 ? results.rows[0] : null;
 }

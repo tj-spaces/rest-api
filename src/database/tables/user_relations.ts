@@ -73,14 +73,14 @@ export interface IncomingRelationResult {
   updated_at: string;
 }
 
-export interface Friend extends Partial<User> {
+export interface PublicUserInfo {
   id: string;
   name: string;
   picture: string;
 }
 
 export const getFriendsAfter = prepareStatement<
-  Friend,
+  PublicUserInfo,
   { from_user: string; after_id: string; limit: number }
 >(
   `SELECT

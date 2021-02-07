@@ -2,6 +2,7 @@ import { Cluster, getClusterByID } from "../database/tables/clusters";
 import {
   getSpaceSessionByID,
   SpaceSession,
+  SpaceSessionVisibility,
   startSpaceSession,
 } from "../database/tables/space_sessions";
 import { getConnectionCount } from "../spaces/server";
@@ -26,12 +27,15 @@ export const typeDef = `
 export const resolvers = {
   Query: {
     space(source: any, args: { id: string }): Promise<SpaceSession> {
-      return getSpaceSessionByID(args.id);
+      return getSpaceSessionByID(args.id, false);
     },
   },
   Mutation: {
-    startSession(source: any, args: { name: string }): Promise<string> {
-      return startSpaceSession("1234", args.name);
+    startSession(
+      source: any,
+      args: { name: string; visibility: SpaceSessionVisibility }
+    ): Promise<string> {
+      return startSpaceSession("1234", args.name, args.visibility);
     },
   },
   Space: {

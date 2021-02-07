@@ -71,7 +71,7 @@ export class SpaceServer {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {
-      return await getSpaceSessionByID(this.spaceID);
+      return await getSpaceSessionByID(this.spaceID, true);
     }
   }
 

@@ -57,7 +57,7 @@ router.get("/suggested", requireApiAuth, async (req, res) => {
  */
 router.get("/:spaceID", requireApiAuth, async (req, res) => {
   const { spaceID } = req.params;
-  const space_session = await getSpaceSessionByID(spaceID);
+  const space_session = await getSpaceSessionByID(spaceID, true);
 
   if (space_session == null) {
     res.status(404);
