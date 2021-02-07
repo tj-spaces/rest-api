@@ -124,16 +124,27 @@ router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
 /**
  * Creates a space in this cluster.
  * Requires params:
- *  - `name` The name of the space
+ *  - `topic` The topic of the space
+ *  - `visibility` The visibility of the space
  */
 router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
-  const { name } = req.body;
+  const { topic, visibility } = req.body;
 
-  if (typeof name !== "string" || name.length == 0 || name.length > 255) {
+  if (typeof topic !== "string" || topic.length == 0 || topic.length > 255) {
     res.status(400);
-    res.json({ status: "error", error: "invalid_space_name" });
+    res.json({ status: "error", error: "invalid_space_topic" });
+    return;
+  }
+
+  if (
+    visibility !== "unlisted" &&
+    visibility !== "discoverable" &&
+    visibility !== "secret"
+  ) {
+    res.status(400);
+    res.json({ status: "error", error: "invalid_space_visibility" });
     return;
   }
 
@@ -154,7 +165,9 @@ router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
 
     res.json({
       status: "success",
-      space_id: await startSpaceSession(accountID, name, clusterID),
+      data: {
+        space_id: await startSpaceSession(accountID, topic, visibility),
+      },
     });
   }
 });

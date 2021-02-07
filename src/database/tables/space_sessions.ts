@@ -20,7 +20,8 @@ export interface SpaceSession {
 export async function startSpaceSession(
   hostID: string,
   topic: string,
-  clusterID?: string
+  visibility: SpaceSessionVisibility,
+  clusterID: string | null = null
 ): Promise<string> {
   if (clusterID != null) {
     const clusterExists = await doesClusterExist(clusterID);
@@ -32,8 +33,8 @@ export async function startSpaceSession(
   const id = nextID();
 
   await db.query(
-    `INSERT INTO "space_sessions" ("id", "topic", "cluster_id", "host_id") VALUES ($1, $2, $3, $4)`,
-    [id, topic, clusterID, hostID]
+    `INSERT INTO "space_sessions" ("id", "topic", "cluster_id", "host_id", "visibility") VALUES ($1, $2, $3, $4, $5)`,
+    [id, topic, clusterID, hostID, visibility]
   );
 
   return id.toString();

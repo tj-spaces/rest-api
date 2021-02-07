@@ -25,16 +25,22 @@ router.post("/", requireApiAuth, async (req, res) => {
   if (typeof topic !== "string" || topic.length > 255 || topic.length === 0) {
     res.status(400);
     res.json({ status: "error", error: "invalid_topic" });
+    return;
   }
 
-  if (visibility !== "") {
+  if (
+    visibility !== "discoverable" &&
+    visibility !== "unlisted" &&
+    visibility !== "secret"
+  ) {
     res.status(400);
     res.json({ status: "error", error: "invalid_visibility" });
+    return;
   }
 
-  let spaceID = await startSpaceSession(accountID, topic);
+  let space_id = await startSpaceSession(accountID, topic, visibility);
 
-  res.json({ status: "success", spaceID });
+  res.json({ status: "success", data: { space_id } });
 });
 
 router.get("/:spaceID", requireApiAuth, async (req, res) => {
