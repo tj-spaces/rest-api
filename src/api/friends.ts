@@ -11,6 +11,13 @@ import {
   getSuggestedFriends,
 } from "../database/tables/user_relations";
 import requireApiAuth from "../middleware/requireApiAuth";
+import InvalidArgumentError from "./InvalidArgumentError";
+import {
+  assertString,
+  assertStringID,
+  validateString,
+  validateStringID,
+} from "./validationUtil";
 
 export const router = Router();
 
@@ -52,11 +59,7 @@ router.post("/send_request", async (req, res) => {
   const { accountID } = req.session;
   const { user_id } = req.body;
 
-  if (typeof user_id !== "string") {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_other_user_id" });
-    return;
-  }
+  assertStringID(user_id);
 
   let relationTypeFromOther = await getUserRelationType({
     from_user: user_id,
@@ -89,11 +92,7 @@ router.post("/accept_request", async (req, res) => {
   const { accountID } = req.session;
   const { user_id } = req.body;
 
-  if (typeof user_id !== "string") {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_other_user_id" });
-    return;
-  }
+  assertStringID(user_id);
 
   let relationType = await getUserRelationType({
     from_user: user_id,
@@ -117,11 +116,7 @@ router.post("/deny_request", async (req, res) => {
   const { accountID } = req.session;
   const { user_id } = req.body;
 
-  if (typeof user_id !== "string") {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_other_user_id" });
-    return;
-  }
+  assertStringID(user_id);
 
   let relationType = await getUserRelationType({
     from_user: user_id,
@@ -140,11 +135,7 @@ router.post("/cancel_request", async (req, res) => {
   const { accountID } = req.session;
   const { user_id } = req.body;
 
-  if (typeof user_id !== "string") {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_other_user_id" });
-    return;
-  }
+  assertStringID(user_id);
 
   let relationType = await getUserRelationType({
     from_user: accountID,
@@ -166,11 +157,7 @@ router.post("/block", async (req, res) => {
   const { accountID } = req.session;
   const { user_id } = req.body;
 
-  if (typeof user_id !== "string") {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_other_user_id" });
-    return;
-  }
+  assertStringID(user_id);
 
   let relationType = await getUserRelationType({
     from_user: accountID,
@@ -197,15 +184,10 @@ router.post("/block", async (req, res) => {
 router.get("/suggested", async (req, res) => {
   const { accountID } = req.session;
   const { search = "" } = req.query;
-  if (typeof search !== "string" || search.length > 255) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_search" });
-    return;
-  }
+
+  assertString(search, 0, 255);
 
   let suggested = await getSuggestedFriends(search, accountID);
-
-  console.log("Suggested friends search for", search, "returned", suggested);
 
   res.json({
     status: "success",

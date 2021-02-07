@@ -3,6 +3,7 @@ import * as clusters from "./clusters";
 import * as spaces from "./spaces";
 import * as users from "./users";
 import * as friends from "./friends";
+import InvalidArgumentError from "./InvalidArgumentError";
 
 export const router = Router();
 
@@ -12,11 +13,19 @@ router.use("/users", users.router);
 router.use("/friends", friends.router);
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  res.status(500);
-  res.json({
-    status: "error",
-    error: "internal_server_error",
-  });
+  if (err instanceof InvalidArgumentError) {
+    res.status(400);
+    res.json({
+      status: "error",
+      error: "invalid_arg",
+    });
+  } else {
+    res.status(500);
+    res.json({
+      status: "error",
+      error: "internal_server_error",
+    });
+  }
 };
 
 router.use(errorHandler);

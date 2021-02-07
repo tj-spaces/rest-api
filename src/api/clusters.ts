@@ -15,6 +15,8 @@ import {
   joinCluster,
 } from "../database/tables/cluster_members";
 import requireApiAuth from "../middleware/requireApiAuth";
+import { assertString, assertStringID, validateString } from "./validationUtil";
+import InvalidArgumentError from "./InvalidArgumentError";
 
 /**
  * Main router for Clusters API.
@@ -35,20 +37,14 @@ router.post("/", requireApiAuth, async (req, res) => {
   const { visibility, name } = req.body;
   const { accountID } = req.session;
 
-  if (typeof name !== "string" || name.length === 0 || name.length > 255) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_cluster_name" });
-    return;
-  }
+  assertString(name, 1, 255);
 
   if (
     visibility !== "discoverable" &&
     visibility !== "unlisted" &&
     visibility !== "secret"
   ) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_cluster_visibility" });
-    return;
+    throw new InvalidArgumentError();
   }
 
   const clusterID = await createCluster(accountID, name, visibility);
@@ -57,9 +53,7 @@ router.post("/", requireApiAuth, async (req, res) => {
 
   res.json({
     status: "success",
-    data: {
-      cluster_id: clusterID,
-    },
+    data: { cluster_id: clusterID },
   });
 });
 
@@ -79,6 +73,8 @@ router.get("/discoverable", async (req, res) => {
 router.get("/:clusterID", async (req, res) => {
   const { clusterID } = req.params;
 
+  assertStringID(clusterID);
+
   const cluster = await getClusterByID(clusterID);
 
   if (cluster == null) {
@@ -92,6 +88,8 @@ router.get("/:clusterID", async (req, res) => {
 router.delete("/:clusterID", requireApiAuth, async (req, res) => {
   const { clusterID } = req.params;
   const { accountID } = req.session;
+
+  assertStringID(clusterID);
 
   const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {
@@ -119,6 +117,8 @@ router.delete("/:clusterID", requireApiAuth, async (req, res) => {
 router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
+
+  assertStringID(clusterID);
 
   const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {
@@ -148,20 +148,15 @@ router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   const { clusterID } = req.params;
   const { topic, visibility } = req.body;
 
-  if (typeof topic !== "string" || topic.length == 0 || topic.length > 255) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_space_topic" });
-    return;
-  }
+  assertStringID(clusterID);
+  assertString(topic, 1, 255);
 
   if (
     visibility !== "unlisted" &&
     visibility !== "discoverable" &&
     visibility !== "secret"
   ) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_space_visibility" });
-    return;
+    throw new InvalidArgumentError();
   }
 
   const clusterExists = await doesClusterExist(clusterID);
@@ -196,6 +191,8 @@ router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
 router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
+
+  assertStringID(clusterID);
 
   const clusterExists = await doesClusterExist(clusterID);
   if (!clusterExists) {

@@ -8,6 +8,7 @@ import {
 } from "../database/tables/space_sessions";
 import { getUserFromID } from "../database/tables/users";
 import requireApiAuth from "../middleware/requireApiAuth";
+import { assertString, assertStringID } from "./validationUtil";
 
 /* ROUTES TO MAKE:
 
@@ -25,11 +26,8 @@ export const router = Router();
 router.post("/", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const { topic, visibility } = req.body;
-  if (typeof topic !== "string" || topic.length > 255 || topic.length === 0) {
-    res.status(400);
-    res.json({ status: "error", error: "invalid_topic" });
-    return;
-  }
+
+  assertString(topic, 1, 255);
 
   if (
     visibility !== "discoverable" &&
@@ -63,6 +61,9 @@ router.get("/suggested", requireApiAuth, async (req, res) => {
  */
 router.get("/:spaceID", requireApiAuth, async (req, res) => {
   const { spaceID } = req.params;
+
+  assertStringID(spaceID);
+
   const space_session = await getSpaceSessionByID(spaceID, true);
 
   if (space_session == null) {
