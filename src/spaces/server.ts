@@ -1,18 +1,18 @@
-import { Connection } from "../socket";
+import { mutate, Permissions, Updater, verify } from "queryshift";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import {
   doesSpaceSessionExist,
   getSpaceSessionByID,
   SpaceSession,
 } from "../database/tables/space_sessions";
+import { getLogger } from "../lib/ClusterLogger";
+import createTwilioGrantJwt from "../lib/createTwilioGrant";
+import createUuid from "../lib/createUuid";
+import { getSessionDataByID } from "../session";
+import { Connection } from "../socket";
+import { Question } from "./QuestionAndAnswer";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
-import { getSessionDataByID } from "../session";
-import createTwilioGrantJwt from "../lib/createTwilioGrant";
-import { mutate, verify, Updater, Permissions } from "queryshift";
-import { getLogger } from "../lib/ClusterLogger";
-import { Question } from "./QuestionAndAnswer";
-import createUuid from "../lib/createUuid";
 
 const allowedParticipantUpdates: Permissions<SpaceParticipant> = {
   $set: {
