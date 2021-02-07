@@ -22,7 +22,7 @@ router.get("/incoming_requests", async (req, res) => {
   const { accountID } = req.session;
   let requests = await getIncomingFriendRequests({ to_user: accountID });
 
-  res.json({ status: "success", data: requests });
+  res.json({ status: "success", data: requests.rows });
 });
 
 /**
@@ -32,7 +32,7 @@ router.get("/outgoing_requests", async (req, res) => {
   const { accountID } = req.session;
   let requests = await getOutgoingFriendRequests({ from_user: accountID });
 
-  res.json({ status: "success", data: requests });
+  res.json({ status: "success", data: requests.rows });
 });
 
 /**
