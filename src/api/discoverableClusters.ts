@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getPublicClusters } from "../../database/tables/clusters";
+import { getPublicClusters } from "../database/tables/clusters";
 
 export const router = Router();
 

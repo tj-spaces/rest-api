@@ -8,8 +8,8 @@ import {
   getUserRelationType,
   updateUserRelation,
   getSuggestedFriends,
-} from "../../database/tables/user_relations";
-import requireApiAuth from "../../middleware/requireApiAuth";
+} from "../database/tables/user_relations";
+import requireApiAuth from "../middleware/requireApiAuth";
 
 export const router = Router();
 

@@ -2,18 +2,18 @@ import { Router } from "express";
 import {
   startSpaceSession,
   getActiveSpaceSessionsInCluster,
-} from "../../database/tables/space_sessions";
+} from "../database/tables/space_sessions
 import {
   createCluster,
   deleteCluster,
   doesClusterExist,
   getClusterByID,
-} from "../../database/tables/clusters";
+} from "../database/tables/clusters";
 import {
   didUserJoinCluster,
   joinCluster,
-} from "../../database/tables/cluster_members";
-import requireApiAuth from "../../middleware/requireApiAuth";
+} from "../database/tables/cluster_members";
+import requireApiAuth from "../middleware/requireApiAuth";
 
 /**
  * Main router for Clusters API.

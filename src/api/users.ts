@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getClustersWithUser } from "../../database/tables/cluster_members";
-import { getUserFromID } from "../../database/tables/users";
-import { getFriendsAfter } from "../../database/tables/user_relations";
-import requireApiAuth from "../../middleware/requireApiAuth";
+import { getClustersWithUser } from "../database/tables/cluster_members";
+import { getUserFromID } from "../database/tables/users";
+import { getFriendsAfter } from "../database/tables/user_relations";
+import requireApiAuth from "../middleware/requireApiAuth";
 
 export const router = Router();
 
