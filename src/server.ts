@@ -39,11 +39,11 @@ app.use((req, res, next) => {
     let duration = endTime - startTime;
     logger({
       path: req.path,
-      query: req.query,
+      // query: req.query,
       params: req.params,
-      auth: req.headers.authorization,
-      startTime,
-      endTime,
+      // auth: req.headers.authorization,
+      // startTime,
+      // endTime,
       duration,
     });
   });

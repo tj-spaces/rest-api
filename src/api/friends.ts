@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getPublicUserFromID } from "../database/tables/users";
 import {
   makeFriendRelation,
   getIncomingFriendRequests,
@@ -21,8 +22,12 @@ router.use(requireApiAuth);
 router.get("/incoming_requests", async (req, res) => {
   const { accountID } = req.session;
   let requests = await getIncomingFriendRequests({ to_user: accountID });
+  let users = [];
+  for (let row of requests.rows) {
+    users.push(await getPublicUserFromID(row.from_user));
+  }
 
-  res.json({ status: "success", data: requests.rows });
+  res.json({ status: "success", data: users });
 });
 
 /**
@@ -31,8 +36,12 @@ router.get("/incoming_requests", async (req, res) => {
 router.get("/outgoing_requests", async (req, res) => {
   const { accountID } = req.session;
   let requests = await getOutgoingFriendRequests({ from_user: accountID });
+  let users = [];
+  for (let row of requests.rows) {
+    users.push(await getPublicUserFromID(row.to_user));
+  }
 
-  res.json({ status: "success", data: requests.rows });
+  res.json({ status: "success", data: users });
 });
 
 /**
@@ -95,7 +104,7 @@ router.post("/accept_request", async (req, res) => {
     makeFriendRelation({ user_a: accountID, user_b: user_id });
     res.json({ status: "success" });
   } else {
-    res.status(401);
+    res.status(404);
     res.json({ status: "error", error: "request_not_found" });
   }
 });

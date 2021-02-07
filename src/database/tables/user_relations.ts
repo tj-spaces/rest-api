@@ -45,7 +45,7 @@ export const queryUserRelationType = prepareStatement<
   { relation_type: UserRelationType; created_at: string; updated_at: string },
   { from_user: string; to_user: string }
 >(
-  `SELECT (relation_type, created_at, updated_at) FROM user_relations WHERE from_user = $1 AND to_user = $2 LIMIT 1`,
+  `SELECT relation_type, created_at, updated_at FROM user_relations WHERE from_user = $1 AND to_user = $2 LIMIT 1`,
   { from_user: 1, to_user: 2 }
 );
 
@@ -117,7 +117,7 @@ export const getIncomingFriendRequests = prepareStatement<
   IncomingRelationResult,
   { to_user: string }
 >(
-  `SELECT (from_user, created_at, updated_at) FROM user_relations WHERE to_user = $1 AND relation_type = 'requested_friends';`,
+  `SELECT from_user, created_at, updated_at FROM user_relations WHERE to_user = $1 AND relation_type = 'requested_friends';`,
   { to_user: 1 }
 );
 
@@ -125,7 +125,7 @@ export const getOutgoingFriendRequests = prepareStatement<
   OutgoingRelationResult,
   { from_user: string }
 >(
-  `SELECT (to_user, created_at, updated_at) FROM user_relations WHERE from_user = $1 AND relation_type = 'requested_friends';`,
+  `SELECT to_user, created_at, updated_at FROM user_relations WHERE from_user = $1 AND relation_type = 'requested_friends';`,
   { from_user: 1 }
 );
 
