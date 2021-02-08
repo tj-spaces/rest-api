@@ -1,7 +1,7 @@
 import { Router } from "express";
 import createSessionFromCodeAndProvider from "./createSessionFromCodeAndProvider";
 
-const router = Router();
+export const router = Router();
 
 router.post("/create_session", async (req, res) => {
   const { provider, code } = req.body;
@@ -42,13 +42,3 @@ router.get("/logout", (req, res) => {
 
   res.redirect("/");
 });
-
-router.get("/login-error", (req, res) => {
-  res.status(400);
-  res.render("login", {
-    message: "There was a problem, try logging in again.",
-    title: "Login Error",
-  });
-});
-
-export { router };
