@@ -1,7 +1,0 @@
-1 Space = 1 World
-
-Spaces can be infinitely large
-
-Spaces can be shared by a group, and a collection of spaces can be shared with a group, much like channels on a Discord server
-
-

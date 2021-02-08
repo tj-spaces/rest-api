@@ -1,7 +1,6 @@
 import { db } from "..";
-import { GoogleProfile } from "../../auth/google/profile";
-import { IonProfile } from "../../auth/ion/profile";
-import createUuid from "../../lib/createUuid";
+import { IonProfile } from "../../auth/provider/ion";
+import { GoogleProfile } from "../../auth/provider/google";
 import { nextID } from "../../lib/snowflakeID";
 import { PublicUserInfo } from "./user_relations";
 

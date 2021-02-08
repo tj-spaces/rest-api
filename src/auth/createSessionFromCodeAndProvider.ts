@@ -1,6 +1,6 @@
 import { createSession } from "../session";
-import getAccountIDFromGoogleCode from "./google/getAccountID";
-import getAccountIDFromIonCode from "./ion/getAccountID";
+import { getAccountIDFromGoogleCode } from "./provider/google";
+import { getAccountIDFromIonCode } from "./provider/ion";
 
 /**
  * Given an authorization code and the OAuth provider, load the profile of the user

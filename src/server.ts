@@ -6,7 +6,6 @@ import * as auth from "./auth/index";
 import * as bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
-import exphbs from "express-handlebars";
 import * as http from "http";
 import { getSessionMiddleware } from "./session";
 import { createIo } from "./socket";
@@ -18,17 +17,6 @@ import { getLogger } from "./lib/ClusterLogger";
 const app = express();
 const httpServer = http.createServer(app);
 const io = createIo(httpServer);
-
-app.set("view engine", "hbs");
-
-app.engine(
-  "hbs",
-  exphbs({
-    extname: "hbs",
-    layoutsDir: "views/layouts",
-    partialsDir: "views/partials",
-  })
-);
 
 const logger = getLogger("requests");
 
