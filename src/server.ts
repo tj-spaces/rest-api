@@ -8,7 +8,7 @@ import cors from "cors";
 import express from "express";
 import * as http from "http";
 import { getSessionMiddleware } from "./session";
-import { createIo } from "./socket";
+import { createIO } from "./socket";
 // import { graphqlHTTP } from "express-graphql";
 // import { executableSchema } from "./graphql/graphql";
 // import isDevelopmentMode from "./lib/isDevelopment";
@@ -16,7 +16,7 @@ import { getLogger } from "./lib/ClusterLogger";
 
 const app = express();
 const httpServer = http.createServer(app);
-const io = createIo(httpServer);
+const io = createIO(httpServer);
 
 const logger = getLogger("requests");
 

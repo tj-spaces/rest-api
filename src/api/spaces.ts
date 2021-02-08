@@ -6,7 +6,7 @@ import {
   startSpaceSession,
 } from "../database/tables/space_sessions";
 import { getUserFromID } from "../database/tables/users";
-import requireApiAuth from "../middleware/requireApiAuth";
+import requireApiAuth from "../lib/requireApiAuth";
 import { ResourceNotFoundError } from "./errors";
 import {
   assertSpaceVisibility,

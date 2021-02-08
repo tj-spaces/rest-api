@@ -10,7 +10,7 @@ import {
   updateUserRelation,
   getSuggestedFriends,
 } from "../database/tables/user_relations";
-import requireApiAuth from "../middleware/requireApiAuth";
+import requireApiAuth from "../lib/requireApiAuth";
 import {
   assertRelationIs,
   assertRelationIsNot,

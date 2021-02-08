@@ -14,7 +14,7 @@ import {
   didUserJoinCluster,
   joinCluster,
 } from "../database/tables/cluster_members";
-import requireApiAuth from "../middleware/requireApiAuth";
+import requireApiAuth from "../lib/requireApiAuth";
 import {
   assertClusterExists,
   assertClusterVisibility,

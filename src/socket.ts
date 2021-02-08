@@ -77,7 +77,7 @@ const accountConnections = new Map<string, Connection>();
  * Sets up the callbacks and returns a newly-created Socket.io instance
  * @param server The http server to bind to
  */
-export const createIo = (server: http.Server) => {
+export const createIO = (server: http.Server) => {
   const io = new SocketIOServer(server, {
     cors: {
       origin: "*",

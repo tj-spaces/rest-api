@@ -1,6 +1,5 @@
 import { db } from "..";
 import getFirst from "../../lib/getFirst";
-import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 
 interface Channel {
@@ -20,7 +19,10 @@ export async function getChannelByID(id: string): Promise<Channel> {
   return getFirst(result.rows);
 }
 
-export async function createChannel(name: string, clusterID: string) {
+export async function createChannel(
+  name: string,
+  clusterID: string
+): Promise<string> {
   const id = nextID().toString();
   await db.query(
     `INSERT INTO "channels" ("id", "name", "cluster_id", "is_cluster_channel") VALUES ($1, $2, $3, true)`,
@@ -29,10 +31,9 @@ export async function createChannel(name: string, clusterID: string) {
   return id;
 }
 
-export const setChannelSubsection = prepareStatement<
-  void,
-  { subsection_name: string; id: string }
->(`UPDATE "channels" SET "subsection_name" = $1 WHERE "id" = $2`, {
-  subsection_name: 1,
-  id: 2,
-});
+export async function setChannelSubsection(id: string, subsection: string) {
+  await db.query(
+    `UPDATE "channels" SET "subsection_name" = $1 WHERE "id" = $2`,
+    [subsection, id]
+  );
+}
