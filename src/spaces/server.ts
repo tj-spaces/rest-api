@@ -10,7 +10,7 @@ import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import createUuid from "../lib/createUuid";
 import { getSessionDataByID } from "../session";
 import { Connection } from "../socket";
-import { Question } from "./QuestionAndAnswer";
+import { SpaceMessage } from "./SpaceMessage";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
 
@@ -66,7 +66,9 @@ export class SpaceServer {
   space: SpaceSession;
   lastCacheLoadTime: -1;
   tickHandle: NodeJS.Timeout | null = null;
-  questions: Record<string, Question> = {};
+  messagesMap: Record<string, SpaceMessage> = {};
+  // This is used so we can easily send a list of messages to the client, in order
+  messagesInsertionOrder: string[] = [];
 
   constructor(public io: SocketIOServer, public spaceID: string) {}
 
@@ -132,10 +134,6 @@ export class SpaceServer {
     socket.emit("peers", this.participants);
     socket.broadcast.emit("peer_joined", participant);
 
-    conn.useListener("chat_message", (messageContent) => {
-      this.addMessage(participantID, messageContent);
-    });
-
     conn.useListener("update", (updates) => {
       if (verify(allowedParticipantUpdates, updates).allowed) {
         this.updateParticipant(participantID, updates);
@@ -146,41 +144,24 @@ export class SpaceServer {
       this.deregisterParticipantFromSpace(participantID);
     });
 
-    conn.useListener("question", (text) => {
+    conn.useListener("message", (text: string, replyTo?: string) => {
       const id = createUuid();
-      this.questions[id] = {
+
+      this.messagesMap[id] = {
         id,
         senderID: participantID,
         text,
-        answers: [],
-        markedAsAnswered: false,
+        replyTo,
       };
 
-      this.io.in(this.getRoomName()).emit("question", id, participantID, text);
-    });
-
-    conn.useListener("answer_question", (questionID, text) => {
-      this.questions[questionID].answers.push({
-        senderID: participantID,
-        text,
-      });
+      this.messagesInsertionOrder.push(id);
 
       this.io
         .in(this.getRoomName())
-        .emit("question_answer_added", questionID, participantID, text);
+        .emit("message", id, participantID, text, replyTo);
     });
 
-    conn.useListener("accept_question_answer", (questionID) => {
-      let question = this.questions[questionID];
-      if (question.id === participantID) {
-        question.markedAsAnswered = true;
-        this.io
-          .in(this.getRoomName())
-          .emit("question_answer_accepted", questionID);
-      }
-    });
-
-    socket.emit("question_list", Object.values(this.questions));
+    socket.emit("messages", Object.values(this.messagesMap));
 
     if (this.tickHandle == null) {
       logger({ event: "startedTick" });
