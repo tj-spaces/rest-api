@@ -96,6 +96,11 @@ export class SpaceServer {
   }
 
   deregisterParticipantFromSpace(participantID: string) {
+    if (!(participantID in this.connections)) {
+      logger({ event: "participantLeft", warn: "participant already left" });
+      return;
+    }
+
     const { socket } = this.connections[participantID];
 
     delete this.participants[participantID];
