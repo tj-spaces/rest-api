@@ -34,6 +34,8 @@ export class Connection {
    */
   pingTimeoutHandle: NodeJS.Timeout;
 
+  listeners: Parameters<Socket["on"]>[] = [];
+
   constructor(public socket: Socket, onPingTimeout: () => void) {
     socket.on("ping", (key) => {
       if (key === this.pingKey) {
@@ -61,6 +63,17 @@ export class Connection {
 
     this.sendPing();
   }
+
+  // @ts-expect-error
+  useListener: Socket["on"] = (...args: Parameters<Socket["on"]>) => {
+    return this.socket.on(...args);
+  };
+
+  destroyListeners = () => {
+    for (let args of this.listeners) {
+      this.socket.off(...args);
+    }
+  };
 
   sendPing() {
     this.pingKey = createUuid();

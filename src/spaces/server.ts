@@ -97,14 +97,8 @@ export class SpaceServer {
     const { socket } = this.connections[participantID];
 
     delete this.participants[participantID];
+    this.connections[participantID].destroyListeners();
     delete this.connections[participantID];
-
-    socket.removeAllListeners("chat_message");
-    socket.removeAllListeners("update");
-    socket.removeAllListeners("leave_space");
-    socket.removeAllListeners("question");
-    socket.removeAllListeners("answer_question");
-    socket.removeAllListeners("accept_question_answer");
 
     socket.broadcast.emit("peer_left", participantID);
 
@@ -122,9 +116,9 @@ export class SpaceServer {
 
   addParticipantToSpace(participant: SpaceParticipant, socket: Socket) {
     let participantID = participant.accountID;
-    this.connections[participantID] = new Connection(socket, () => {
+    let conn = (this.connections[participantID] = new Connection(socket, () => {
       this.deregisterParticipantFromSpace(participantID);
-    });
+    }));
     this.participants[participantID] = participant;
 
     logger({ event: "participantJoined", participantID });
@@ -138,21 +132,21 @@ export class SpaceServer {
     socket.emit("peers", this.participants);
     socket.broadcast.emit("peer_joined", participant);
 
-    socket.on("chat_message", (messageContent) => {
+    conn.useListener("chat_message", (messageContent) => {
       this.addMessage(participantID, messageContent);
     });
 
-    socket.on("update", (updates) => {
+    conn.useListener("update", (updates) => {
       if (verify(allowedParticipantUpdates, updates).allowed) {
         this.updateParticipant(participantID, updates);
       }
     });
 
-    socket.on("leave_space", () => {
+    conn.useListener("leave_space", () => {
       this.deregisterParticipantFromSpace(participantID);
     });
 
-    socket.on("question", (text) => {
+    conn.useListener("question", (text) => {
       const id = createUuid();
       this.questions[id] = {
         id,
@@ -165,7 +159,7 @@ export class SpaceServer {
       this.io.in(this.getRoomName()).emit("question", id, participantID, text);
     });
 
-    socket.on("answer_question", (questionID, text) => {
+    conn.useListener("answer_question", (questionID, text) => {
       this.questions[questionID].answers.push({
         senderID: participantID,
         text,
@@ -176,7 +170,7 @@ export class SpaceServer {
         .emit("question_answer_added", questionID, participantID, text);
     });
 
-    socket.on("accept_question_answer", (questionID) => {
+    conn.useListener("accept_question_answer", (questionID) => {
       let question = this.questions[questionID];
       if (question.id === participantID) {
         question.markedAsAnswered = true;
