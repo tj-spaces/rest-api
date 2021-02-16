@@ -8,6 +8,7 @@ import {
 } from "../database/tables/clusters";
 import {
   didUserJoinCluster,
+  getUsersInCluster,
   joinCluster,
 } from "../database/tables/cluster_members";
 import requireApiAuth from "../lib/requireApiAuth";
@@ -25,6 +26,7 @@ import {
   ResourceNotFoundError,
   UnauthorizedError,
 } from "./errors";
+import { getPublicUserFromID } from "../database/tables/users";
 
 /**
  * Main router for Clusters API.
@@ -138,4 +140,18 @@ router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
     status: "success",
     data: await getSpacesInCluster(clusterID),
   });
+});
+
+/**
+ * Gets a list of members in this cluster.
+ * TODO: add paging
+ */
+router.get("/:clusterID/members", requireApiAuth, async (req, res) => {
+  const { accountID } = req.session;
+  const { clusterID } = req.params;
+  assertStringID(clusterID);
+  assertUserJoinedCluster(clusterID, accountID);
+  let ids = await getUsersInCluster(clusterID);
+  let users = await Promise.all(ids.map((id) => getPublicUserFromID(id)));
+  res.json({ status: "success", data: users, paging: {} });
 });
