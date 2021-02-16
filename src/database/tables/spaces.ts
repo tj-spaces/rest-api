@@ -50,7 +50,7 @@ export async function createSpace(
     )
     VALUES
     (
-      $1, $2, $3, $4, $5)`,
+      $1, $2, $3, $4, $5, $6)`,
     [id, creatorOrClusterID, name, description, visibility, allowsTemplating]
   );
 
