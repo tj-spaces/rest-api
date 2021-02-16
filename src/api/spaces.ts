@@ -29,12 +29,25 @@ export const router = Router();
  */
 router.post("/", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
-  const { topic, visibility } = req.body;
+  const {
+    name,
+    description = "",
+    visibility,
+    allowsTemplating = false,
+  } = req.body;
 
-  assertString(topic, 1, 255);
+  assertString(name, 1, 32);
+  assertString(description, 0, 255);
   assertSpaceVisibility(visibility);
 
-  let space_id = await createSpace(accountID, topic, visibility);
+  let space_id = await createSpace(
+    accountID,
+    name,
+    description,
+    visibility,
+    allowsTemplating,
+    "creator"
+  );
 
   res.json({ status: "success", data: { space_id } });
 });
@@ -43,7 +56,7 @@ router.post("/", requireApiAuth, async (req, res) => {
  * Gets suggested spaces
  */
 router.get("/suggested", requireApiAuth, async (req, res) => {
-  let result = await db.query<Space>(`SELECT * FROM space_sessions;`);
+  let result = await db.query<Space>(`SELECT * FROM spaces;`);
 
   res.json({ status: "success", data: result.rows });
 });
