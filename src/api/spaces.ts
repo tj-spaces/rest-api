@@ -33,20 +33,28 @@ router.post("/", requireApiAuth, async (req, res) => {
     name,
     description = "",
     visibility,
-    allowsTemplating = false,
+    allows_templating = false,
+    cluster_id,
   } = req.body;
 
   assertString(name, 1, 32);
   assertString(description, 0, 255);
   assertSpaceVisibility(visibility);
 
+  const isClusterSpace = cluster_id != null;
+
+  // cluster_id is not required
+  if (isClusterSpace) {
+    assertStringID(cluster_id);
+  }
+
   let space_id = await createSpace(
-    accountID,
+    isClusterSpace ? cluster_id : accountID,
     name,
     description,
     visibility,
-    allowsTemplating,
-    "creator"
+    allows_templating,
+    isClusterSpace ? "cluster" : "creator"
   );
 
   res.json({ status: "success", data: { space_id } });

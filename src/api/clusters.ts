@@ -121,44 +121,6 @@ router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
 });
 
 /**
- * Creates a space in this cluster.
- * Requires params:
- *  - `topic` The topic of the space
- *  - `visibility` The visibility of the space
- */
-router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
-  const { accountID } = req.session;
-  const { clusterID } = req.params;
-  const {
-    name,
-    description = "",
-    visibility,
-    allowsTemplating = false,
-  } = req.body;
-
-  assertString(name, 1, 32);
-  assertString(description, 0, 255);
-  assertSpaceVisibility(visibility);
-  assertStringID(clusterID);
-  assertClusterExists(clusterID);
-  assertUserJoinedCluster(clusterID, accountID);
-
-  res.json({
-    status: "success",
-    data: {
-      space_id: await createSpace(
-        clusterID,
-        name,
-        description,
-        visibility,
-        allowsTemplating,
-        "cluster"
-      ),
-    },
-  });
-});
-
-/**
  * Gets a list of spaces in this cluster.
  * Requires params:
  *  - `cluster_id` The cluster to find spaces for
