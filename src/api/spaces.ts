@@ -2,10 +2,9 @@ import { Router } from "express";
 import { db } from "../database";
 import {
   getSpaceSessionByID,
-  SpaceSession,
-  startSpaceSession,
-} from "../database/tables/space_sessions";
-import { getUserFromID } from "../database/tables/users";
+  Space,
+  createSpace,
+} from "../database/tables/spaces";
 import requireApiAuth from "../lib/requireApiAuth";
 import { ResourceNotFoundError } from "./errors";
 import {
@@ -35,7 +34,7 @@ router.post("/", requireApiAuth, async (req, res) => {
   assertString(topic, 1, 255);
   assertSpaceVisibility(visibility);
 
-  let space_id = await startSpaceSession(accountID, topic, visibility);
+  let space_id = await createSpace(accountID, topic, visibility);
 
   res.json({ status: "success", data: { space_id } });
 });
@@ -44,13 +43,9 @@ router.post("/", requireApiAuth, async (req, res) => {
  * Gets suggested spaces
  */
 router.get("/suggested", requireApiAuth, async (req, res) => {
-  let result = await db.query<SpaceSession>(`SELECT * FROM space_sessions;`);
-  let spaceSessions = result.rows;
-  for (let spaceSession of spaceSessions) {
-    spaceSession.host = await getUserFromID(spaceSession.host_id);
-  }
+  let result = await db.query<Space>(`SELECT * FROM space_sessions;`);
 
-  res.json({ status: "success", data: spaceSessions });
+  res.json({ status: "success", data: result.rows });
 });
 
 /**
@@ -61,7 +56,7 @@ router.get("/:spaceID", requireApiAuth, async (req, res) => {
 
   assertStringID(spaceID);
 
-  const space_session = await getSpaceSessionByID(spaceID, true);
+  const space_session = await getSpaceSessionByID(spaceID);
 
   if (space_session == null) {
     throw new ResourceNotFoundError();

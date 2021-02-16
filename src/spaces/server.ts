@@ -3,8 +3,8 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import {
   doesSpaceSessionExist,
   getSpaceSessionByID,
-  SpaceSession,
-} from "../database/tables/space_sessions";
+  Space,
+} from "../database/tables/spaces";
 import { getLogger } from "../lib/ClusterLogger";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import createUuid from "../lib/createUuid";
@@ -63,7 +63,7 @@ export class SpaceServer {
    */
   participants: Record<string, SpaceParticipant> = {};
   connections: Record<string, Connection> = {};
-  space: SpaceSession;
+  space: Space;
   lastCacheLoadTime: -1;
   tickHandle: NodeJS.Timeout | null = null;
   messagesMap: Record<string, SpaceMessage> = {};
@@ -72,11 +72,11 @@ export class SpaceServer {
 
   constructor(public io: SocketIOServer, public spaceID: string) {}
 
-  async getSpace(): Promise<SpaceSession> {
+  async getSpace(): Promise<Space> {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {
-      return await getSpaceSessionByID(this.spaceID, true);
+      return await getSpaceSessionByID(this.spaceID);
     }
   }
 

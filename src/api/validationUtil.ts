@@ -3,7 +3,7 @@ import {
   doesClusterExist,
 } from "../database/tables/clusters";
 import { didUserJoinCluster } from "../database/tables/cluster_members";
-import { SpaceSessionVisibility } from "../database/tables/space_sessions";
+import { SpaceVisibility } from "../database/tables/spaces";
 import {
   getUserRelationType,
   UserRelationType,
@@ -82,7 +82,7 @@ export function assertClusterVisibility(
 
 export function assertSpaceVisibility(
   value: unknown
-): asserts value is SpaceSessionVisibility {
+): asserts value is SpaceVisibility {
   if (typeof value === "string") {
     if (
       value === "discoverable" ||

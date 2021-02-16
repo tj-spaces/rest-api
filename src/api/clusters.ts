@@ -1,12 +1,8 @@
 import { Router } from "express";
-import {
-  startSpaceSession,
-  getActiveSpaceSessionsInCluster,
-} from "../database/tables/space_sessions";
+import { createSpace, getSpacesInCluster } from "../database/tables/spaces";
 import {
   createCluster,
   deleteCluster,
-  doesClusterExist,
   getClusterByID,
   getPublicClusters,
 } from "../database/tables/clusters";
@@ -133,20 +129,31 @@ router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
 router.post("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
-  const { topic, visibility } = req.body;
+  const {
+    name,
+    description = "",
+    visibility,
+    allowsTemplating = false,
+  } = req.body;
 
-  assertString(topic, 1, 255);
+  assertString(name, 1, 32);
+  assertString(description, 0, 255);
   assertSpaceVisibility(visibility);
   assertStringID(clusterID);
   assertClusterExists(clusterID);
   assertUserJoinedCluster(clusterID, accountID);
 
-  // If we are in the group, then the group must exist, and we can add spaces to it
-
   res.json({
     status: "success",
     data: {
-      space_id: await startSpaceSession(accountID, topic, visibility),
+      space_id: await createSpace(
+        clusterID,
+        name,
+        description,
+        visibility,
+        allowsTemplating,
+        "cluster"
+      ),
     },
   });
 });
@@ -167,6 +174,6 @@ router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   // If we are in the group, then the group must exist
   res.json({
     status: "success",
-    data: await getActiveSpaceSessionsInCluster(clusterID),
+    data: await getSpacesInCluster(clusterID),
   });
 });
