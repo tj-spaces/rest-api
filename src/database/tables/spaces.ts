@@ -76,7 +76,7 @@ export async function getClusterThatHasSpaceWithID(
   id: string
 ): Promise<Cluster | null> {
   let result = await db.query<Cluster>(
-    `SELECT "clusters".* FROM "spaces" INNER JOIN "clusters" ON "clusters"."id" = "spaces"."cluster_id" WHERE "id" = $1 LIMIT 1`,
+    `SELECT clusters.* FROM spaces INNER JOIN clusters ON clusters.id = spaces.cluster_id WHERE spaces.id = $1 LIMIT 1`,
     [id]
   );
 
@@ -95,7 +95,7 @@ export async function getSpacesInCluster(clusterID: string): Promise<Space[]> {
   }));
 }
 
-export async function doesSpaceSessionExist(id: string) {
+export async function doesSpaceExist(id: string) {
   let result = await db.query(
     `SELECT 1 FROM "spaces" WHERE "id" = $1 LIMIT 1`,
     [id]
@@ -104,7 +104,7 @@ export async function doesSpaceSessionExist(id: string) {
   return result.rowCount > 0;
 }
 
-export async function getSpaceSessionByID(id: string): Promise<Space> {
+export async function getSpaceByID(id: string): Promise<Space> {
   let result = await db.query<Space>(
     `SELECT * FROM "spaces" WHERE "id" = $1 LIMIT 1`,
     [id]

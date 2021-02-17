@@ -1,10 +1,6 @@
 import { mutate, Permissions, Updater, verify } from "queryshift";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import {
-  doesSpaceSessionExist,
-  getSpaceSessionByID,
-  Space,
-} from "../database/tables/spaces";
+import { doesSpaceExist, getSpaceByID, Space } from "../database/tables/spaces";
 import { getLogger } from "../lib/ClusterLogger";
 import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import createUuid from "../lib/createUuid";
@@ -76,7 +72,7 @@ export class SpaceServer {
     if (Date.now() - this.lastCacheLoadTime < SPACE_CACHE_TTL) {
       return this.space;
     } else {
-      return await getSpaceSessionByID(this.spaceID);
+      return await getSpaceByID(this.spaceID);
     }
   }
 
@@ -257,7 +253,7 @@ export async function getSpaceServer(
   spaceID: string,
   io: SocketIOServer
 ): Promise<SpaceServer | null> {
-  const spaceExists = await doesSpaceSessionExist(spaceID);
+  const spaceExists = await doesSpaceExist(spaceID);
   if (spaceExists) {
     if (spaceServers.has(spaceID)) {
       return spaceServers.get(spaceID);

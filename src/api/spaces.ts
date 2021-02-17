@@ -2,13 +2,14 @@ import { Router } from "express";
 import { db } from "../database";
 import { didUserJoinCluster } from "../database/tables/cluster_members";
 import {
-  getSpaceSessionByID,
+  getSpaceByID,
   Space,
   createSpace,
   getClusterThatHasSpaceWithID,
-  doesSpaceSessionExist,
+  doesSpaceExist,
 } from "../database/tables/spaces";
 import createBase36String from "../lib/createBase36String";
+import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import requireApiAuth from "../lib/requireApiAuth";
 import { redis } from "../redis";
 import { ResourceNotFoundError } from "./errors";
@@ -84,7 +85,7 @@ router.get("/:spaceID/join", requireApiAuth, async (req, res) => {
   const { spaceID } = req.params;
 
   // Ensure that this space exists
-  const exists = await doesSpaceSessionExist(spaceID);
+  const exists = await doesSpaceExist(spaceID);
   if (!exists) {
     res.json({ status: "error", error: "space_not_found" });
     return;
@@ -102,34 +103,36 @@ router.get("/:spaceID/join", requireApiAuth, async (req, res) => {
   const code = createBase36String(32);
 
   const setUser = new Promise<void>((resolve, reject) =>
-    redis.SET("session.user_id:" + code, accountID, (err) => {
-      err ? reject() : resolve();
+    redis.SET("join_code.user_id:" + code, accountID, (err) => {
+      err ? reject(err) : resolve();
     })
   );
 
   const setSpace = new Promise<void>((resolve, reject) =>
-    redis.SET("session.space_id:" + code, spaceID, (err) => {
-      err ? reject() : resolve();
+    redis.SET("join_code.space_id:" + code, spaceID, (err) => {
+      err ? reject(err) : resolve();
     })
   );
 
   const setUserTTL = new Promise<void>((resolve, reject) =>
-    redis.EXPIRE("session.user_id:" + code, 3600, (err) => {
-      err ? reject() : resolve();
+    redis.EXPIRE("join_code.user_id:" + code, 3600, (err) => {
+      err ? reject(err) : resolve();
     })
   );
 
   const setSpaceTTL = new Promise<void>((resolve, reject) =>
-    redis.EXPIRE("session.space_id:" + code, 3600, (err) => {
-      err ? reject() : resolve();
+    redis.EXPIRE("join_code.space_id:" + code, 3600, (err) => {
+      err ? reject(err) : resolve();
     })
   );
+
+  const twilioGrant = createTwilioGrantJwt(accountID, spaceID);
 
   await Promise.all([setUser, setSpace, setUserTTL, setSpaceTTL]);
 
   res.json({
     status: "success",
-    data: code,
+    data: { code, twilioGrant },
   });
 });
 
@@ -141,20 +144,17 @@ router.get("/:spaceID", requireApiAuth, async (req, res) => {
 
   assertStringID(spaceID);
 
-  const space_session = await getSpaceSessionByID(spaceID);
+  const space = await getSpaceByID(spaceID);
 
-  if (space_session == null) {
+  if (space == null) {
     throw new ResourceNotFoundError();
   }
 
-  if (
-    space_session.cluster_id != null &&
-    space_session.visibility !== "discoverable"
-  ) {
+  if (space.cluster_id != null && space.visibility !== "discoverable") {
     let { accountID } = req.session;
 
-    assertUserJoinedCluster(space_session.cluster_id, accountID);
+    assertUserJoinedCluster(space.cluster_id, accountID);
   }
 
-  res.json({ status: "success", data: space_session });
+  res.json({ status: "success", data: space });
 });
