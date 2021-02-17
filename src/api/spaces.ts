@@ -39,6 +39,7 @@ router.post("/", requireApiAuth, async (req, res) => {
     description = "",
     visibility,
     allows_templating = false,
+    world_type,
     cluster_id,
   } = req.body;
 
@@ -59,6 +60,7 @@ router.post("/", requireApiAuth, async (req, res) => {
     description,
     visibility,
     allows_templating,
+    world_type,
     isClusterSpace ? "cluster" : "creator"
   );
 

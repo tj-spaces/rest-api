@@ -6,6 +6,7 @@ import { getConnectionCount } from "../../spaces/server";
 import { Cluster, doesClusterExist } from "./clusters";
 
 export type SpaceVisibility = "discoverable" | "unlisted" | "secret";
+export type WorldType = "3d-voxel" | "2d-pixel";
 
 export interface Space {
   id: string;
@@ -16,6 +17,7 @@ export interface Space {
   visibility: SpaceVisibility;
   allows_templating: boolean;
   download_count: number;
+  world_type: WorldType;
 }
 
 export async function createSpace(
@@ -24,9 +26,10 @@ export async function createSpace(
   description: string,
   visibility: SpaceVisibility,
   allowsTemplating: boolean,
-  type: "creator" | "cluster"
+  worldType: WorldType,
+  creatorEntityType: "creator" | "cluster"
 ): Promise<string> {
-  if (type == "cluster") {
+  if (creatorEntityType == "cluster") {
     const clusterExists = await doesClusterExist(creatorOrClusterID);
     if (!clusterExists) {
       throw new Error("Cluster does not exist: " + creatorOrClusterID);
@@ -40,16 +43,25 @@ export async function createSpace(
     INSERT INTO "spaces" 
     (
       "id",
-      "${type === "cluster" ? "cluster_id" : "creator_id"}",
+      "${creatorEntityType === "cluster" ? "cluster_id" : "creator_id"}",
       "name",
       "description",
       "visibility",
-      "allows_templating"
+      "allows_templating",
+      "world_type"
     )
     VALUES
     (
-      $1, $2, $3, $4, $5, $6)`,
-    [id, creatorOrClusterID, name, description, visibility, allowsTemplating]
+      $1, $2, $3, $4, $5, $6, $7)`,
+    [
+      id,
+      creatorOrClusterID,
+      name,
+      description,
+      visibility,
+      allowsTemplating,
+      worldType,
+    ]
   );
 
   return id.toString();
