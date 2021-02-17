@@ -1,11 +1,9 @@
-import { Cluster } from "cluster";
 import { db } from "..";
 import getFirst from "../../lib/getFirst";
 import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 import { getConnectionCount } from "../../spaces/server";
-import { doesClusterExist } from "./clusters";
-import { getPublicUserFromID } from "./users";
+import { Cluster, doesClusterExist } from "./clusters";
 
 export type SpaceVisibility = "discoverable" | "unlisted" | "secret";
 
@@ -64,7 +62,7 @@ export async function createSpace(
  */
 export async function getClusterThatHasSpaceWithID(
   id: string
-): Promise<Cluster> {
+): Promise<Cluster | null> {
   let result = await db.query<Cluster>(
     `SELECT "clusters".* FROM "spaces" INNER JOIN "clusters" ON "clusters"."id" = "spaces"."cluster_id" WHERE "id" = $1 LIMIT 1`,
     [id]
