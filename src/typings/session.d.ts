@@ -2,7 +2,6 @@
  * This is where the typings for our session go.
  */
 export interface SessionData {
-  isLoggedIn: boolean;
   accountID: string;
 }
 

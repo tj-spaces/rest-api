@@ -7,12 +7,12 @@ import * as bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import * as http from "http";
-import { getSessionMiddleware } from "./session";
 import { createIO } from "./socket";
 // import { graphqlHTTP } from "express-graphql";
 // import { executableSchema } from "./graphql/graphql";
 // import isDevelopmentMode from "./lib/isDevelopment";
 import { getLogger } from "./lib/ClusterLogger";
+import { sessionMiddleware } from "./session";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 
 app.use(cors());
 
-app.use(getSessionMiddleware());
+app.use(sessionMiddleware);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

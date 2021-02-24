@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { redis } from "../redis";
 import createSessionFromCodeAndProvider from "./createSessionFromCodeAndProvider";
 
 export const router = Router();
@@ -36,9 +37,14 @@ router.post("/create_session", async (req, res) => {
   }
 });
 
-router.get("/logout", (req, res) => {
-  delete req.session.accountID;
-  req.session.isLoggedIn = false;
-
-  res.redirect("/");
+router.get("/purge_session", (req, res) => {
+  const auth = req.headers.authorization;
+  if (typeof auth === "string" && auth.startsWith("Bearer ")) {
+    const token = auth.slice(7);
+    redis.DEL("session.user_id:" + token, (err) =>
+      err ? res.status(500) : res.status(200)
+    );
+  } else {
+    res.status(200);
+  }
 });

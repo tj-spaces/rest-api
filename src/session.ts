@@ -1,5 +1,8 @@
 import { RequestHandler } from "express";
-import createUuid from "./lib/createUuid";
+import createBase36String from "./lib/createBase36String";
+import getSessionID from "./lib/getSessionID";
+import resetSessionTTL from "./lib/resetSessionTTL";
+import { redis } from "./redis";
 import { SessionData } from "./typings/session";
 
 export interface Session {
@@ -7,20 +10,18 @@ export interface Session {
   data: SessionData;
 }
 
-const MEMORY_STORED_SESSIONS = new Map<string, Session>();
-
-export function getSessionDataByID(sessionID: string): SessionData | null {
-  if (MEMORY_STORED_SESSIONS.has(sessionID)) {
-    const session = MEMORY_STORED_SESSIONS.get(sessionID);
-    if (Date.now() > session.expiresAt) {
-      MEMORY_STORED_SESSIONS.delete(sessionID);
-      return null;
-    } else {
-      return MEMORY_STORED_SESSIONS.get(sessionID).data;
-    }
-  } else {
-    return null;
-  }
+export async function getSessionDataByID(
+  sessionID: string
+): Promise<SessionData> {
+  return new Promise<SessionData>((resolve, reject) => {
+    redis.GET("session.user_id:" + sessionID, (err, reply) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ accountID: reply ?? null });
+      }
+    });
+  });
 }
 
 export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24;
@@ -29,36 +30,36 @@ export const SESSION_LIFETIME_MS = 1000 * 60 * 60 * 24;
  * Registers a session in the memory cache
  * @return Session id
  */
-export function createSession(accountID: string): string {
-  const id = createUuid();
+export async function createSession(accountID: string): Promise<string> {
+  const sessionID = createBase36String(64);
+  const setKey = new Promise<void>((resolve, reject) =>
+    redis.SET("session.user_id:" + sessionID, accountID, (err) =>
+      err ? reject(err) : resolve()
+    )
+  );
+  const setKeyExpiration = new Promise<void>((resolve, reject) =>
+    redis.EXPIRE("session.user_id:" + sessionID, 3600, (err) =>
+      err ? reject(err) : resolve()
+    )
+  );
 
-  MEMORY_STORED_SESSIONS.set(id, {
-    expiresAt: Date.now() + SESSION_LIFETIME_MS,
-    data: {
-      accountID,
-      isLoggedIn: true,
-    },
-  });
+  await Promise.all([setKey, setKeyExpiration]);
 
-  return id;
+  return sessionID;
 }
 
 /**
  * The cached sessionMiddleware, to be shared across the server
  */
-let sessionMiddleware: RequestHandler = (req, res, next) => {
-  const auth = req.headers.authorization;
-  // console.log("Checking request with Authorization = " + auth);
-  if (typeof auth === "string" && auth.startsWith("Bearer ")) {
-    const token = auth.slice(7);
-    req.session = getSessionDataByID(token);
-    next();
-  } else {
-    req.session = { isLoggedIn: false, accountID: null };
-    next();
-  }
-};
+export const sessionMiddleware: RequestHandler = async (req, res, next) => {
+  const token = getSessionID(req);
 
-export function getSessionMiddleware(): RequestHandler {
-  return sessionMiddleware;
-}
+  if (token != null) {
+    req.session = await getSessionDataByID(token);
+    await resetSessionTTL(token);
+  } else {
+    req.session = { accountID: null };
+  }
+
+  next();
+};

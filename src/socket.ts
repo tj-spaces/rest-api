@@ -1,7 +1,7 @@
 import * as http from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
-import { getSessionDataByID, getSessionMiddleware } from "./session";
+import { getSessionDataByID } from "./session";
 import { getUserFromID } from "./database/tables/users";
 import createUuid from "./lib/createUuid";
 
@@ -102,11 +102,11 @@ export const createIO = (server: http.Server) => {
     getSessionMiddleware()(socket.request, {}, next);
   });
 
-  io.on("connection", (socket: Socket) => {
+  io.on("connection", async (socket: Socket) => {
     const sessionID = socket.handshake.query["sessionID"];
-    const session = getSessionDataByID(sessionID);
+    const session = await getSessionDataByID(sessionID);
 
-    if (session == null || session.isLoggedIn == false) {
+    if (session == null || session.accountID == null) {
       socket.emit("unauthenticated");
       return;
     }

@@ -202,10 +202,12 @@ export class SpaceServer {
     this.io.in(this.getRoomName()).emit("peer_update", participantID, updates);
   }
 
-  tryJoin(socket: Socket, displayName: string = "user") {
-    const session = getSessionDataByID(socket.handshake.query["sessionID"]);
+  async tryJoin(socket: Socket, displayName: string = "user") {
+    const session = await getSessionDataByID(
+      socket.handshake.query["sessionID"]
+    );
 
-    if (session?.isLoggedIn) {
+    if (session.accountID) {
       const { accountID } = session;
 
       const participant: SpaceParticipant = {
