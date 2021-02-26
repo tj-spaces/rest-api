@@ -5,7 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+		"dev": "concurrently --names 'TSC,SRV' 'tsc -w --project ./' 'nodemon ./dist/server.js'"
   },
   "author": "Michael Fatemi",
   "license": "ISC",
