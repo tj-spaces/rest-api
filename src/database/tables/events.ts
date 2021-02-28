@@ -8,6 +8,7 @@ export type EventVisibility = "unlisted" | "discoverable";
 
 export interface Event {
   id: string;
+  name: string;
   host_user_id: string;
   host_cluster_id?: string;
   start_time?: string;
@@ -32,12 +33,13 @@ export async function createEvent(spec: Event) {
   await db.query(
     `
 	INSERT INTO "events" (
-		id, host_user_id, host_cluster_id, start_time, end_time, visibility, description
+		id, name, host_user_id, host_cluster_id, start_time, end_time, visibility, description
 	) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
+		$1, $2, $3, $4, $5, $6, $7, $8
 	)`,
     [
       id,
+      spec.name,
       spec.host_user_id,
       spec.host_cluster_id,
       spec.start_time,

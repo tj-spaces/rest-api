@@ -3,6 +3,7 @@ import {
   doesClusterExist,
 } from "../database/tables/clusters";
 import { didUserJoinCluster } from "../database/tables/cluster_members";
+import { EventVisibility } from "../database/tables/events";
 import { SpaceVisibility } from "../database/tables/spaces";
 import {
   getUserRelationType,
@@ -74,6 +75,17 @@ export function assertClusterVisibility(
       value === "unlisted" ||
       value === "secret"
     ) {
+      return;
+    }
+  }
+  throw new InvalidArgumentError();
+}
+
+export function assertEventVisibility(
+  value: unknown
+): asserts value is EventVisibility {
+  if (typeof value === "string") {
+    if (value === "discoverable" || value === "unlisted") {
       return;
     }
   }
