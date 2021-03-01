@@ -100,9 +100,7 @@ router.delete("/:clusterID", requireApiAuth, async (req, res) => {
 
   await deleteCluster(clusterID);
 
-  res.json({
-    status: "success",
-  });
+  res.json({ status: "success" });
 });
 
 router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
@@ -136,10 +134,7 @@ router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   assertUserJoinedCluster(clusterID, accountID);
 
   // If we are in the group, then the group must exist
-  res.json({
-    status: "success",
-    data: await getSpacesInCluster(clusterID),
-  });
+  res.json({ status: "success", data: await getSpacesInCluster(clusterID) });
 });
 
 /**

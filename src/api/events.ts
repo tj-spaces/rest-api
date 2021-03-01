@@ -29,6 +29,7 @@ router.patch("/:id", async (req, res) => {
   } else {
     // @ts-expect-error
     await updateEvent(id, { name, description });
+    res.json({ status: "success" });
   }
 });
 
@@ -67,7 +68,7 @@ router.post("/", async (req, res) => {
     assertString(description, 0, 4096);
   }
 
-  createEvent({
+  let id = await createEvent({
     name,
     host_user_id: accountID,
     host_cluster_id,
@@ -76,4 +77,6 @@ router.post("/", async (req, res) => {
     visibility,
     description,
   });
+
+  res.json({ status: "success", data: { event_id: id } });
 });
