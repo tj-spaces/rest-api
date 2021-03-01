@@ -19,7 +19,7 @@ export interface Event {
   description?: string;
 }
 
-export async function createEvent(spec: Event) {
+export async function createEvent(spec: Omit<Event, "id">) {
   if (!doesUserExistWithID(spec.host_user_id)) {
     throw new Error("Event host user does not exist");
   }

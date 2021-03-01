@@ -48,7 +48,6 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   const {
-    id,
     name,
     host_cluster_id,
     start_time,
@@ -56,11 +55,10 @@ router.post("/", async (req, res) => {
     visibility,
     description,
   } = req.params;
+
   const { accountID } = req.session;
 
-  assertStringID(id);
   assertString(name, 1, 256);
-
   if (host_cluster_id != null) {
     assertStringID(host_cluster_id);
   }
@@ -70,7 +68,6 @@ router.post("/", async (req, res) => {
   }
 
   createEvent({
-    id,
     name,
     host_user_id: accountID,
     host_cluster_id,
