@@ -4,5 +4,5 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npx tsc
-EXPOSE 80
+EXPOSE 5000
 CMD node .
