@@ -1,4 +1,6 @@
 import { db } from "..";
+import { ResourceNotFoundError } from "../../api/errors";
+import createUpdateString from "../../lib/createUpdateString";
 import prepareStatement from "../../lib/prepareStatement";
 import { nextID } from "../../lib/snowflakeID";
 import { doesClusterExist } from "./clusters";
@@ -50,6 +52,38 @@ export async function createEvent(spec: Event) {
   );
 
   return id.toString();
+}
+
+export async function getEventHostID(eventID: string) {
+  let result = await db.query<Event>(
+    'SELECT "host_user_id" FROM "events" WHERE "id" = $1',
+    [eventID]
+  );
+
+  return result.rowCount > 0 ? result.rows[0].host_user_id : null;
+}
+
+export async function updateEvent(
+  eventID: string,
+  updates: { name?: string; description?: string }
+) {
+  if (!(await doesEventExist(eventID))) {
+    throw new ResourceNotFoundError();
+  }
+
+  const [str, values, nextIndex] = createUpdateString(updates);
+
+  await db.query(
+    `UPDATE "events" SET ${str} WHERE "id" = $${nextIndex}`,
+    values.concat(eventID)
+  );
+}
+
+export async function doesEventExist(eventID: string) {
+  let res = await db.query('select 1 from "events" where "id" = $1 LIMIT 1', [
+    eventID,
+  ]);
+  return res.rowCount > 0;
 }
 
 export const getEvent = prepareStatement<Event, { id: string }>(

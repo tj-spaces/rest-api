@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { createEvent, getEvent } from "../database/tables/events";
+import {
+  createEvent,
+  getEvent,
+  getEventHostID,
+  updateEvent,
+} from "../database/tables/events";
+import { UnauthorizedError } from "./errors";
 import {
   assertEventVisibility,
   assertString,
@@ -11,6 +17,19 @@ export const router = Router();
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const { name, description } = req.query;
+
+  if (name != null) assertString(name, 1, 256);
+  if (description != null) assertString(description, 1, 4096);
+
+  const { accountID } = req.session;
+  const eventHostID = await getEventHostID(id);
+
+  if (accountID !== eventHostID) {
+    throw new UnauthorizedError();
+  } else {
+    // @ts-expect-error
+    await updateEvent(id, { name, description });
+  }
 });
 
 router.get("/:id", async (req, res) => {
