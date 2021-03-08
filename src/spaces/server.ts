@@ -2,7 +2,6 @@ import { mutate, Permissions, Updater, verify } from "queryshift";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { doesSpaceExist, getSpaceByID, Space } from "../database/tables/spaces";
 import { getLogger } from "../lib/ClusterLogger";
-import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import createUuid from "../lib/createUuid";
 import { getSessionDataByID } from "../session";
 import { Connection } from "../socket";
@@ -128,10 +127,10 @@ export class SpaceServer {
 
     socket.join(this.getRoomName());
     socket.emit("space_join_complete");
-    socket.emit(
-      "twilio_grant",
-      createTwilioGrantJwt(participantID, this.spaceID)
-    );
+    // socket.emit(
+    //   "twilio_grant",
+    //   createTwilioGrantJwt(participantID, this.spaceID)
+    // );
     socket.emit("peers", this.participants);
     socket.broadcast.emit("peer_joined", participant);
 
