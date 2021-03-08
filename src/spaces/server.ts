@@ -2,7 +2,7 @@ import { mutate, Permissions, Updater, verify } from "queryshift";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { doesSpaceExist, getSpaceByID, Space } from "../database/tables/spaces";
 import { getLogger } from "../lib/ClusterLogger";
-import createUuid from "../lib/createUuid";
+import createUuid from "../lib/createUUID";
 import { getSessionDataByID } from "../session";
 import { Connection } from "../socket";
 import { SpaceMessage } from "./SpaceMessage";

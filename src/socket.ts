@@ -3,7 +3,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
 import { getSessionDataByID } from "./session";
 import { getUserFromID } from "./database/tables/users";
-import createUuid from "./lib/createUuid";
+import createUuid from "./lib/createUUID";
 
 const PING_SEND_INTERVAL = 5000;
 const PING_TIMEOUT = 60000;

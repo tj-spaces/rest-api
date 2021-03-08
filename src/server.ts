@@ -8,9 +8,6 @@ import cors from "cors";
 import express from "express";
 import * as http from "http";
 import { createIO } from "./socket";
-// import { graphqlHTTP } from "express-graphql";
-// import { executableSchema } from "./graphql/graphql";
-// import isDevelopmentMode from "./lib/isDevelopment";
 import { getLogger } from "./lib/ClusterLogger";
 import { sessionMiddleware } from "./session";
 
@@ -47,11 +44,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/auth", auth.router);
 app.use("/api", api.router);
-
-// app.use(
-//   "/graphql",
-//   graphqlHTTP({ schema: executableSchema, graphiql: isDevelopmentMode() })
-// );
 
 const port = process.env.PORT ?? 5000;
 
