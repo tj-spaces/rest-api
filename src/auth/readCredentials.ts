@@ -1,6 +1,3 @@
-import * as fs from "fs";
-import * as path from "path";
-
 export interface OAuthProviderClientCredentials {
   id: string;
   secret: string;

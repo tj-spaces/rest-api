@@ -1,4 +1,7 @@
-import * as url from "../url";
+import isDevelopmentMode from "../lib/isDevelopment";
 
-export default (name: string) =>
-  url.join("http://localhost:3000/auth", name, "callback");
+const rootURL = isDevelopmentMode()
+  ? "http://localhost:3000"
+  : "https://www.joinnebula.co";
+
+export default (name: string) => `${rootURL}/auth/${name}/callback`;
