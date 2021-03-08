@@ -69,8 +69,6 @@ export async function getSimulationServerURL() {
     })
     .promise();
 
-  console.log(containers);
-
   let instance = await ec2
     .describeInstances({
       InstanceIds: [containers.containerInstances[0].ec2InstanceId],
