@@ -9,9 +9,8 @@ export interface OAuthProviderClientCredentials {
 export default function readCredentials(
   name: string
 ): OAuthProviderClientCredentials {
-  return JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, `../../credentials/${name}.json`), {
-      encoding: "utf-8",
-    })
-  );
+  return {
+    id: process.env[name.toUpperCase() + "_KEY_ID"],
+    secret: process.env[name.toUpperCase() + "_SECRET"],
+  };
 }
