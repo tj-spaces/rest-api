@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getSimulationServerURL, getVoiceServerURL } from "../aws";
 import { db } from "../database";
 import { didUserJoinCluster } from "../database/tables/cluster_members";
 import {
@@ -9,7 +10,6 @@ import {
   doesSpaceExist,
 } from "../database/tables/spaces";
 import createBase36String from "../lib/createBase36String";
-import createTwilioGrantJwt from "../lib/createTwilioGrant";
 import requireApiAuth from "../lib/requireApiAuth";
 import { redis } from "../redis";
 import { ResourceNotFoundError } from "./errors";
@@ -126,13 +126,16 @@ router.get("/:spaceID/join", requireApiAuth, async (req, res) => {
     })
   );
 
-  const twilioGrant = createTwilioGrantJwt(accountID, spaceID);
-
   await Promise.all([setUser, setSpace, setUserTTL, setSpaceTTL]);
+
+  const [voiceURL, simulationURL] = await Promise.all([
+    getVoiceServerURL(),
+    getSimulationServerURL(),
+  ]);
 
   res.json({
     status: "success",
-    data: { code, twilioGrant },
+    data: { code, voiceURL, simulationURL },
   });
 });
 
