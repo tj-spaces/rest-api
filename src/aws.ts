@@ -1,7 +1,15 @@
 import * as AWS from "aws-sdk";
 
+AWS.config.update({
+  region: "us-east-1",
+});
+
 let ecs = new AWS.ECS();
 let ec2 = new AWS.EC2();
+
+const simulationCluster =
+  "arn:aws:ecs:us-east-1:763687816313:cluster/simulation";
+const voiceCluster = "arn:aws:ecs:us-east-1:763687816313:cluster/voice";
 
 /**
  * Gets a container's external IP address for a client to connect to.
@@ -19,11 +27,14 @@ export async function getVoiceServerURL() {
   }
 
   let containerARNs = await ecs
-    .listContainerInstances({ cluster: "voice" })
+    .listContainerInstances({
+      cluster: voiceCluster,
+    })
     .promise();
 
   let containers = await ecs
     .describeContainerInstances({
+      cluster: voiceCluster,
       containerInstances: containerARNs.containerInstanceArns,
     })
     .promise();
@@ -46,14 +57,19 @@ export async function getSimulationServerURL() {
   }
 
   let containerARNs = await ecs
-    .listContainerInstances({ cluster: "simulation" })
+    .listContainerInstances({
+      cluster: simulationCluster,
+    })
     .promise();
 
   let containers = await ecs
     .describeContainerInstances({
+      cluster: simulationCluster,
       containerInstances: containerARNs.containerInstanceArns,
     })
     .promise();
+
+  console.log(containers);
 
   let instance = await ec2
     .describeInstances({
