@@ -1,11 +1,15 @@
 import * as AWS from "aws-sdk";
 
+console.log("Connecting to AWS...");
+
 AWS.config.update({
   region: "us-east-1",
 });
 
 let ecs = new AWS.ECS();
 let ec2 = new AWS.EC2();
+
+console.log("Connected to AWS.");
 
 const simulationCluster =
   "arn:aws:ecs:us-east-1:763687816313:cluster/simulation";

@@ -7,13 +7,11 @@ import * as bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import * as http from "http";
-import { createIO } from "./socket";
 import { getLogger } from "./lib/ClusterLogger";
 import { sessionMiddleware } from "./session";
 
 const app = express();
 const httpServer = http.createServer(app);
-const io = createIO(httpServer);
 
 const logger = getLogger("requests");
 
@@ -24,11 +22,10 @@ app.use((req, res, next) => {
     let duration = endTime - startTime;
     logger({
       path: req.path,
-      // query: req.query,
+      query: req.query,
       params: req.params,
-      // auth: req.headers.authorization,
-      // startTime,
-      // endTime,
+      auth: req.headers.authorization,
+      ip: req.ip,
       duration,
     });
   });
@@ -42,9 +39,15 @@ app.use(sessionMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.get("/healthcheck", (req, res) => {
+  res.status(200);
+  res.json({ status: "ok" });
+});
 app.use("/auth", auth.router);
 app.use("/api", api.router);
 
 const port = process.env.PORT ?? 5000;
+
+console.log("Added routes");
 
 httpServer.listen(port, () => console.log("Listening on port", port));
