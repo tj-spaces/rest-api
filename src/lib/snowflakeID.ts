@@ -1,3 +1,7 @@
+/*
+  Method is created by Twitter.
+*/
+
 /**
  * Snowflakes are unique IDs used by Twitter and Discord that have the guarantee that if one
  * Snowflake is less than another Snowflake, it was created before.

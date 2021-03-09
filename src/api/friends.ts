@@ -1,14 +1,20 @@
+/*
+  Copyright (C) Michael Fatemi - All Rights Reserved.
+  Unauthorized copying of this file via any medium is strictly prohibited.
+  Proprietary and confidential.
+  Written by Michael Fatemi <myfatemi04@gmail.com>, February 2021.
+*/
 import { Router } from "express";
 import { getPublicUserFromID } from "../database/tables/users";
 import {
-  makeFriendRelation,
+  deleteFriendRequest,
   getIncomingFriendRequests,
   getOutgoingFriendRequests,
-  sendFriendRequest,
-  deleteFriendRequest,
-  getUserRelationType,
-  updateUserRelation,
   getSuggestedFriends,
+  getUserRelationType,
+  makeFriendRelation,
+  sendFriendRequest,
+  updateUserRelation,
 } from "../database/tables/user_relations";
 import requireApiAuth from "../lib/requireApiAuth";
 import {

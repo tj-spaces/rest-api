@@ -1,13 +1,19 @@
+/*
+  Copyright (C) Michael Fatemi - All Rights Reserved.
+  Unauthorized copying of this file via any medium is strictly prohibited.
+  Proprietary and confidential.
+  Written by Michael Fatemi <myfatemi04@gmail.com>, February 2021.
+*/
 import { Router } from "express";
 import { getSimulationServerURL, getVoiceServerURL } from "../aws";
 import { db } from "../database";
 import { didUserJoinCluster } from "../database/tables/cluster_members";
 import {
+  createSpace,
+  doesSpaceExist,
+  getClusterThatHasSpaceWithID,
   getSpaceByID,
   Space,
-  createSpace,
-  getClusterThatHasSpaceWithID,
-  doesSpaceExist,
 } from "../database/tables/spaces";
 import createBase36String from "../lib/createBase36String";
 import requireApiAuth from "../lib/requireApiAuth";

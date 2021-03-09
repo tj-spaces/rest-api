@@ -1,5 +1,11 @@
+/*
+  Copyright (C) Michael Fatemi - All Rights Reserved.
+  Unauthorized copying of this file via any medium is strictly prohibited.
+  Proprietary and confidential.
+  Written by Michael Fatemi <myfatemi04@gmail.com>, February 2021.
+*/
 import { Router } from "express";
-import { createSpace, getSpacesInCluster } from "../database/tables/spaces";
+import { getSpacesInCluster } from "../database/tables/spaces";
 import {
   createCluster,
   deleteCluster,

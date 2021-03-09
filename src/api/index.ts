@@ -1,9 +1,15 @@
-import { Router, ErrorRequestHandler } from "express";
+/*
+  Copyright (C) Michael Fatemi - All Rights Reserved.
+  Unauthorized copying of this file via any medium is strictly prohibited.
+  Proprietary and confidential.
+  Written by Michael Fatemi <myfatemi04@gmail.com>, February 2021.
+*/
+import { ErrorRequestHandler, Router } from "express";
 import * as clusters from "./clusters";
+import { InvalidArgumentError } from "./errors";
+import * as friends from "./friends";
 import * as spaces from "./spaces";
 import * as users from "./users";
-import * as friends from "./friends";
-import { InvalidArgumentError } from "./errors";
 
 export const router = Router();
 

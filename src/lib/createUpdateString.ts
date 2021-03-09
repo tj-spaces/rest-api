@@ -1,3 +1,10 @@
+/*
+  Copyright (C) Michael Fatemi - All Rights Reserved.
+  Unauthorized copying of this file via any medium is strictly prohibited.
+  Proprietary and confidential.
+  Written by Michael Fatemi <myfatemi04@gmail.com>, February 2021.
+*/
+
 /**
  * Returns an array containing a string of the format `"A" = $1, "B" = $2, "C" = $3`, the list of the values
  * to supply ($1, $2, and $3), and the number to use for the next dollar-sign symbol (...$4, etc)
