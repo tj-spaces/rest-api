@@ -37,6 +37,8 @@ export async function getVoiceServerURL() {
     return "localhost:8080";
   }
 
+  return "0.voice.joinnebula.co";
+
   let containerARNs = await ecs
     .listContainerInstances({
       cluster: voiceCluster,
@@ -66,6 +68,8 @@ export async function getSimulationServerURL() {
   if (process.env.USE_LOCAL_SIMULATION === "1") {
     return "localhost:7000";
   }
+
+  return "0.sim.joinnebula.co";
 
   let containerARNs = await ecs
     .listContainerInstances({
