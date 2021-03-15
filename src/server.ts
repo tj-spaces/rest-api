@@ -9,6 +9,7 @@ dotenv.config();
 
 import * as api from "./api/index";
 import * as auth from "./auth/index";
+import * as analytics from "./analytics/analytics";
 import * as bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
@@ -51,6 +52,7 @@ app.get("/healthcheck", (req, res) => {
 });
 app.use("/auth", auth.router);
 app.use("/api", api.router);
+app.use("/analytics", analytics.router);
 
 const port = process.env.PORT ?? 5000;
 
