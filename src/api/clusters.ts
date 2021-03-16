@@ -27,6 +27,7 @@ import {
   assertUserJoinedCluster,
 } from "./validationUtil";
 import {
+  InternalServerError,
   InvalidArgumentError,
   NoopError,
   ResourceNotFoundError,
@@ -80,7 +81,7 @@ router.get("/discoverable", async (req, res) => {
   });
 });
 
-router.get("/:clusterID", async (req, res) => {
+router.get("/:clusterID", async (req, res, next) => {
   const { clusterID } = req.params;
 
   assertStringID(clusterID);
@@ -88,13 +89,13 @@ router.get("/:clusterID", async (req, res) => {
   const cluster = await getClusterByID(clusterID);
 
   if (cluster == null) {
-    throw new ResourceNotFoundError();
+    next(new ResourceNotFoundError());
   } else {
     res.json({ status: "success", data: cluster });
   }
 });
 
-router.delete("/:clusterID", requireApiAuth, async (req, res) => {
+router.delete("/:clusterID", requireApiAuth, (req, res, next) => {
   const { clusterID } = req.params;
   const { accountID } = req.session;
 
@@ -104,26 +105,30 @@ router.delete("/:clusterID", requireApiAuth, async (req, res) => {
 
   // If we are in the group, then the group must exist, and we can delete it
 
-  await deleteCluster(clusterID);
-
-  res.json({ status: "success" });
+  deleteCluster(clusterID)
+    .then(() => {
+      res.json({ status: "success" });
+    })
+    .catch((err) => next(err));
 });
 
-router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
+router.post("/:clusterID/join", requireApiAuth, (req, res, next) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
 
   assertStringID(clusterID);
   assertClusterExists(clusterID);
 
-  const inCluster = await didUserJoinCluster(clusterID, accountID);
+  (async () => {
+    const inCluster = await didUserJoinCluster(clusterID, accountID);
 
-  if (inCluster) {
-    throw new NoopError();
-  } else {
-    await joinCluster(clusterID, accountID);
-    res.json({ status: "success" });
-  }
+    if (inCluster) {
+      throw new NoopError();
+    } else {
+      await joinCluster(clusterID, accountID);
+      res.json({ status: "success" });
+    }
+  })().catch((err) => next(err));
 });
 
 /**
@@ -131,7 +136,7 @@ router.post("/:clusterID/join", requireApiAuth, async (req, res) => {
  * Requires params:
  *  - `cluster_id` The cluster to find spaces for
  */
-router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
+router.get("/:clusterID/spaces", requireApiAuth, async (req, res, next) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
 
@@ -140,19 +145,27 @@ router.get("/:clusterID/spaces", requireApiAuth, async (req, res) => {
   assertUserJoinedCluster(clusterID, accountID);
 
   // If we are in the group, then the group must exist
-  res.json({ status: "success", data: await getSpacesInCluster(clusterID) });
+  getSpacesInCluster(clusterID)
+    .then((spaces) => {
+      res.json({ status: "success", data: spaces });
+    })
+    .catch((err) => next(err));
 });
 
 /**
  * Gets a list of members in this cluster.
  * TODO: add paging
  */
-router.get("/:clusterID/members", requireApiAuth, async (req, res) => {
+router.get("/:clusterID/members", requireApiAuth, async (req, res, next) => {
   const { accountID } = req.session;
   const { clusterID } = req.params;
+
   assertStringID(clusterID);
   assertUserJoinedCluster(clusterID, accountID);
-  let ids = await getUsersInCluster(clusterID);
-  let users = await Promise.all(ids.map((id) => getPublicUserFromID(id)));
-  res.json({ status: "success", data: users, paging: {} });
+
+  (async () => {
+    let ids = await getUsersInCluster(clusterID);
+    let users = await Promise.all(ids.map((id) => getPublicUserFromID(id)));
+    res.json({ status: "success", data: users, paging: {} });
+  })().catch((err) => next(err));
 });

@@ -20,7 +20,7 @@ import {
 
 export const router = Router();
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", async (req, res, next) => {
   const { id } = req.params;
   const { name, description } = req.query;
 
@@ -28,15 +28,18 @@ router.patch("/:id", async (req, res) => {
   if (description != null) assertString(description, 1, 4096);
 
   const { accountID } = req.session;
-  const eventHostID = await getEventHostID(id);
-
-  if (accountID !== eventHostID) {
-    throw new UnauthorizedError();
-  } else {
-    // @ts-expect-error
-    await updateEvent(id, { name, description });
-    res.json({ status: "success" });
-  }
+  getEventHostID(id).then((eventHostID) => {
+    if (accountID !== eventHostID) {
+      throw new UnauthorizedError();
+    } else {
+      // @ts-expect-error
+      updateEvent(id, { name, description })
+        .then(() => {
+          res.json({ status: "success" });
+        })
+        .catch((err) => next(err));
+    }
+  });
 });
 
 router.get("/:id", async (req, res) => {

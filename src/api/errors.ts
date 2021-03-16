@@ -10,3 +10,4 @@ export class InvalidPermissionsError extends Error {}
 export class UnauthorizedError extends Error {}
 export class NoopError extends Error {}
 export class WrongRelationTypeError extends Error {}
+export class InternalServerError extends Error {}
