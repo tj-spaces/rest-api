@@ -148,24 +148,24 @@ router.get("/:spaceID/join", requireApiAuth, async (req, res) => {
 /**
  * Gets a space with a specific ID
  */
-router.get("/:spaceID", requireApiAuth, async (req, res, next) => {
+router.get("/:spaceID", requireApiAuth, (req, res, next) => {
   const { spaceID } = req.params;
 
   assertStringID(spaceID);
 
-  getSpaceByID(spaceID)
-    .then((space) => {
-      if (space == null) {
-        throw new ResourceNotFoundError();
-      }
+  (async () => {
+    const space = await getSpaceByID(spaceID);
 
-      if (space.cluster_id != null && space.visibility !== "discoverable") {
-        let { accountID } = req.session;
+    if (space == null) {
+      throw new ResourceNotFoundError();
+    }
 
-        assertUserJoinedCluster(space.cluster_id, accountID);
-      }
+    if (space.cluster_id != null && space.visibility !== "discoverable") {
+      let { accountID } = req.session;
 
-      res.json({ status: "success", data: space });
-    })
-    .catch((err) => next(err));
+      await assertUserJoinedCluster(space.cluster_id, accountID);
+    }
+
+    res.json({ status: "success", data: space });
+  })().catch(next);
 });
