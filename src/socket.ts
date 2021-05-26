@@ -7,7 +7,7 @@
 import * as http from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { getSpaceServer } from "./spaces/server";
-import { getSessionDataByID } from "./session";
+import { getSessionDataByID, sessionMiddleware } from "./session";
 import { getUserFromID } from "./database/tables/users";
 import createUuid from "./lib/createUUID";
 
@@ -98,19 +98,22 @@ const accountConnections = new Map<string, Connection>();
  */
 export const createIO = (server: http.Server) => {
   const io = new SocketIOServer(server, {
-    cors: {
-      origin: "*",
-    },
+    cors: { origin: "*" },
   });
 
   io.use((socket, next) => {
-    // @ts-ignore
-    getSessionMiddleware()(socket.request, {}, next);
+    console.log("Handling socket", socket);
+    sessionMiddleware(
+      // @ts-expect-error
+      socket.request,
+      {},
+      next
+    );
   });
 
   io.on("connection", async (socket: Socket) => {
-    const sessionID = socket.handshake.query["sessionID"];
-    const session = await getSessionDataByID(sessionID);
+    const sessionID = socket.handshake.query.sessionID;
+    const session = await getSessionDataByID(sessionID as string);
 
     if (session == null || session.accountID == null) {
       socket.emit("unauthenticated");
@@ -119,6 +122,10 @@ export const createIO = (server: http.Server) => {
 
     socket.on("disconnect", () => {
       socket.broadcast.emit("peer_left");
+    });
+
+    socket.on("join-room", (roomID: string) => {
+      socket.emit("joined-room", roomID);
     });
 
     socket.on("join_space", async (spaceID: string) => {

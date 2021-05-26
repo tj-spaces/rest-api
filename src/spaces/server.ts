@@ -209,7 +209,7 @@ export class SpaceServer {
 
   async tryJoin(socket: Socket, displayName: string = "user") {
     const session = await getSessionDataByID(
-      socket.handshake.query["sessionID"]
+      socket.handshake.query.sessionID as string
     );
 
     if (session.accountID) {

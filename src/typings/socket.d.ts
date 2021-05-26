@@ -28,7 +28,9 @@ declare module "socket.io" {
       text: string
     ): this;
     emit(ev: "messages", messages: SpaceMessage[]): this;
+    emit(ev: "joined-room", roomID: string): this;
 
+    on(ev: "join-room", cb: (roomID: string) => void): this;
     on(ev: "chat_message", cb: (messageContent: string) => void): this;
     on(ev: "disconnect", cb: () => void): this;
     on(ev: "leave_space", cb: () => void): this;

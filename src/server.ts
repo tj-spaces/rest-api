@@ -16,9 +16,12 @@ import express from "express";
 import * as http from "http";
 import { getLogger } from "./lib/ClusterLogger";
 import { sessionMiddleware } from "./session";
+import { createIO } from "./socket";
 
 const app = express();
 const httpServer = http.createServer(app);
+
+createIO(httpServer);
 
 const logger = getLogger("requests");
 
