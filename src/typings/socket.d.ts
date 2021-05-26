@@ -9,34 +9,42 @@ import { Updater } from "queryshift";
 import { SpaceMessage } from "../spaces/SpaceMessage";
 import { SpaceParticipant } from "../spaces/SpaceParticipant";
 
+type ToClientEventMap = {
+  peer_joined: [SpaceParticipant];
+  peer_left: [string];
+  peer_info: [SpaceParticipant];
+  ping: [string, number];
+  peers: [Map<string, SpaceParticipant>];
+  space_not_found: [];
+  space_join_complete: [];
+  unauthenticated: [];
+  peer_update: [string, SpaceParticipant];
+  messages: [SpaceMessage[]];
+  "joined-room": [string]; // roomID
+};
+
+type ToServerEventMap = {
+  "join-room": [string]; // roomID
+  "leave-room": [];
+  chat_message: [string]; // messageContent
+  disconnect: [];
+  leave_space: [];
+  join_space: [string];
+  ping: [string];
+  update: [Updater<SpaceParticipant>];
+  message: [string, string]; // text, replyTo
+};
+
 declare module "socket.io" {
   interface Socket {
-    emit(ev: "peer_joined", peer: SpaceParticipant): this;
-    emit(ev: "peer_left", peerID: string): this;
-    emit(ev: "peer_info", peer: SpaceParticipant): this;
-    emit(ev: "ping", key: string, lastPingLatency: number): this;
-    emit(ev: "peers", users: Map<string, SpaceParticipant>): this;
-    emit(
-      ev: "space_not_found" | "space_join_complete" | "unauthenticated"
+    emit<E extends keyof ToClientEventMap>(
+      ev: E,
+      ...args: ToClientEventMap[E]
     ): this;
-    emit(ev: "twilio_grant", grant: string): this;
-    emit(ev: "peer_update", peerID: string, peer: SpaceParticipant): this;
-    emit(
-      ev: "messages",
-      questionID: string,
-      senderID: string,
-      text: string
-    ): this;
-    emit(ev: "messages", messages: SpaceMessage[]): this;
-    emit(ev: "joined-room", roomID: string): this;
 
-    on(ev: "join-room", cb: (roomID: string) => void): this;
-    on(ev: "chat_message", cb: (messageContent: string) => void): this;
-    on(ev: "disconnect", cb: () => void): this;
-    on(ev: "leave_space", cb: () => void): this;
-    on(ev: "join_space", cb: (spaceID: string) => void): this;
-    on(ev: "ping", cb: (key: string) => void): this;
-    on(ev: "update", cb: (updates: Updater<SpaceParticipant>) => void): this;
-    on(ev: "message", cb: (text: string, replyTo?: string) => void): this;
+    on<E extends keyof ToServerEventMap>(
+      ev: E,
+      cb: (...args: ToServerEventMap[E]) => void
+    ): this;
   }
 }

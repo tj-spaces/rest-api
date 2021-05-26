@@ -10,7 +10,7 @@ import { doesSpaceExist, getSpaceByID, Space } from "../database/tables/spaces";
 import { getLogger } from "../lib/ClusterLogger";
 import createUuid from "../lib/createUUID";
 import { getSessionDataByID } from "../session";
-import { Connection } from "../socket";
+import { Connection } from "../connection";
 import { SpaceMessage } from "./SpaceMessage";
 import { SpaceParticipant } from "./SpaceParticipant";
 import { SpacePositionInfo } from "./SpacePositionInfo";
